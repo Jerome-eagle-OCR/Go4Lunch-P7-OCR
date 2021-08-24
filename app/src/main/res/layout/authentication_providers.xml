@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="16dp">
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/fui_google"
+        style="@style/FirebaseUI.Button.AccountChooser.GoogleButton"
+        android:layout_marginTop="0dp"
+        android:gravity="center"
+        android:text="@string/fui_sign_in_with_google"
+        app:backgroundTint="@color/fui_bgGoogle" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/fui_facebook"
+        style="@style/FirebaseUI.Button.AccountChooser.FacebookButton"
+        android:layout_marginTop="0dp"
+        android:gravity="center"
+        android:text="@string/fui_sign_in_with_facebook"
+        app:backgroundTint="@color/fui_bgFacebook" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/fui_twitter"
+        style="@style/FirebaseUI.Button.AccountChooser.TwitterButton"
+        android:layout_marginTop="0dp"
+        android:gravity="center"
+        android:text="@string/fui_sign_in_with_twitter"
+        app:backgroundTint="@color/fui_bgTwitter" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/fui_email"
+        style="@style/FirebaseUI.Button.AccountChooser.EmailButton"
+        android:layout_marginTop="0dp"
+        android:gravity="center"
+        android:text="@string/fui_sign_in_with_email"
+        app:backgroundTint="@color/fui_bgEmail" />
+
+</androidx.appcompat.widget.LinearLayoutCompat>

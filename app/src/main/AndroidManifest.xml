@@ -11,7 +11,8 @@
         android:theme="@style/Theme.Go4Lunch">
         <activity
             android:name=".AuthenticationActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.Go4Lunch.Fullscreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Go4Lunch</string>
+    <!-- Facebook application ID and custom URL scheme (app ID prefixed by 'fb'). -->
+    <string name="facebook_application_id" translatable="false">949848765796508</string>
+    <string name="facebook_login_protocol_scheme" translatable="false">fb949848765796508</string>
+    <string name="authentication_page_wallpaper">Authentication page wallpaper</string>
+    <string name="application_logo">Application logo</string>
 </resources>
