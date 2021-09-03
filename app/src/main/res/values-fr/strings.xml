@@ -24,4 +24,11 @@
     <string name="menu_your_lunch">VOTRE CHOIX</string>
     <string name="menu_settings">REGLAGES</string>
     <string name="menu_logout">DECONNEXION</string>
+    <string name="connection_succeed">Authentification réussie !</string>
+    <string name="error_authentication_canceled">Authentification annulée…</string>
+    <string name="error_no_internet">Aucune connexion internet !</string>
+    <string name="error_unknown_error">Une erreur inconnue s\'est produite…</string>
+    <string name="default_info_title">Localisation par défaut</string>
+    <string name="default_info_snippet">Aucun lieu trouvé car l\'autorisation pour la localisation est désactivée.</string>
+    <string name="pick_place">Choisissez un lieu</string>
 </resources>

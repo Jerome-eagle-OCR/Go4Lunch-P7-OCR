@@ -9,9 +9,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.firebase.ui.auth.AuthMethodPickerLayout;
 import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.ErrorCodes;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
@@ -29,12 +31,16 @@ public class AuthenticationActivity extends AppCompatActivity {
             this::onSignInResult
     );
 
+    private ActivityAuthenticationBinding binding;
+    private View view;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ActivityAuthenticationBinding binding = ActivityAuthenticationBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        binding = ActivityAuthenticationBinding.inflate(getLayoutInflater());
+        view = binding.getRoot();
+        setContentView(view);
 
         initAuthentication();
     }
@@ -61,31 +67,49 @@ public class AuthenticationActivity extends AppCompatActivity {
         // Create and launch sign-in intent
         Intent signInIntent = AuthUI.getInstance()
                 .createSignInIntentBuilder()
-                .setAvailableProviders(providers)
                 .setTheme(R.style.Theme_Go4Lunch_FirebaseUI)
-                .setLockOrientation(true)
+                .setAvailableProviders(providers)
+                .setIsSmartLockEnabled(true, true)
                 .setAuthMethodPickerLayout(customLayout)
+                .setLockOrientation(true)
                 .build();
         signInLauncher.launch(signInIntent);
+    }
+
+    // Show Snack Bar with a message
+    private void showSnackBar(String message) {
+        Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show();
+//        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {
         IdpResponse response = result.getIdpResponse();
         if (result.getResultCode() == RESULT_OK) {
             // Successfully signed in
+            showSnackBar(getString(R.string.connection_succeed));
+            showSnackBar(response.getProviderType());
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
             Intent mainActivityIntent = new Intent(this, MainActivity.class);
             startActivity(mainActivityIntent);
             finish();
             // ...
         } else {
-            Intent mainActivityIntent = new Intent(this, MainActivity.class);
-            startActivity(mainActivityIntent);
-            finish();
             // Sign in failed. If response is null the user canceled the
             // sign-in flow using the back button. Otherwise check
             // response.getError().getErrorCode() and handle the error.
             // ...
+            if (response == null) {
+                showSnackBar(getString(R.string.error_authentication_canceled));
+            } else if (response.getError() != null) {
+                if (response.getError().getErrorCode() == ErrorCodes.NO_NETWORK) {
+                    showSnackBar(getString(R.string.error_no_internet));
+                } else if (response.getError().getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
+                    showSnackBar(getString(R.string.error_unknown_error));
+                    Intent mainActivityIntent = new Intent(this, MainActivity.class);
+                    startActivity(mainActivityIntent);
+                    finish();
+                }
+            }
         }
     }
 }
