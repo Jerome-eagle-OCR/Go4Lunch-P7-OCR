@@ -1,7 +1,8 @@
-package com.jr_eagle_ocr.go4lunch;
+package com.jr_eagle_ocr.go4lunch.authentication;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,7 +14,9 @@ import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityAuthenticationBinding;
+import com.jr_eagle_ocr.go4lunch.ui.MainActivity;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +45,8 @@ public class AuthenticationActivity extends AppCompatActivity {
                 new AuthUI.IdpConfig.GoogleBuilder().build(),
                 new AuthUI.IdpConfig.FacebookBuilder().build(),
                 new AuthUI.IdpConfig.TwitterBuilder().build(),
-                new AuthUI.IdpConfig.EmailBuilder().build());
+                new AuthUI.IdpConfig.EmailBuilder().build(),
+                new AuthUI.IdpConfig.AnonymousBuilder().build());
 
         // Create custom layout
         AuthMethodPickerLayout customLayout = new AuthMethodPickerLayout
@@ -51,6 +55,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                 .setFacebookButtonId(R.id.fui_facebook)
                 .setTwitterButtonId(R.id.fui_twitter)
                 .setEmailButtonId(R.id.fui_email)
+                .setAnonymousButtonId(R.id.fui_anonymous)
                 .build();
 
         // Create and launch sign-in intent
@@ -69,8 +74,14 @@ public class AuthenticationActivity extends AppCompatActivity {
         if (result.getResultCode() == RESULT_OK) {
             // Successfully signed in
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            Intent mainActivityIntent = new Intent(this, MainActivity.class);
+            startActivity(mainActivityIntent);
+            finish();
             // ...
         } else {
+            Intent mainActivityIntent = new Intent(this, MainActivity.class);
+            startActivity(mainActivityIntent);
+            finish();
             // Sign in failed. If response is null the user canceled the
             // sign-in flow using the back button. Otherwise check
             // response.getError().getErrorCode() and handle the error.
