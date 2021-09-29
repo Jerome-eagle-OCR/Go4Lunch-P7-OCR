@@ -88,7 +88,9 @@ public class AuthenticationActivity extends AppCompatActivity {
             // Successfully signed in
             showSnackBar(getString(R.string.connection_succeed));
             showSnackBar(response.getProviderType());
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+//            User user = new User;
+//            user.setId = firebaseUser.getUid();
             Intent mainActivityIntent = new Intent(this, MainActivity.class);
             startActivity(mainActivityIntent);
             finish();
