@@ -12,7 +12,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.model.User;
 
 import java.util.List;
-import java.util.Objects;
 
 public final class UserRepository {
 
@@ -42,16 +41,35 @@ public final class UserRepository {
 
     public User getCurrentUser() {
         // TODO: to be modified when Firestore is implemented
-        String userId = Objects.requireNonNull(this.getCurrentFirebaseUser()).getUid();
+        String userId = this.getCurrentFirebaseUser().getUid();
         String userName = this.getCurrentFirebaseUser().getDisplayName();
+        String userEmail;
+        if (userName == null || userName.equals("")) {
+            userEmail = this.getCurrentFirebaseUser().getEmail();
+            if (userEmail != null) {
+                userName = this.getNameFromEmail(userEmail);
+            } else {
+                userName = "Anonymous";
+            }
+        }
         // Get photo url and manage if null
         Uri photoUrl = getCurrentFirebaseUser().getPhotoUrl();
-        String userUrlPicture =
-                photoUrl != null ? this.getCurrentFirebaseUser().getPhotoUrl().toString() : null;
+        String userUrlPicture;
+        if (photoUrl != null) {
+            userUrlPicture = this.getCurrentFirebaseUser().getPhotoUrl().toString();
+        } else {
+            switch (userName) {
+                case "Tintin":
+                    userUrlPicture = "https://static.wikia.nocookie.net/tintinfr/images/a/a0/Unnamed.png/revision/latest?cb=20200817143958&path-prefix=fr";
+                    break;
+                default:
+                    userUrlPicture = null;
+            }
+        }
         if (currentUser == null || !currentUser.getUid().equals(userId)) {
             currentUser = new User(userId, userName, userUrlPicture);
         }
-        return currentUser;
+        return new User(userId, userName, userUrlPicture);
     }
 
     public List<User> getAllUsers() {
@@ -73,5 +91,19 @@ public final class UserRepository {
 
     public Task<Void> deleteUser(Context context) {
         return AuthUI.getInstance().delete(context);
+    }
+
+    private String getNameFromEmail(String email) {
+        String[] words = email.split("@")[0].split("_");
+        StringBuilder capitalizedStr = new StringBuilder();
+
+        for (String word : words) {
+            // Capitalize first letter
+            String firstLetter = word.substring(0, 1);
+            // Get remaining letter
+            String remainingLetters = word.substring(1);
+            capitalizedStr.append(firstLetter.toUpperCase()).append(remainingLetters).append(" ");
+        }
+        return capitalizedStr.toString().trim();
     }
 }
