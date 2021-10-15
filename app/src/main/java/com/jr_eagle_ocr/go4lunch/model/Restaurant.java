@@ -15,13 +15,13 @@ public class Restaurant {
     private OpeningHours mOpeningHours;
     private String mPhoneNumber;
     private Bitmap mPhoto;
+    private String mWebSiteUrl;
 
     public Restaurant(
             String id
     ) {
         mId = id;
     }
-
 
     public String getId() {
         return mId;
@@ -55,6 +55,11 @@ public class Restaurant {
         return mPhoto;
     }
 
+    public String getWebSiteUrl() {
+        return mWebSiteUrl;
+    }
+
+
     public void setName(String name) {
         mName = name;
     }
@@ -81,5 +86,9 @@ public class Restaurant {
 
     public void setPhoto(Bitmap photo) {
         mPhoto = photo;
+    }
+
+    public void setWebSiteUrl(String webSiteUrl) {
+        mWebSiteUrl = webSiteUrl;
     }
 }

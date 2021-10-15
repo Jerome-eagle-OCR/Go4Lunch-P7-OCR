@@ -48,18 +48,22 @@ public class UserManager {
     }
 
     public String getUserChoice() {
-        return this.getCurrentUser().getChosenRestaurantId();
+        return userRepository.getUserChoice();
     }
 
     public void setUserChoice(String userChoice) {
-        this.getCurrentUser().setChosenRestaurantId(userChoice);
+        userRepository.setUserChoice(userChoice);
     }
 
-    public Task<Void> signOut(Context context){
+    public List<User> getUsersLunchingAtGivenRestaurant(String restaurantId) {
+        return userRepository.getUsersLunchingAtGivenRestaurant(restaurantId);
+    }
+
+    public Task<Void> signOut(Context context) {
         return userRepository.signOut(context);
     }
 
-    public Task<Void> deleteUser(Context context){
+    public Task<Void> deleteUser(Context context) {
         return userRepository.deleteUser(context);
     }
 }

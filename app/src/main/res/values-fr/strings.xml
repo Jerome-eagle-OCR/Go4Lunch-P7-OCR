@@ -31,4 +31,13 @@
     <string name="default_info_title">Localisation par défaut</string>
     <string name="default_info_snippet">Aucun lieu trouvé car l\'autorisation pour la localisation est désactivée.</string>
     <string name="pick_place">Choisissez un lieu</string>
+    <string name="choose_restaurant">Vous voulez déjeuner chez\u0020</string>
+    <string name="unchoose_restaurant">Vous ne voulez plus déjeuner chez\u0020</string>
+    <string name="call">APPELER</string>
+    <string name="like">FAVORI</string>
+    <string name="website">SITE WEB</string>
+    <string name="is_joining">\u0020veut déjeuner ici !</string>
+    <string name="is_eating_at">\u0020déjeune chez\u0020</string>
+    <string name="like_restaurant">\u0020a été ajouté à vos favoris.</string>
+    <string name="unlike_restaurant">\u0020a été retiré de vos favoris.</string>
 </resources>

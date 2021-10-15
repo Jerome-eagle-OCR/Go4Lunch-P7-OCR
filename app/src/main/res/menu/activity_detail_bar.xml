@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/call"
+        android:contentDescription="@string/call"
+        android:icon="@drawable/ic_call"
+        android:title="@string/call" />
+    <item
+        android:id="@+id/like"
+        android:icon="@drawable/ic_star"
+        android:title="@string/like" />
+    <item
+        android:id="@+id/website"
+        android:icon="@drawable/ic_public"
+        android:title="@string/website" />
+</menu>

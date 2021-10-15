@@ -5,31 +5,43 @@
       <map>
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable-v21/ic_menu_camera.xml" value="0.38177083333333334" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.38177083333333334" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable/ic_baseline_check_circle_24.xml" value="0.3416666666666667" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable/ic_bottom_nav_map.xml" value="0.22083333333333333" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable/ic_check_circle.xml" value="0.22083333333333333" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable/ic_circle.xml" value="0.3416666666666667" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable/ic_drawer_restaurant.xml" value="0.38177083333333334" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable/ic_drawer_settings.xml" value="0.38177083333333334" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable/ic_menu_logout.xml" value="0.38177083333333334" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable/ic_menu_restaurant.xml" value="0.38177083333333334" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable/ic_menu_search.xml" value="0.38177083333333334" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/drawable/side_nav_bar.xml" value="0.38177083333333334" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout-w936dp/content_scrolling.xml" value="0.153515625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/activity_authentication.xml" value="0.365625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/activity_drawer.xml" value="0.365625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/activity_main.xml" value="0.365625" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/activity_restaurant_detail.xml" value="0.29907407407407405" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/app_bar_drawer.xml" value="0.365625" />
-        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/app_bar_main.xml" value="0.365625" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/app_bar_main.xml" value="0.3212962962962963" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/authentication_providers.xml" value="0.25" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/content_drawer.xml" value="0.365625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/content_main.xml" value="0.365625" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/content_scrolling.xml" value="0.365625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/fragment_logout.xml" value="0.365625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/fragment_maps.xml" value="0.3515625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/fragment_maps_view.xml" value="0.3515625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/fragment_yourlunch.xml" value="0.365625" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/item_user.xml" value="0.365625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/map_view_fragment.xml" value="0.365625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/nav_header_drawer.xml" value="0.365625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/nav_header_main.xml" value="0.365625" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/restaurant_content_scrolling.xml" value="0.1835590845399346" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/restaurant_infos.xml" value="0.365625" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/layout/workmates_fragment.xml" value="0.365625" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/menu/activity_detail_bar.xml" value="0.2046875" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/menu/activity_main_bottom_bar.xml" value="0.365625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/menu/activity_main_drawer.xml" value="0.365625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/menu/main.xml" value="0.365625" />
+        <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/menu/menu_restaurant_detail.xml" value="0.365625" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.38177083333333334" />
         <entry key="..\:/Users/jrigault/Documents/Formation_EAGLE-OC/P7/Go4Lunch/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.38177083333333334" />
       </map>

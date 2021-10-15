@@ -31,4 +31,14 @@
     <string name="default_info_title">Default Location</string>
     <string name="default_info_snippet">No places found, because location permission is disabled.</string>
     <string name="pick_place">Choose a place</string>
+    <string name="title_activity_restaurant_detail" translatable="false">RestaurantDetailActivity</string>
+    <string name="choose_restaurant">You want to lunch at\u0020</string>
+    <string name="unchoose_restaurant">You don\'t anymore want to lunch at\u0020</string>
+    <string name="call">CALL</string>
+    <string name="like">LIKE</string>
+    <string name="website">WEBSITE</string>
+    <string name="is_joining">\u0020is joining !</string>
+    <string name="is_eating_at">\u0020is eating at\u0020</string>
+    <string name="like_restaurant">\u0020is now marked as liked by you.</string>
+    <string name="unlike_restaurant">\u0020is not anymore marked as liked by you.</string>
 </resources>

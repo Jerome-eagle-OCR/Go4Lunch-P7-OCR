@@ -11,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.model.User;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class UserRepository {
@@ -46,7 +47,7 @@ public final class UserRepository {
         String userEmail;
         if (userName == null || userName.equals("")) {
             userEmail = this.getCurrentFirebaseUser().getEmail();
-            if (userEmail != null) {
+            if (userEmail != null && !userEmail.equals("")) {
                 userName = this.getNameFromEmail(userEmail);
             } else {
                 userName = "Anonymous";
@@ -60,16 +61,31 @@ public final class UserRepository {
         } else {
             switch (userName) {
                 case "Tintin":
-                    userUrlPicture = "https://static.wikia.nocookie.net/tintinfr/images/a/a0/Unnamed.png/revision/latest?cb=20200817143958&path-prefix=fr";
+                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/tintin/tintin@2x.png";
+                    break;
+                case "Capitaine Haddock":
+                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/le-capitaine-haddock/le-capitaine-haddock@2x.png";
+                    break;
+                case "Dupond":
+                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/dupond-et-dupont/dupond-et-dupont@2x.png";
+                    break;
+                case "Dupont":
+                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/dupond-et-dupont/dupond-et-dupont@2x.png";
+                    break;
+                case "Bianca Castafiore":
+                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/bianca-castafiore/bianca-castafiore@2x.png";
+                    break;
+                case "Professeur Tournesol":
+                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/le-professeur-tournesol/le-professeur-tournesol@2x.png";
                     break;
                 default:
-                    userUrlPicture = null;
+                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/rascar-capac/rascar-capac@2x.png";
             }
         }
         if (currentUser == null || !currentUser.getUid().equals(userId)) {
             currentUser = new User(userId, userName, userUrlPicture);
         }
-        return new User(userId, userName, userUrlPicture);
+        return currentUser;
     }
 
     public List<User> getAllUsers() {
@@ -83,6 +99,18 @@ public final class UserRepository {
 
     public void setUserChoice(String userChoice) {
         this.getCurrentUser().setChosenRestaurantId(userChoice);
+    }
+
+    public List<User> getUsersLunchingAtGivenRestaurant(String restaurantId) {
+        List<User> usersLunchingAtGivenRestaurant = new ArrayList<>();
+        if (getAllUsers() != null) {
+            for (User u : getAllUsers()) {
+                if (restaurantId.equals(u.getChosenRestaurantId())) {
+                    usersLunchingAtGivenRestaurant.add(u);
+                }
+            }
+        }
+        return usersLunchingAtGivenRestaurant;
     }
 
     public Task<Void> signOut(Context context) {
