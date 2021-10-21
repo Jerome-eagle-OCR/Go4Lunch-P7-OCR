@@ -2,14 +2,12 @@ package com.jr_eagle_ocr.go4lunch.ui;
 
 import static androidx.navigation.ui.NavigationUI.setupActionBarWithNavController;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -19,29 +17,26 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.authentication.UserManager;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityMainBinding;
-import com.jr_eagle_ocr.go4lunch.model.User;
+import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.net.ssl.HttpsURLConnection;
-
+/**
+ * @author jrigault
+ */
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private NavController mNavController;
     private ActivityMainBinding binding;
     private View header;
+
+    private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,8 +45,7 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        final Toolbar toolbar = binding.appBarMain.toolbar;
-        setSupportActionBar(toolbar);
+        initToolbar();
 
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
@@ -68,55 +62,31 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView bottomBar = binding.appBarMain.navBar;
         NavigationUI.setupWithNavController(bottomBar, mNavController);
 
-        UserManager userManager = UserManager.getInstance();
-        User user = userManager.getCurrentUser();
-
         header = navigationView.getHeaderView(0);
         TextView userName = header.findViewById(R.id.drwr_user_name);
-        userName.setText(user.getUserName());
-        TextView userEmail = header.findViewById(R.id.drwr_user_email);
-        userEmail.setText(userManager.getCurrentFirebaseUser().getEmail());
-
         ImageView userPhoto = header.findViewById(R.id.drwr_user_photo);
-        Bitmap bm = getUserBitmap(user);
-        userPhoto.setImageBitmap(bm);
+        tempUserRestaurantManager.getUserData().observe(this, user -> {
+            if (user != null) {
+                userName.setText(user.getUserName());
+
+                Glide.with(MainActivity.this)
+                        .load(user.getUserUrlPicture())
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(userPhoto);
+
+                Toast.makeText(MainActivity.this, "User details set for " + user.getUserName() + " !", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        TextView userEmailTextView = header.findViewById(R.id.drwr_user_email);
+        FirebaseUser firebaseUser = tempUserRestaurantManager.getCurrentFirebaseUser();
+        String userEmail = (firebaseUser != null) ? firebaseUser.getEmail() : "";
+        userEmailTextView.setText(userEmail);
     }
 
-    private Bitmap getUserBitmap(User user) {
-        AtomicReference<Bitmap> userPhotoBtmp = new AtomicReference<>();
-        ExecutorService executors = Executors.newSingleThreadExecutor();
-        if (user.getUserUrlPicture() != null) {
-            executors.execute(() -> {
-                URL url = null;
-                try {
-                    url = new URL(user.getUserUrlPicture());
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                HttpsURLConnection connection = null;
-                try {
-                    assert url != null;
-                    connection = (HttpsURLConnection) url.openConnection();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                InputStream inputStream = null;
-                try {
-                    assert connection != null;
-                    inputStream = connection.getInputStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                userPhotoBtmp.set(BitmapFactory.decodeStream(inputStream));
-                executors.shutdown();
-            });
-            while (!executors.isShutdown()) {
-                Log.d("PHOTO URL: ", "Still running...");
-            }
-        } else {
-            userPhotoBtmp.set(BitmapFactory.decodeResource(getResources(), R.drawable.default_avatar));
-        }
-        return userPhotoBtmp.get();
+    private void initToolbar() {
+        final Toolbar toolbar = binding.appBarMain.toolbar;
+        setSupportActionBar(toolbar);
     }
 
     @Override

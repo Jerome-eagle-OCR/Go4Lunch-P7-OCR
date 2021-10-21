@@ -1,25 +1,46 @@
 package com.jr_eagle_ocr.go4lunch.repositories;
 
 import android.content.Context;
-import android.net.Uri;
+import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.jr_eagle_ocr.go4lunch.model.User;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
+/**
+ * @author jrigault
+ */
 public final class UserRepository {
-
+    private static final String TAG = "UserRepository";
     private static volatile UserRepository instance;
-    private User currentUser;
+
+    private final FirebaseFirestore db;
+    private final MutableLiveData<User> currentUser;
+    private final MutableLiveData<Map<String, User>> allUsers;
+    private final MutableLiveData<List<String>> allUserIds;
+
 
     private UserRepository() {
+        db = FirebaseFirestore.getInstance();
+        currentUser = new MutableLiveData<>(null);
+        allUsers = new MutableLiveData<>();
+        allUserIds = new MutableLiveData<>();
     }
 
     public static UserRepository getInstance() {
@@ -35,93 +56,169 @@ public final class UserRepository {
         }
     }
 
+
+    // TODO: to be used in logout
+    public Task<Void> signOut(Context context) {
+        return AuthUI.getInstance().signOut(context);
+    }
+
+    // TODO: to be used in settings
+    public Task<Void> deleteUser(Context context) {
+        return AuthUI.getInstance().delete(context);
+    }
+
+
+    // --- FIREBASE ---
+
+    /**
+     * Get the current Firebase user
+     *
+     * @return the current Firebase user
+     */
     @Nullable
     public FirebaseUser getCurrentFirebaseUser() {
         return FirebaseAuth.getInstance().getCurrentUser();
     }
 
-    public User getCurrentUser() {
-        // TODO: to be modified when Firestore is implemented
-        String userId = this.getCurrentFirebaseUser().getUid();
-        String userName = this.getCurrentFirebaseUser().getDisplayName();
-        String userEmail;
-        if (userName == null || userName.equals("")) {
-            userEmail = this.getCurrentFirebaseUser().getEmail();
-            if (userEmail != null && !userEmail.equals("")) {
-                userName = this.getNameFromEmail(userEmail);
-            } else {
-                userName = "Anonymous";
+
+    // --- FIRESTORE ---
+
+    private static final String COLLECTION_NAME = "users";
+    private static final String USERID_FIELD = "uid";
+    private static final String USERNAME_FIELD = "userName";
+    private static final String USERURLPICTURE_FIELD = "userUrlPicture";
+
+
+    /**
+     * Create User in Firestore from FirebaseAuth eventually modified/completed with Firestore db infos
+     */
+    public LiveData<Boolean> createUser() {
+        MutableLiveData<Boolean> isCreatedMutableLiveData = new MutableLiveData<>();
+        isCreatedMutableLiveData.setValue(false);
+        FirebaseUser user = this.getCurrentFirebaseUser();
+        if (user != null) {
+            String uid = user.getUid();
+            String name = user.getDisplayName();
+            String urlPicture;
+            String NOPHOTOURL = "https://ia801503.us.archive.org/3/items/default_avatar_202110/no_photo.png";
+            urlPicture = user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : NOPHOTOURL;
+
+            User userToCreate = new User(uid, name, urlPicture);
+
+            // If the user already exists in Firestore, we get his data (url_picture, user_name)
+            Task<DocumentSnapshot> userData = getUserData();
+            if (userData != null) {
+                userData.addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.contains(USERURLPICTURE_FIELD)) {
+                        userToCreate.setUserUrlPicture(
+                                (String) documentSnapshot.get(USERURLPICTURE_FIELD));
+                    }
+                    if (documentSnapshot.contains(USERNAME_FIELD)) {
+                        userToCreate.setUserName(
+                                (String) documentSnapshot.get(USERNAME_FIELD));
+                    }
+                    String userName = userToCreate.getUserName();
+                    if (userName == null || userName.equals("")) {
+                        // Compose alternative name from email
+                        String nameFromEmail;
+                        String email = (Objects.equals(user.getEmail(), "")) ? null : user.getEmail();
+                        String unknown = "unknown"; // TODO: to set null in case email is null and VM will set R.string.unknown
+                        nameFromEmail = (email != null) ? this.getNameFromEmail(email) : unknown;
+                        userToCreate.setUserName(nameFromEmail);
+                    }
+                    currentUser.setValue(userToCreate);
+                    this.getUsersCollection().document(uid).set(userToCreate)
+                            .addOnSuccessListener(unused -> isCreatedMutableLiveData.setValue(true));
+                });
             }
         }
-        // Get photo url and manage if null
-        Uri photoUrl = getCurrentFirebaseUser().getPhotoUrl();
-        String userUrlPicture;
-        if (photoUrl != null) {
-            userUrlPicture = this.getCurrentFirebaseUser().getPhotoUrl().toString();
+        return isCreatedMutableLiveData;
+    }
+
+    /**
+     * Get User Data from Firestore
+     *
+     * @return a task to get the documentSnapshot
+     */
+    @Nullable
+    public Task<DocumentSnapshot> getUserData() {
+        FirebaseUser currentFirebaseUser = getCurrentFirebaseUser();
+        if (currentFirebaseUser != null) {
+            String uid = currentFirebaseUser.getUid();
+            return this.getUsersCollection().document(uid).get();
         } else {
-            switch (userName) {
-                case "Tintin":
-                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/tintin/tintin@2x.png";
-                    break;
-                case "Capitaine Haddock":
-                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/le-capitaine-haddock/le-capitaine-haddock@2x.png";
-                    break;
-                case "Dupond":
-                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/dupond-et-dupont/dupond-et-dupont@2x.png";
-                    break;
-                case "Dupont":
-                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/dupond-et-dupont/dupond-et-dupont@2x.png";
-                    break;
-                case "Bianca Castafiore":
-                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/bianca-castafiore/bianca-castafiore@2x.png";
-                    break;
-                case "Professeur Tournesol":
-                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/le-professeur-tournesol/le-professeur-tournesol@2x.png";
-                    break;
-                default:
-                    userUrlPicture = "https://cdn001.tintin.com/public/tintin/img/characters/rascar-capac/rascar-capac@2x.png";
-            }
+            return null;
         }
-        if (currentUser == null || !currentUser.getUid().equals(userId)) {
-            currentUser = new User(userId, userName, userUrlPicture);
-        }
-        return currentUser;
     }
 
-    public List<User> getAllUsers() {
-        //TODO: get all users from DB when Firestore is implemented
-        return null;
-    }
-
-    public String getUserChoice() {
-        return this.getCurrentUser().getChosenRestaurantId();
-    }
-
-    public void setUserChoice(String userChoice) {
-        this.getCurrentUser().setChosenRestaurantId(userChoice);
-    }
-
-    public List<User> getUsersLunchingAtGivenRestaurant(String restaurantId) {
-        List<User> usersLunchingAtGivenRestaurant = new ArrayList<>();
-        if (getAllUsers() != null) {
-            for (User u : getAllUsers()) {
-                if (restaurantId.equals(u.getChosenRestaurantId())) {
-                    usersLunchingAtGivenRestaurant.add(u);
+    /**
+     * Get all users in Firestore db
+     *
+     * @return a user map with key = uid and value = user, in a livedata
+     */
+    public LiveData<Map<String, User>> getAllUsers() {
+        this.getUsersCollection().addSnapshotListener((value, error) -> {
+            Map<String, User> users = new LinkedHashMap<>();
+            if (value != null && !value.isEmpty()) {
+                List<DocumentSnapshot> documents = value.getDocuments();
+                for (DocumentSnapshot d : documents) {
+                    User user = d.toObject(User.class);
+                    if (user != null) users.put(user.getUid(), user);
                 }
             }
-        }
-        return usersLunchingAtGivenRestaurant;
+            allUsers.setValue(users);
+            if (error != null) {
+                allUsers.setValue(null);
+                Log.e(TAG, "getAllUsers: ", error);
+            }
+        });
+        return allUsers;
     }
 
-    public Task<Void> signOut(Context context) {
-        return AuthUI.getInstance().signOut(context);
+    /**
+     * Get all user ids in Firestore db
+     *
+     * @return a list of user ids in a livedata
+     */
+    public LiveData<List<String>> getAllUserIds() {
+        this.getUsersCollection().addSnapshotListener((value, error) -> {
+            List<String> users = new ArrayList<>();
+            if (value != null && !value.isEmpty()) {
+                List<DocumentSnapshot> documents = value.getDocuments();
+                for (DocumentSnapshot d : documents) {
+                    User user = d.toObject(User.class);
+                    if (user != null) users.add(user.getUid());
+                }
+            }
+            allUserIds.setValue(users);
+            if (error != null) {
+                allUserIds.setValue(null);
+                Log.e(TAG, "getAllUsers: ", error);
+            }
+        });
+        return allUserIds;
     }
 
-    public Task<Void> deleteUser(Context context) {
-        return AuthUI.getInstance().delete(context);
+    /**
+     * Get the "users" Collection Reference
+     *
+     * @return the "users" Collection Reference
+     */
+    private CollectionReference getUsersCollection() {
+        return db.collection(COLLECTION_NAME);
     }
 
-    private String getNameFromEmail(String email) {
+
+    // --- UTIL ---
+
+    /**
+     * Get a name from an email address
+     * (assuming name@server.domain or name_surname@server.domain)
+     *
+     * @param email the email address (e.g.: tryphon.tournesol@herge.be)
+     * @return a name only or with surname (e.g.: Tryphon Tournesol)
+     */
+    private String getNameFromEmail(@NonNull String email) {
         String[] words = email.split("@")[0].split("_");
         StringBuilder capitalizedStr = new StringBuilder();
 

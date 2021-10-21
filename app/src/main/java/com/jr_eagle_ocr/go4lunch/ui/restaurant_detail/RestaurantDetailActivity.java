@@ -19,40 +19,39 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.snackbar.Snackbar;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.authentication.UserManager;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityRestaurantDetailBinding;
-import com.jr_eagle_ocr.go4lunch.databinding.RestaurantContentScrollingBinding;
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
-import com.jr_eagle_ocr.go4lunch.model.User;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.model.UserViewState;
+import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
 import com.jr_eagle_ocr.go4lunch.ui.UserAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
+/**
+ * @author jrigault
+ */
 public class RestaurantDetailActivity extends AppCompatActivity implements NavigationBarView.OnItemSelectedListener {
 
     private ActivityRestaurantDetailBinding binding;
-    private RestaurantContentScrollingBinding scrollingBinding;
 
     private FloatingActionButton fab;
-    private UserAdapter userAdapter;
 
     // Used to pass selected restaurant to detail activity
     private static final String PLACE_ID = "PLACE_ID";
+    // Used to display appropriated snackbar
+    private static final String LIKE = "LIKE";
+    private static final String CHOICE = "CHOICE";
 
-    private final UserManager userManager = UserManager.getInstance();
-    private List<User> usersJoining;
-    private final RestaurantRepository restaurantRepository = RestaurantRepository.getInstance();
+    private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
+    private List<UserViewState> joiningUsers = new ArrayList<>();
     private Restaurant restaurant;
     private String restaurantId;
     private String restaurantName;
     private String restaurantAddress;
+    private boolean isChosen;
 
-    private static final String LIKE = "LIKE";
-    private static final String CHOICE = "CHOICE";
     private ImageView restaurantLike;
     private boolean isLiked;
     private int likeVisibility;
@@ -63,15 +62,13 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
         super.onCreate(savedInstanceState);
 
         binding = ActivityRestaurantDetailBinding.inflate(getLayoutInflater());
-        View view = binding.getRoot();
-        setContentView(view);
-        scrollingBinding = RestaurantContentScrollingBinding.bind(view);
+        setContentView(binding.getRoot());
 
         setToolbar();
         setBottomNavigationView();
         setRestaurantDetails();
-        initFab();
         setRecyclerView();
+        initFab();
     }
 
     private void setToolbar() {
@@ -82,12 +79,12 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
     }
 
     private void setBottomNavigationView() {
-        scrollingBinding.navBarDetail.setOnItemSelectedListener(this);
+        binding.scrollingLyt.navBarDetail.setOnItemSelectedListener(this);
     }
 
     private void setRestaurantDetails() {
-        Map<String, Restaurant> restaurants = restaurantRepository.getRestaurants();
         restaurantId = getIntent().getStringExtra(PLACE_ID);
+        Map<String, Restaurant> restaurants = tempUserRestaurantManager.getFoundRestaurants();
         restaurant = restaurants.get(restaurantId);
         if (restaurant != null) {
             restaurantName = restaurant.getName();
@@ -97,43 +94,52 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
         binding.restaurantName.setText(restaurantName);
 
         restaurantLike = binding.restaurantLike;
-        isLiked = false; //TODO: when Firestore implemented retrieve liked restaurants and check if liked by current user
-        likeVisibility = isLiked ? View.VISIBLE : View.INVISIBLE;
-        restaurantLike.setVisibility(likeVisibility);
+        tempUserRestaurantManager.getIsLiked(restaurantId).observe(this, aBoolean -> {
+            isLiked = aBoolean;
+            likeVisibility = isLiked ? View.VISIBLE : View.INVISIBLE;
+            restaurantLike.setVisibility(likeVisibility);
+        });
 
         binding.restaurantAddress.setText(restaurantAddress);
     }
 
-    private void initFab() {
-        fab = binding.fab;
-        setFab(isChosen());
-        //Manage click on fab
-        fab.setOnClickListener(view -> {
-            boolean isChosen = !isChosen();
-            String choice = isChosen ? restaurantId : null;
-            userManager.setUserChoice(choice);
-            setFab(isChosen);
-            snackLikeChoice(CHOICE, isChosen);
-            //TODO: to be modified when Firestore implemented
-            refreshUserJoiningList();
+    private void setRecyclerView() {
+        final RecyclerView recyclerView = binding.scrollingLyt.userRecyclerview;
+        recyclerView.setHasFixedSize(true);
+        final UserAdapter userAdapter = new UserAdapter(joiningUsers, null);
+        recyclerView.setAdapter(userAdapter);
+
+        tempUserRestaurantManager.getJoiningUsers(restaurantId).observe(this, userViewStates -> {
+            if (userViewStates != null) {
+                joiningUsers = userViewStates;
+                userAdapter.updateItems(joiningUsers);
+            }
         });
     }
 
-    private void refreshUserJoiningList() {
-        usersJoining = userManager.getUsersLunchingAtGivenRestaurant(restaurantId);
-        userAdapter.setItems(new ArrayList<>(usersJoining));
-    }
-
-    private void setRecyclerView() {
-        final RecyclerView recyclerView = scrollingBinding.userRecyclerview;
-        recyclerView.setHasFixedSize(true);
-        userAdapter = new UserAdapter(usersJoining, true);
-        recyclerView.setAdapter(userAdapter);
-        refreshUserJoiningList();
-    }
-
-    private boolean isChosen() {
-        return Objects.equals(userManager.getUserChoice(), restaurantId);
+    private void initFab() {
+        fab = binding.fab;
+//        isChosen = false;
+//        setFab(false);
+        // Update fab
+        tempUserRestaurantManager.getIsChosen().observe(this, aBoolean -> {
+            if (aBoolean != null) {
+                isChosen = aBoolean;
+                setFab(isChosen);
+            }
+        });
+        //Manage click on fab
+        fab.setOnClickListener(view -> {
+            isChosen = !isChosen;
+            if (isChosen) {
+                tempUserRestaurantManager.setChosenRestaurant(restaurantId)
+                        .observe(this, aBoolean -> snackLikeChoice(CHOICE, true));
+            } else {
+                tempUserRestaurantManager.clearChosenRestaurant(restaurantId)
+                        .observe(this, aBoolean -> snackLikeChoice(CHOICE, false));
+            }
+//            setFab(isChosen);
+        });
     }
 
     private void setFab(boolean isChosen) {
@@ -143,46 +149,48 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
         fab.setImageDrawable(drawable);
     }
 
-    private void snackLikeChoice(String likeOrChoice, boolean isLikedOrChosen) {
+    private void snackLikeChoice(String likeOrChoice, boolean isLikedChosen) {
         String snackMsg;
         switch (likeOrChoice) {
             case LIKE:
-                snackMsg = isLikedOrChosen ?
+                snackMsg = isLikedChosen ?
                         restaurantName + getString(R.string.like_restaurant)
                         : restaurantName + getString(R.string.unlike_restaurant);
                 break;
             case CHOICE:
-                snackMsg = isLikedOrChosen ?
+                snackMsg = isLikedChosen ?
                         getString(R.string.choose_restaurant) + restaurantName + "."
                         : getString(R.string.unchoose_restaurant) + restaurantName + ".";
                 break;
             default:
                 return;
         }
-        Snackbar.make(binding.getRoot(), snackMsg, Snackbar.LENGTH_LONG).show();
+        Snackbar.make(binding.getRoot(), snackMsg, Snackbar.LENGTH_SHORT).show();
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.call:
+        switch (item.getOrder()) {
+            case 1:
                 String phoneNumber = restaurant.getPhoneNumber();
                 Intent dial = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", phoneNumber, null));
                 startActivity(dial);
                 return true;
-            case R.id.like:
+            case 2:
                 isLiked = !isLiked;
                 if (isLiked) {
-                    likeVisibility = View.VISIBLE;
-                    //TODO: add userId in restaurant like list
+                    tempUserRestaurantManager.setLikedRestaurant(restaurantId)
+                            .observe(this, aBoolean -> {
+                                if (aBoolean) snackLikeChoice(LIKE, isLiked);
+                            });
                 } else {
-                    likeVisibility = View.INVISIBLE;
-                    //TODO: remove userId from restaurant like list
+                    tempUserRestaurantManager.clearLikedRestaurant(restaurantId)
+                            .observe(this, aBoolean -> {
+                                if (aBoolean) snackLikeChoice(LIKE, isLiked);
+                            });
                 }
-                restaurantLike.setVisibility(likeVisibility);
-                snackLikeChoice(LIKE, isLiked);
                 return true;
-            case R.id.website:
+            case 3:
                 String websiteUrl = restaurant.getWebSiteUrl();
                 Intent browse = new Intent(Intent.ACTION_VIEW, Uri.parse(websiteUrl));
                 startActivity(browse);
@@ -192,9 +200,15 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
         }
     }
 
-    public static Intent navigate(Activity startActivity, String restaurantId) {
-        Intent intent = new Intent(startActivity, RestaurantDetailActivity.class);
+    public static Intent navigate(Activity caller, String restaurantId) {
+        Intent intent = new Intent(caller, RestaurantDetailActivity.class);
         intent.putExtra(PLACE_ID, restaurantId);
         return intent;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        binding = null;
     }
 }

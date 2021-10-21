@@ -52,7 +52,7 @@ dependencies {
     implementation 'pub.devrel:easypermissions:3.0.0'
 
     // FIREBASE
-    implementation platform('com.google.firebase:firebase-bom:28.4.1')
+    implementation platform('com.google.firebase:firebase-bom:28.4.2')
     implementation 'com.google.firebase:firebase-analytics'
 
     // FIREBASE UI
@@ -67,8 +67,12 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:18.0.0'
 
     // GOOGLE PLACES
+    //noinspection GradleDependency
     implementation 'com.google.android.libraries.places:places:2.4.0'
     implementation 'com.android.volley:volley:1.2.1'
+
+    // FIRESTORE
+    implementation 'com.google.firebase:firebase-firestore'
 
     // For tests
     testImplementation 'junit:junit:4.13.2'

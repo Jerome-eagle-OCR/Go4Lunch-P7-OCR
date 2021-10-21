@@ -2,24 +2,24 @@ package com.jr_eagle_ocr.go4lunch.model;
 
 import androidx.annotation.Nullable;
 
+/**
+ * @author jrigault
+ */
 public class User {
 
     private String mUid;
     private String mUserName;
     @Nullable
     private String mUserUrlPicture;
-    @Nullable
-    private String mChosenRestaurantId;
 
 
     public User() {
     }
 
-    public User(String uId, String userName, @Nullable String userUrlPicture) {
-        mUid = uId;
+    public User(String uid, String userName, @Nullable String userUrlPicture) {
+        mUid = uid;
         mUserName = userName;
         mUserUrlPicture = userUrlPicture;
-        mChosenRestaurantId = null;
     }
 
 
@@ -36,11 +36,9 @@ public class User {
         return mUserUrlPicture;
     }
 
-    @Nullable
-    public String getChosenRestaurantId() {
-        return mChosenRestaurantId;
+    public void setUid(String uid) {
+        mUid = uid;
     }
-
 
     public void setUserName(String userName) {
         mUserName = userName;
@@ -48,9 +46,5 @@ public class User {
 
     public void setUserUrlPicture(@Nullable String userUrlPicture) {
         mUserUrlPicture = userUrlPicture;
-    }
-
-    public void setChosenRestaurantId(@Nullable String chosenRestaurantId) {
-        mChosenRestaurantId = chosenRestaurantId;
     }
 }

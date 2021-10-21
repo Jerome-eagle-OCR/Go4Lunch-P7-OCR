@@ -5,6 +5,9 @@ import android.graphics.Bitmap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.libraries.places.api.model.OpeningHours;
 
+/**
+ * @author jrigault
+ */
 public class Restaurant {
 
     private final String mId;

@@ -111,6 +111,8 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/restaurant_content_scrolling" />
+    <include
+        android:id="@+id/scrolling_lyt"
+        layout="@layout/restaurant_content_scrolling" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

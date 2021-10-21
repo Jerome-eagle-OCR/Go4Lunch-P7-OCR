@@ -33,7 +33,6 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
@@ -49,11 +48,11 @@ import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.authentication.UserManager;
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -61,11 +60,14 @@ import java.util.Objects;
 
 import pub.devrel.easypermissions.AppSettingsDialog;
 
+/**
+ * @author jrigault
+ */
 public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
 
     private static final String TAG = MapsViewFragment.class.getSimpleName();
     private GoogleMap map;
-    private CameraPosition cameraPosition;
+//    private CameraPosition cameraPosition;
 
     // A default location (Sydney, Australia) and default zoom to use when location permission is
     // not granted.
@@ -92,11 +94,11 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     // Used for selecting the current place.
     private List<Place.Type> placeTypes;
     private FindCurrentPlaceResponse likelyPlaces;
+    ArrayList<Marker> markerArray = new ArrayList<>();
 
-    private final RestaurantRepository restaurantRepository = RestaurantRepository.getInstance();
-    private final Map<String, Restaurant> restaurants = restaurantRepository.getRestaurants();
-
-    private final UserManager userManager = UserManager.getInstance();
+    private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
+    private final Map<String, Restaurant> restaurants = tempUserRestaurantManager.getFoundRestaurants();
+    private boolean isChosen = false;
 
     @Nullable
     @Override
@@ -123,7 +125,6 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         }
-
     }
 
     @Override
@@ -136,9 +137,13 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
 
         //Go to detail activity when marker info balloon is clicked
         map.setOnInfoWindowClickListener(marker -> {
-            String restaurantId = marker.getTag().toString();
+            Object tag = marker.getTag();
+            String restaurantId = tag != null ? tag.toString() : null;
             Intent intent = RestaurantDetailActivity.navigate(requireActivity(), restaurantId);
             startActivity(intent);
+//            isChosen = !isChosen;
+//            if (isChosen) tempUserRestaurantManager.setChosenRestaurant(restaurantId);
+//            if (!isChosen) tempUserRestaurantManager.clearChosenRestaurant(restaurantId);
         });
     }
 
@@ -216,9 +221,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void showCurrentPlaces() {
-        if (map == null) {
-            return;
-        }
+        if (map == null) return;
 
         if (locationPermissionGranted) {
             // Use fields to define the data types to return.
@@ -238,27 +241,46 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                 if (task.isSuccessful() && task.getResult() != null) {
                     likelyPlaces = task.getResult();
 
-                    for (PlaceLikelihood placeLikelihood : likelyPlaces.getPlaceLikelihoods()) {
+//                    for (PlaceLikelihood placeLikelihood : likelyPlaces.getPlaceLikelihoods()) {
+                    for (int i = 0; i < 1; i++) {
+                        PlaceLikelihood placeLikelihood = likelyPlaces.getPlaceLikelihoods().get(0);
                         Place place = placeLikelihood.getPlace();
                         placeTypes = place.getTypes();
                         String placeId = place.getId();
                         if (placeId != null && placeTypes.contains(Place.Type.RESTAURANT)) {
-                            int color;
-                            // TODO: A changer pour tester tous les users
-                            if (placeId.equals(userManager.getUserChoice())) {
-                                color = getResources().getColor(android.R.color.holo_green_dark);
-                            } else {
-                                color = getResources().getColor(android.R.color.holo_orange_dark);
-                            }
-
                             // Add a marker on the map for each restaurant
-                            Marker marker =
-                                    map.addMarker(new MarkerOptions()
-                                            .position(Objects.requireNonNull(placeLikelihood.getPlace().getLatLng()))
-                                            .title(placeLikelihood.getPlace().getName())
-                                            .icon(drawableToBitmap(R.drawable.resto_pin,
-                                                    getResources().getColor(android.R.color.holo_orange_dark))));
-                            marker.setTag(place.getId());
+                            tempUserRestaurantManager.getChosenRestaurantIds().observe(this, chosenPlaceIds -> {
+                                // remove all markers
+                                for (Marker marker : markerArray) {
+                                    marker.remove();
+                                }
+                                // set color according to place chosen or not
+                                int orange = getResources().getColor(android.R.color.holo_orange_dark);
+                                int green = getResources().getColor(android.R.color.holo_green_dark);
+                                int color = orange;
+                                if (chosenPlaceIds != null) {
+                                    color = (chosenPlaceIds.contains(placeId)) ? green : orange;
+                                }
+                                // create and add marker
+                                Marker marker =
+                                        map.addMarker(new MarkerOptions()
+                                                .position(Objects.requireNonNull(placeLikelihood.getPlace().getLatLng()))
+                                                .title(placeLikelihood.getPlace().getName())
+                                                .icon(drawableToBitmap(R.drawable.resto_pin, color)));
+                                if (marker != null) marker.setTag(place.getId());
+                                // add marker to list
+                                markerArray.add(marker);
+                            });
+//                            if (hasPlaceChosen) {
+//                                Toast.makeText(this.requireContext(), "Au moins un de vos collègue a fait son choix !", Toast.LENGTH_SHORT).show();
+//                            }
+
+//                            Marker marker =
+//                                    map.addMarker(new MarkerOptions()
+//                                            .position(Objects.requireNonNull(placeLikelihood.getPlace().getLatLng()))
+//                                            .title(placeLikelihood.getPlace().getName())
+//                                            .icon(drawableToBitmap(R.drawable.resto_pin, ORANGE)));
+//                            if (marker != null) marker.setTag(place.getId());
 
                             if (!restaurants.containsKey(placeId)) {
                                 // Create new restaurant with place id
@@ -326,7 +348,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                                     }
                                 });
 
-                                restaurantRepository.addRestaurant(restaurant);
+                                tempUserRestaurantManager.addFoundRestaurant(restaurant);
                             }
                         }
                     }
@@ -342,20 +364,18 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
 
     private BitmapDescriptor drawableToBitmap(@DrawableRes int id, @ColorInt int color) {
         Drawable drawable = ResourcesCompat.getDrawable(getResources(), id, null);
-        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
-                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        DrawableCompat.setTint(drawable, color);
-        drawable.draw(canvas);
-        return BitmapDescriptorFactory.fromBitmap(bitmap);
+        Bitmap bitmap = null;
+        if (drawable != null) {
+            bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                    drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+            DrawableCompat.setTint(drawable, color);
+            drawable.draw(canvas);
+        }
+        if (bitmap != null) {
+            return BitmapDescriptorFactory.fromBitmap(bitmap);
+        }
+        return null;
     }
-
-//    @Override
-//    public boolean onMarkerClick(@NonNull Marker marker) {
-//        String restaurantId = marker.getTag().toString();
-//        Intent intent = RestaurantDetailActivity.navigate(requireActivity(), restaurantId);
-//        startActivity(intent);
-//        return false;
-//    }
 }

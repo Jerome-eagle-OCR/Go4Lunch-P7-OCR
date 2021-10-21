@@ -1,8 +1,9 @@
-package com.jr_eagle_ocr.go4lunch.authentication;
+package com.jr_eagle_ocr.go4lunch.ui.authentication;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,16 +14,17 @@ import com.firebase.ui.auth.ErrorCodes;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityAuthenticationBinding;
+import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
 import com.jr_eagle_ocr.go4lunch.ui.MainActivity;
 
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * @author jrigault
+ */
 public class AuthenticationActivity extends AppCompatActivity {
 
     // See: https://developer.android.com/training/basics/intents/result
@@ -33,6 +35,7 @@ public class AuthenticationActivity extends AppCompatActivity {
 
     private ActivityAuthenticationBinding binding;
     private View view;
+    private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,20 +80,16 @@ public class AuthenticationActivity extends AppCompatActivity {
     }
 
     // Show Snack Bar with a message
-    private void showSnackBar(String message) {
-        Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show();
-//        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    private void toastThis(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {
         IdpResponse response = result.getIdpResponse();
         if (result.getResultCode() == RESULT_OK) {
             // Successfully signed in
-            showSnackBar(getString(R.string.connection_succeed));
-            showSnackBar(response.getProviderType());
-            FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-//            User user = new User;
-//            user.setId = firebaseUser.getUid();
+            tempUserRestaurantManager.createUser().observe(this, aBoolean ->
+                    toastThis(getString(R.string.connection_succeed)));
             Intent mainActivityIntent = new Intent(this, MainActivity.class);
             startActivity(mainActivityIntent);
             finish();
@@ -101,15 +100,12 @@ public class AuthenticationActivity extends AppCompatActivity {
             // response.getError().getErrorCode() and handle the error.
             // ...
             if (response == null) {
-                showSnackBar(getString(R.string.error_authentication_canceled));
+                toastThis(getString(R.string.error_authentication_canceled));
             } else if (response.getError() != null) {
                 if (response.getError().getErrorCode() == ErrorCodes.NO_NETWORK) {
-                    showSnackBar(getString(R.string.error_no_internet));
+                    toastThis(getString(R.string.error_no_internet));
                 } else if (response.getError().getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
-                    showSnackBar(getString(R.string.error_unknown_error));
-                    Intent mainActivityIntent = new Intent(this, MainActivity.class);
-                    startActivity(mainActivityIntent);
-                    finish();
+                    toastThis(getString(R.string.error_unknown_error));
                 }
             }
         }
