@@ -176,30 +176,6 @@ public final class UserRepository {
     }
 
     /**
-     * Get all user ids in Firestore db
-     *
-     * @return a list of user ids in a livedata
-     */
-    public LiveData<List<String>> getAllUserIds() {
-        this.getUsersCollection().addSnapshotListener((value, error) -> {
-            List<String> users = new ArrayList<>();
-            if (value != null && !value.isEmpty()) {
-                List<DocumentSnapshot> documents = value.getDocuments();
-                for (DocumentSnapshot d : documents) {
-                    User user = d.toObject(User.class);
-                    if (user != null) users.add(user.getUid());
-                }
-            }
-            allUserIds.setValue(users);
-            if (error != null) {
-                allUserIds.setValue(null);
-                Log.e(TAG, "getAllUsers: ", error);
-            }
-        });
-        return allUserIds;
-    }
-
-    /**
      * Get the "users" Collection Reference
      *
      * @return the "users" Collection Reference

@@ -84,6 +84,9 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
 
     private void setRestaurantDetails() {
         restaurantId = getIntent().getStringExtra(PLACE_ID);
+        if(restaurantId == null) {
+            restaurantId = tempUserRestaurantManager.getAuthUserChosenRestaurant().getValue();
+        }
         Map<String, Restaurant> restaurants = tempUserRestaurantManager.getFoundRestaurants();
         restaurant = restaurants.get(restaurantId);
         if (restaurant != null) {

@@ -164,6 +164,16 @@ public class TempUserRestaurantManager {
     }
 
     /**
+     * Get authenticated user chosen restaurant id
+     *
+     * @return the place id of the chosen restaurant
+     */
+    public LiveData<String> getAuthUserChosenRestaurant() {
+        return restaurantRepository.getAuthUserChosenRestaurant();
+    }
+
+
+    /**
      * Get all users or only users joining at a specific restaurant,
      * depending on placeId null or not
      *
