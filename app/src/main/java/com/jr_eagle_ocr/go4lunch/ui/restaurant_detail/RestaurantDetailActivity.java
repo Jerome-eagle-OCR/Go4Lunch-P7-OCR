@@ -21,9 +21,9 @@ import com.google.android.material.snackbar.Snackbar;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityRestaurantDetailBinding;
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
-import com.jr_eagle_ocr.go4lunch.model.UserViewState;
+import com.jr_eagle_ocr.go4lunch.ui.adaptersviewstates.UserViewState;
 import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
-import com.jr_eagle_ocr.go4lunch.ui.UserAdapter;
+import com.jr_eagle_ocr.go4lunch.ui.adapters.UserAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +104,7 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
     }
 
     private void setRecyclerView() {
-        final RecyclerView recyclerView = binding.scrollingLyt.userRecyclerview;
+        final RecyclerView recyclerView = binding.scrollingLyt.joiningUserRecyclerview;
         recyclerView.setHasFixedSize(true);
         final UserAdapter userAdapter = new UserAdapter(joiningUsers, null);
         recyclerView.setAdapter(userAdapter);

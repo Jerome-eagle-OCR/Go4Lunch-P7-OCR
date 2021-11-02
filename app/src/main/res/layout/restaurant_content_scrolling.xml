@@ -32,7 +32,7 @@
             android:background="@color/ic_launcher_background" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/user_recyclerview"
+            android:id="@+id/joining_user_recyclerview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/white"

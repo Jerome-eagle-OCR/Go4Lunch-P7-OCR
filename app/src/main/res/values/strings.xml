@@ -37,12 +37,14 @@
     <string name="call">CALL</string>
     <string name="like">LIKE</string>
     <string name="website">WEBSITE</string>
-    <string name="is_joining">\u0020is joining !</string>
+    <string name="is_joining">\u0020is eating here !</string>
     <string name="is_eating_at">\u0020is eating at\u0020</string>
     <string name="like_restaurant">\u0020is now marked as liked by you.</string>
     <string name="unlike_restaurant">\u0020is not anymore marked as liked by you.</string>
     <string name="not_decided_yet">\u0020hasn\'t decided yet</string>
     <string name="unknown">Unknown</string>
-    <string name="you_lunch_here">You lunch here</string>
+    <string name="you_lunch_here">You lunch here !</string>
     <string name="restaurant_picture" translatable="false">Restaurant Picture</string>
+    <string name="you_are_eating_at">"You are eating at\u0020"</string>
+    <string name="you_have_not_decided_yet">You haven\'t decided yet</string>
 </resources>

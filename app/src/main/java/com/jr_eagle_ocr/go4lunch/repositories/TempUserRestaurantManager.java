@@ -15,7 +15,7 @@ import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
 import com.jr_eagle_ocr.go4lunch.model.User;
-import com.jr_eagle_ocr.go4lunch.model.UserViewState;
+import com.jr_eagle_ocr.go4lunch.ui.adaptersviewstates.UserViewState;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -232,53 +232,6 @@ public class TempUserRestaurantManager {
                 });
     }
 
-//    /**
-//     *
-//     */
-//    private void getByUsersThenUserViewStates() {
-//        if (this.restaurantIdMutableLivedata == null) {
-//            Map<String, User> allUsers = allUsersLiveData.getValue();
-//            restaurantRepository.getChosenRestaurantsCollection()
-//                    .get()
-//                    .addOnSuccessListener(queryDocumentSnapshots -> {
-//                        List<UserViewState> userViewStates; //To be produced to valorize livedata
-//                        Map<String, String> userChosenRestaurantMap = new HashMap<>();
-//                        List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
-//                        for (DocumentSnapshot d : documents) {
-//                            String restaurantId = d.getId();
-//                            List<String> byUserIds = restaurantRepository.getByUserIds(d);
-//                            for (int i = 0; i < byUserIds.size(); i++) {
-//                                String iUser = byUserIds.get(i);
-//                                userChosenRestaurantMap.put(iUser, restaurantId);
-//                            }
-//                        }
-//                        userViewStates = generateUserViewStates(allUsers, userChosenRestaurantMap);
-//                        joiningUserViewStatesMediatorLiveData.setValue(userViewStates);
-//                    });
-//        } else {
-//            Map<String, User> allUsers = allUsersLiveData.getValue();
-//            restaurantRepository.getChosenRestaurantsCollection()
-//                    .whereIn(PLACEID_FIELD, Collections.singletonList(this.restaurantIdMutableLivedata))
-//                    .get()
-//                    .addOnSuccessListener(queryDocumentSnapshots -> {
-//                        List<UserViewState> userViewStates; //To be produced to valorize livedata
-//                        Map<String, String> userChosenRestaurantMap = new HashMap<>();
-//                        if (!queryDocumentSnapshots.isEmpty()) {
-//                            DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
-//                            String placeId = document.getId();
-//                            if (placeId.equals(this.restaurantIdMutableLivedata.getValue())) {
-//                                List<String> byUserIds = restaurantRepository.getByUserIds(document);
-//                                for (String uid : byUserIds) {
-//                                    userChosenRestaurantMap.put(uid, placeId);
-//                                }
-//                            }
-//                        }
-//                        userViewStates = generateUserViewStates(allUsers, userChosenRestaurantMap);
-//                        joiningUserViewStatesMediatorLiveData.setValue(userViewStates);
-//                    });
-//        }
-//    }
-
     /**
      * @param displayedRestaurantId
      * @param allUsers
@@ -296,36 +249,39 @@ public class TempUserRestaurantManager {
                 String userUrlPicture = user.getUserUrlPicture();
                 String restaurantId;
                 String restaurantName = null;
-                boolean hasChosen;
-                boolean isChosen = false;
+                boolean hasChosen; // has currently iterated user chosen a restaurant ?
                 hasChosen = userChosenRestaurantMap.containsKey(uid);
                 restaurantId = hasChosen ? userChosenRestaurantMap.get(uid) : null;
+                String authUserUid = this.getCurrentFirebaseUser().getUid();
+                boolean isAuthUser = authUserUid.equals(uid); // is currently iterated user the authenticated user ?
+                boolean isChosen = false; // is restaurant displayed in detail activity chosen by authenticated user ?
                 if (displayedRestaurantId == null) {
                     appendingString = hasChosen ? R.string.is_eating_at : R.string.not_decided_yet;
                     if (restaurantId != null) {
                         Restaurant restaurant = mRestaurants.get(restaurantId);
                         if (restaurant != null) restaurantName = restaurant.getName();
                     }
+//                    if (isAuthUser) {
+//                        userName = "";
+//                        appendingString = hasChosen ? R.string.you_are_eating_at : R.string.you_have_not_decided_yet;
+//                    }
                 } else {
                     appendingString = hasChosen ? R.string.is_joining : R.string.not_decided_yet;
-                    String connectedUserUid = this.getCurrentFirebaseUser().getUid();
-                    if (connectedUserUid.equals(uid)) {
+                    if (isAuthUser) {
                         isChosen = displayedRestaurantId.equals(restaurantId);
                         isChosenMutableLiveData.setValue(isChosen);
-                        userName = "";
-                        appendingString = R.string.you_lunch_here;
+//                        userName = "";
+//                        appendingString = R.string.you_lunch_here;
                     }
                 }
                 float textAlpha = hasChosen ? 1 : 0.3f;
                 float imageAlpha = hasChosen ? 1 : 0.6f;
 
-                if (!(displayedRestaurantId != null && !hasChosen)) {
+                if (!(displayedRestaurantId != null && !hasChosen) && !(displayedRestaurantId == null && isAuthUser)) {
                     UserViewState userViewState = new UserViewState(
                             userName, appendingString, userUrlPicture,
                             restaurantId, restaurantName, textAlpha, imageAlpha);
-                    if (isChosen) {
-                        userViewStates.add(0, userViewState);
-                    } else {
+                    if (!isChosen) {
                         userViewStates.add(userViewState);
                     }
                 }

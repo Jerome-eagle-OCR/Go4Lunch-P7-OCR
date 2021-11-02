@@ -71,7 +71,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
 
     // A default location (Sydney, Australia) and default zoom to use when location permission is
     // not granted.
-    private final LatLng defaultLocation = new LatLng(-33.8523341, 151.2106085);
+    private final LatLng defaultLocation = new LatLng(48.8057, 2.1323);
     private static final int DEFAULT_ZOOM = 18;
 
     private boolean locationPermissionGranted;
@@ -105,7 +105,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_maps_view, container, false);
+        return inflater.inflate(R.layout.fragment_mapsview, container, false);
     }
 
     @Override

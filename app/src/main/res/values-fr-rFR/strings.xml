@@ -42,6 +42,8 @@
     <string name="like_restaurant">\u0020a été ajouté à vos favoris.</string>
     <string name="unlike_restaurant">\u0020a été retiré de vos favoris.</string>
     <string name="not_decided_yet">\u0020n\'a pas encore choisi</string>
-    <string name="you_lunch_here">Vous déjeuner ici</string>
+    <string name="you_lunch_here">Vous déjeunez ici !</string>
     <string name="unknown">Inconnu</string>
+    <string name="you_are_eating_at">"Vous déjeunez chez\u0020"</string>
+    <string name="you_have_not_decided_yet">Vous n\'avez pas encore choisi</string>
 </resources>
