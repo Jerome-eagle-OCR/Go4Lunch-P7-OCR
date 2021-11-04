@@ -87,8 +87,10 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
         if(restaurantId == null) {
             restaurantId = tempUserRestaurantManager.getAuthUserChosenRestaurant().getValue();
         }
-        Map<String, Restaurant> restaurants = tempUserRestaurantManager.getFoundRestaurants();
-        restaurant = restaurants.get(restaurantId);
+        Map<String, Restaurant> restaurants = tempUserRestaurantManager.getFoundRestaurantsLiveData().getValue();
+        if (restaurants != null) {
+            restaurant = restaurants.get(restaurantId);
+        }
         if (restaurant != null) {
             restaurantName = restaurant.getName();
             restaurantAddress = restaurant.getAddress();
@@ -112,7 +114,7 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
         final UserAdapter userAdapter = new UserAdapter(joiningUsers, null);
         recyclerView.setAdapter(userAdapter);
 
-        tempUserRestaurantManager.getJoiningUsers(restaurantId).observe(this, userViewStates -> {
+        tempUserRestaurantManager.getJoiningUserViewStates(restaurantId).observe(this, userViewStates -> {
             if (userViewStates != null) {
                 joiningUsers = userViewStates;
                 userAdapter.updateItems(joiningUsers);

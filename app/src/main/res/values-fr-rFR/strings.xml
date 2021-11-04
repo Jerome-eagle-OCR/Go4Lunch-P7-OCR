@@ -46,4 +46,8 @@
     <string name="unknown">Inconnu</string>
     <string name="you_are_eating_at">"Vous déjeunez chez\u0020"</string>
     <string name="you_have_not_decided_yet">Vous n\'avez pas encore choisi</string>
+    <string name="closed">Fermé</string>
+    <string name="closing_soon">Ferme bientôt</string>
+    <string name="open_until">"Ouvert jusqu'à\u0020"</string>
+    <string name="always_open">Ouvert 24h/24</string>
 </resources>

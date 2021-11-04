@@ -54,7 +54,7 @@ public class WorkmatesFragment extends Fragment implements UserAdapter.DisplayCh
         final UserAdapter userAdapter = new UserAdapter(allUsers, this);
         recyclerView.setAdapter(userAdapter);
 
-        tempUserRestaurantManager.getAllUsers().observe(getViewLifecycleOwner(), userViewStates -> {
+        tempUserRestaurantManager.getAllUserViewStates().observe(getViewLifecycleOwner(), userViewStates -> {
             allUsers = userViewStates;
             userAdapter.updateItems(allUsers);
         });
@@ -62,7 +62,7 @@ public class WorkmatesFragment extends Fragment implements UserAdapter.DisplayCh
 
     @Override
     public void onDisplayChosenRestaurant(String restaurantId) {
-        Intent intent = RestaurantDetailActivity.navigate(this.getActivity(), restaurantId);
+        Intent intent = RestaurantDetailActivity.navigate(this.requireActivity(), restaurantId);
         this.startActivity(intent);
     }
 

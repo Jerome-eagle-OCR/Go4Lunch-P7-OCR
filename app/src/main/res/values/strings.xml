@@ -47,4 +47,8 @@
     <string name="restaurant_picture" translatable="false">Restaurant Picture</string>
     <string name="you_are_eating_at">"You are eating at\u0020"</string>
     <string name="you_have_not_decided_yet">You haven\'t decided yet</string>
+    <string name="closed">Closed</string>
+    <string name="closing_soon">Closing soon</string>
+    <string name="open_until">"Open until\u0020"</string>
+    <string name="always_open">Open 24/7</string>
 </resources>

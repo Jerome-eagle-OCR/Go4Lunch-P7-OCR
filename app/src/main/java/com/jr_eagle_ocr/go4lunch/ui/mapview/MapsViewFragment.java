@@ -1,6 +1,7 @@
 package com.jr_eagle_ocr.go4lunch.ui.mapview;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -29,6 +30,7 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -52,7 +54,6 @@ import com.jr_eagle_ocr.go4lunch.model.Restaurant;
 import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -94,11 +95,9 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     // Used for selecting the current place.
     private List<Place.Type> placeTypes;
     private FindCurrentPlaceResponse likelyPlaces;
-    ArrayList<Marker> markerArray = new ArrayList<>();
 
     private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
-    private final Map<String, Restaurant> restaurants = tempUserRestaurantManager.getFoundRestaurants();
-    private boolean isChosen = false;
+    private Map<String, Restaurant> foundRestaurants;
 
     @Nullable
     @Override
@@ -111,6 +110,9 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        tempUserRestaurantManager.getFoundRestaurantsLiveData().observe(this.requireActivity(), foundRestaurants ->
+                this.foundRestaurants = foundRestaurants);
 
         // Construct a FusedLocationProviderClient.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
@@ -141,9 +143,11 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
             String restaurantId = tag != null ? tag.toString() : null;
             Intent intent = RestaurantDetailActivity.navigate(requireActivity(), restaurantId);
             startActivity(intent);
-//            isChosen = !isChosen;
-//            if (isChosen) tempUserRestaurantManager.setChosenRestaurant(restaurantId);
-//            if (!isChosen) tempUserRestaurantManager.clearChosenRestaurant(restaurantId);
+        });
+
+        map.setOnCameraMoveListener(() -> {
+            //TODO: could refresh map with
+            // refreshMap();
         });
     }
 
@@ -152,19 +156,29 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
      */
     private final ActivityResultLauncher<String> getPermissionResult = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(), new ActivityResultCallback<Boolean>() {
+                @SuppressLint("MissingPermission")
                 @Override
                 public void onActivityResult(Boolean result) {
                     if (result) {
                         locationPermissionGranted = true;
-                        updateLocationUI(); //Turn on the My Location layer and the related control on the map.
-                        getDeviceLocation(); //Get the current location of the device and set the position of the map.
-                        showCurrentPlaces(); //Get places around, filter only restaurants and add them to the list
+//                        LocationManager lm = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
+//                        lm.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 5000, 50, MapsViewFragment.this::onLocationChanged);
+                        refreshMap();
                     } else {
                         locationPermissionGranted = false;
                         new AppSettingsDialog.Builder(requireActivity()).build().show();
                     }
                 }
             });
+
+
+    /**
+     * Call methods to successively update UI, location and places
+     */
+    private void refreshMap() {
+        updateLocationUI(); //Turn on the My Location layer and the related control on the map.
+        getDeviceLocation(); //Get the current location of the device and set the position of the map.
+    }
 
     /**
      * Updates the map's UI settings based on whether the user has granted location permission.
@@ -206,6 +220,8 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                             map.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                     new LatLng(lastKnownLocation.getLatitude(),
                                             lastKnownLocation.getLongitude()), DEFAULT_ZOOM));
+                            tempUserRestaurantManager.setLocation(lastKnownLocation);
+                            showCurrentPlaces(); //Get places around, filter only restaurants and add them to the list
                         }
                     } else {
                         Log.d(TAG, "Current location is null. Using defaults.");
@@ -247,13 +263,12 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                         Place place = placeLikelihood.getPlace();
                         placeTypes = place.getTypes();
                         String placeId = place.getId();
+
                         if (placeId != null && placeTypes.contains(Place.Type.RESTAURANT)) {
-                            // Add a marker on the map for each restaurant
+                            // Add a marker on the map for each restaurant with green color for those chosen by other users
                             tempUserRestaurantManager.getChosenRestaurantIds().observe(this, chosenPlaceIds -> {
-                                // remove all markers
-                                for (Marker marker : markerArray) {
-                                    marker.remove();
-                                }
+                                // clear the map so remove all markers
+                                map.clear();
                                 // set color according to place chosen or not
                                 int orange = getResources().getColor(android.R.color.holo_orange_dark);
                                 int green = getResources().getColor(android.R.color.holo_green_dark);
@@ -268,21 +283,9 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                                                 .title(placeLikelihood.getPlace().getName())
                                                 .icon(drawableToBitmap(R.drawable.resto_pin, color)));
                                 if (marker != null) marker.setTag(place.getId());
-                                // add marker to list
-                                markerArray.add(marker);
                             });
-//                            if (hasPlaceChosen) {
-//                                Toast.makeText(this.requireContext(), "Au moins un de vos collègue a fait son choix !", Toast.LENGTH_SHORT).show();
-//                            }
 
-//                            Marker marker =
-//                                    map.addMarker(new MarkerOptions()
-//                                            .position(Objects.requireNonNull(placeLikelihood.getPlace().getLatLng()))
-//                                            .title(placeLikelihood.getPlace().getName())
-//                                            .icon(drawableToBitmap(R.drawable.resto_pin, ORANGE)));
-//                            if (marker != null) marker.setTag(place.getId());
-
-                            if (!restaurants.containsKey(placeId)) {
+                            if (foundRestaurants != null && !foundRestaurants.containsKey(placeId)) {
                                 // Create new restaurant with place id
                                 Restaurant restaurant = new Restaurant(placeId);
 
