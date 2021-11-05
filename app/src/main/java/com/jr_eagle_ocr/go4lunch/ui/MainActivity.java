@@ -2,13 +2,17 @@ package com.jr_eagle_ocr.go4lunch.ui;
 
 import static androidx.navigation.ui.NavigationUI.setupActionBarWithNavController;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -31,12 +35,15 @@ import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private AppBarConfiguration mAppBarConfiguration;
-    private NavController mNavController;
+    private static final String TAG = MainActivity.class.getSimpleName();
+    private AppBarConfiguration appBarConfiguration;
+    private NavController navController;
     private ActivityMainBinding binding;
     private View header;
 
     private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
+    private FirebaseUser firebaseUser;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,24 +52,45 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        initToolbar();
+        setToolbar();
+        setNavigationViews();
+        setDrawerHeader();
+        setAuthListener();
+    }
 
+    private void setToolbar() {
+        final Toolbar toolbar = binding.appBarMain.toolbar;
+        setSupportActionBar(toolbar);
+    }
+
+    private void setNavigationViews() {
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
-        mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_map_view, R.id.nav_list_view, R.id.nav_workmates, R.id.nav_your_lunch, R.id.nav_settings, R.id.nav_logout)
+        appBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_map_view, R.id.nav_list_view, R.id.nav_workmates, R.id.nav_your_lunch,
+                R.id.nav_settings, R.id.nav_logout, R.id.authentication)
                 .setOpenableLayout(drawer)
                 .build();
-        mNavController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        setupActionBarWithNavController(this, mNavController, mAppBarConfiguration);
-        NavigationUI.setupWithNavController(navigationView, mNavController);
+        navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        setupActionBarWithNavController(this, navController, appBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, navController);
+
+        //navigationView.bringToFront();
+
+        navigationView.setNavigationItemSelectedListener(item -> {
+            drawer.closeDrawers();
+            return onNavigationItemSelected(item);
+        });
 
         BottomNavigationView bottomBar = binding.appBarMain.navBar;
-        NavigationUI.setupWithNavController(bottomBar, mNavController);
+        NavigationUI.setupWithNavController(bottomBar, navController);
 
         header = navigationView.getHeaderView(0);
+    }
+
+    private void setDrawerHeader() {
         TextView userName = header.findViewById(R.id.drwr_user_name);
         ImageView userPhoto = header.findViewById(R.id.drwr_user_photo);
         tempUserRestaurantManager.getUserData().observe(this, user -> {
@@ -74,19 +102,25 @@ public class MainActivity extends AppCompatActivity {
                         .apply(RequestOptions.circleCropTransform())
                         .into(userPhoto);
 
-                Toast.makeText(MainActivity.this, "User details set for " + user.getUserName() + " !", Toast.LENGTH_LONG).show();
+                Log.d(TAG, "onCreate: " + "User details set for " + user.getUserName());
             }
         });
-
-        TextView userEmailTextView = header.findViewById(R.id.drwr_user_email);
-        FirebaseUser firebaseUser = tempUserRestaurantManager.getCurrentFirebaseUser();
-        String userEmail = (firebaseUser != null) ? firebaseUser.getEmail() : "";
-        userEmailTextView.setText(userEmail);
     }
 
-    private void initToolbar() {
-        final Toolbar toolbar = binding.appBarMain.toolbar;
-        setSupportActionBar(toolbar);
+    private void setAuthListener() {
+        tempUserRestaurantManager.getCurrentFirebaseUser().observe(this, firebaseUser -> {
+            this.firebaseUser = firebaseUser;
+            if (firebaseUser == null) {
+                navController.navigate(R.id.authentication);
+            }
+            setEmail();
+        });
+    }
+
+    private void setEmail() {
+        TextView userEmailTextView = header.findViewById(R.id.drwr_user_email);
+        String userEmail = (firebaseUser != null) ? firebaseUser.getEmail() : "";
+        userEmailTextView.setText(userEmail);
     }
 
     @Override
@@ -98,7 +132,27 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        return NavigationUI.navigateUp(mNavController, mAppBarConfiguration)
+        return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        boolean hasAuthUserChosen = tempUserRestaurantManager.getAuthUserChosenRestaurant().getValue() != null;
+        if (item.getItemId() == R.id.nav_your_lunch && !hasAuthUserChosen) {
+            Toast.makeText(this, "No choice made !", Toast.LENGTH_SHORT).show();
+        } else {
+            navController.navigate(item.getItemId());
+        }
+        return false;
+    }
+
+    public static Intent navigate(AppCompatActivity caller) {
+        return new Intent(caller, MainActivity.class);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        binding = null;
     }
 }

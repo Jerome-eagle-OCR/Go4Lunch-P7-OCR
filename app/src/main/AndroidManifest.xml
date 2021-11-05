@@ -7,9 +7,9 @@
          location permissions for the "MyLocation" functionality.
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<!--    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />-->
-<!--    <uses-permission android:name="android.permission.INTERNET" />-->
-<!--    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />-->
+    <!--    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />-->
+    <!--    <uses-permission android:name="android.permission.INTERNET" />-->
+    <!--    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />-->
 
     <application
         android:name=".di.Go4LunchApplication"
@@ -46,8 +46,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.MainActivity"
+            android:exported="true"
             android:theme="@style/Theme.Go4Lunch.NoActionBar" />
     </application>
 

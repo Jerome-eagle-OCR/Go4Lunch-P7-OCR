@@ -39,7 +39,7 @@ public final class RestaurantRepository {
         auth = FirebaseAuth.getInstance();
         foundRestaurantsLiveData = new MutableLiveData<>(new HashMap<>());
         chosenRestaurantIdsMutableLiveData = new MutableLiveData<>(new ArrayList<>());
-        authUserChosenRestaurantLiveData = new MutableLiveData<>();
+        authUserChosenRestaurantLiveData = new MutableLiveData<>(null);
     }
 
     public static RestaurantRepository getInstance() {

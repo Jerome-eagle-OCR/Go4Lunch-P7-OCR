@@ -36,6 +36,7 @@ public class TempUserRestaurantManager {
     private static final TempUserRestaurantManager instance = new TempUserRestaurantManager();
 
     private final UserRepository userRepository;
+    private final LiveData<FirebaseUser> currentFirebaseUserLiveData;
     private final LiveData<Map<String, User>> allUsersLiveData;
 
     private final LocationRepository locationRepository;
@@ -53,6 +54,7 @@ public class TempUserRestaurantManager {
 
     private TempUserRestaurantManager() {
         userRepository = Go4LunchApplication.getDependencyContainer().getUserRepository();
+        currentFirebaseUserLiveData = userRepository.getCurrentFirebaseUser();
         allUsersLiveData = userRepository.getAllUsers();
 
         locationRepository = Go4LunchApplication.getDependencyContainer().getLocationRepository();
@@ -97,11 +99,12 @@ public class TempUserRestaurantManager {
 
     // --- UserRepository section ---
 
+
     /**
      * @return
      */
-    public FirebaseUser getCurrentFirebaseUser() {
-        return userRepository.getCurrentFirebaseUser();
+    public LiveData<FirebaseUser> getCurrentFirebaseUser() {
+        return currentFirebaseUserLiveData;
     }
 
     /**
@@ -231,7 +234,7 @@ public class TempUserRestaurantManager {
                 boolean hasChosen; // has currently iterated user chosen a restaurant ?
                 hasChosen = userChosenRestaurantMap.containsKey(uid);
                 restaurantId = hasChosen ? userChosenRestaurantMap.get(uid) : null;
-                String authUserUid = this.getCurrentFirebaseUser().getUid();
+                String authUserUid = getCurrentFirebaseUser().getValue().getUid();
                 boolean isAuthUser = authUserUid.equals(uid); // is currently iterated user the authenticated user ?
                 boolean isChosen = false; // is restaurant displayed in detail activity chosen by authenticated user ?
                 if (displayedRestaurantId == null) {
@@ -387,23 +390,19 @@ public class TempUserRestaurantManager {
         String closingTime = "";
         boolean isWarningStyle = true;
 
-        Calendar todayCalendar = Calendar.getInstance();
-        todayCalendar.setTimeInMillis(System.currentTimeMillis());
-        int todayDay = todayCalendar.get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY;
+        Calendar nowCalendar = Calendar.getInstance();
+        int todayDay = nowCalendar.get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY;
 
         Period todayOpenings = restaurant.getOpeningHours().getPeriods().get(todayDay);
-        Log.d(TAG, "getOpeningText: " + restaurant.getOpeningHours().getWeekdayText().toString());
 
         if (todayOpenings.getClose() != null) {
             LocalTime closeTime = todayOpenings.getClose().getTime();
-            Calendar closeCalendar = Calendar.getInstance();
-            closeCalendar.set(Calendar.DAY_OF_WEEK, todayCalendar.get(Calendar.DAY_OF_WEEK));
-            closeCalendar.set(Calendar.HOUR_OF_DAY, closeTime.getHours());
-            closeCalendar.set(Calendar.MINUTE, closeTime.getMinutes());
-            int compareMn = closeCalendar.compareTo(todayCalendar) / 60000;
+            int closeMn = closeTime.getHours() * 60 + closeTime.getMinutes();
+            int nowMn = nowCalendar.get(Calendar.HOUR_OF_DAY) * 60 + nowCalendar.get(Calendar.MINUTE);
+            int compareMn = closeMn - nowMn;
             if (compareMn <= 0) {
                 openingPrefix = R.string.closed;
-            } else if (compareMn <= 60) {
+            } else if (compareMn < 60) {
                 openingPrefix = R.string.closing_soon;
             } else {
                 openingPrefix = R.string.open_until;
@@ -497,14 +496,6 @@ public class TempUserRestaurantManager {
      * @param restaurantId
      * @return
      */
-    public LiveData<Boolean> getIsLiked(String restaurantId) {
-        return restaurantRepository.getIsLikedRestaurant(restaurantId);
-    }
-
-    /**
-     * @param restaurantId
-     * @return
-     */
     public LiveData<Boolean> setLikedRestaurant(String restaurantId) {
         return restaurantRepository.setLikedRestaurant(restaurantId);
     }
@@ -515,5 +506,13 @@ public class TempUserRestaurantManager {
      */
     public LiveData<Boolean> clearLikedRestaurant(String restaurantId) {
         return restaurantRepository.clearLikedRestaurant(restaurantId);
+    }
+
+    /**
+     * @param restaurantId
+     * @return
+     */
+    public LiveData<Boolean> getIsLiked(String restaurantId) {
+        return restaurantRepository.getIsLikedRestaurant(restaurantId);
     }
 }

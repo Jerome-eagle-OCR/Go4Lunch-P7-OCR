@@ -17,7 +17,6 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.jr_eagle_ocr.go4lunch.model.User;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,16 +30,18 @@ public final class UserRepository {
     private static volatile UserRepository instance;
 
     private final FirebaseFirestore db;
+    private final MutableLiveData<FirebaseUser> currentFirebaseUserMutableLiveData;
     private final MutableLiveData<User> currentUser;
     private final MutableLiveData<Map<String, User>> allUsers;
-    private final MutableLiveData<List<String>> allUserIds;
 
 
     private UserRepository() {
         db = FirebaseFirestore.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        auth.addAuthStateListener(this::onAuthStateChanged);
+        currentFirebaseUserMutableLiveData = new MutableLiveData<>();
         currentUser = new MutableLiveData<>(null);
-        allUsers = new MutableLiveData<>();
-        allUserIds = new MutableLiveData<>();
+        allUsers = new MutableLiveData<>(null);
     }
 
     public static UserRepository getInstance() {
@@ -56,8 +57,30 @@ public final class UserRepository {
         }
     }
 
+    // --- FIREBASE ---
 
-    // TODO: to be used in logout
+    /**
+     *
+     * @param firebaseAuth
+     */
+    public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+        currentFirebaseUserMutableLiveData.setValue(firebaseAuth.getCurrentUser());
+    }
+
+    /**
+     * Get the current Firebase user
+     *
+     * @return the current Firebase user
+     */
+    public LiveData<FirebaseUser> getCurrentFirebaseUser() {
+        return currentFirebaseUserMutableLiveData;
+    }
+
+    /**
+     *
+     * @param context
+     * @return
+     */
     public Task<Void> signOut(Context context) {
         return AuthUI.getInstance().signOut(context);
     }
@@ -65,19 +88,6 @@ public final class UserRepository {
     // TODO: to be used in settings
     public Task<Void> deleteUser(Context context) {
         return AuthUI.getInstance().delete(context);
-    }
-
-
-    // --- FIREBASE ---
-
-    /**
-     * Get the current Firebase user
-     *
-     * @return the current Firebase user
-     */
-    @Nullable
-    public FirebaseUser getCurrentFirebaseUser() {
-        return FirebaseAuth.getInstance().getCurrentUser();
     }
 
 
@@ -95,7 +105,7 @@ public final class UserRepository {
     public LiveData<Boolean> createUser() {
         MutableLiveData<Boolean> isCreatedMutableLiveData = new MutableLiveData<>();
         isCreatedMutableLiveData.setValue(false);
-        FirebaseUser user = this.getCurrentFirebaseUser();
+        FirebaseUser user = getCurrentFirebaseUser().getValue();
         if (user != null) {
             String uid = user.getUid();
             String name = user.getDisplayName();
@@ -142,9 +152,9 @@ public final class UserRepository {
      */
     @Nullable
     public Task<DocumentSnapshot> getUserData() {
-        FirebaseUser currentFirebaseUser = getCurrentFirebaseUser();
-        if (currentFirebaseUser != null) {
-            String uid = currentFirebaseUser.getUid();
+        FirebaseUser firebaseUser = getCurrentFirebaseUser().getValue();
+        if (firebaseUser != null) {
+            String uid = firebaseUser.getUid();
             return this.getUsersCollection().document(uid).get();
         } else {
             return null;

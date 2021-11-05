@@ -50,4 +50,7 @@
     <string name="closing_soon">Ferme bientôt</string>
     <string name="open_until">"Ouvert jusqu'à\u0020"</string>
     <string name="always_open">Ouvert 24h/24</string>
+    <string name="you_will_be_disconnected">Vous allez être déconnecté.e</string>
+    <string name="disconnection_successful">La déconnexion a réussi !</string>
+    <string name="disconnection_unsuccessful">La déconnexion a échoué, un problème a eu lieu</string>
 </resources>

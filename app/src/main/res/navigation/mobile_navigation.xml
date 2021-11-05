@@ -40,4 +40,9 @@
         android:name="com.jr_eagle_ocr.go4lunch.ui.logout.LogOutDialogFragment"
         android:label="@string/menu_logout"
         tools:layout="@layout/fragment_logout" />
+
+    <activity
+        android:id="@+id/authentication"
+        android:name="com.jr_eagle_ocr.go4lunch.ui.authentication.AuthenticationActivity"
+        tools:layout="@layout/activity_authentication" />
 </navigation>

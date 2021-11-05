@@ -51,4 +51,7 @@
     <string name="closing_soon">Closing soon</string>
     <string name="open_until">"Open until\u0020"</string>
     <string name="always_open">Open 24/7</string>
+    <string name="you_will_be_disconnected">You will be disconnected</string>
+    <string name="disconnection_successful">Disconnection successful !</string>
+    <string name="disconnection_unsuccessful">Disconnection unsuccessful, something went wrong</string>
 </resources>
