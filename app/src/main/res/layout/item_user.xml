@@ -15,7 +15,7 @@
         android:padding="2dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:srcCompat="@drawable/default_avatar" />
+        tools:srcCompat="@tools:sample/avatars" />
 
     <TextView
         android:id="@+id/rv_user_joining"
@@ -30,6 +30,6 @@
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@+id/rv_user_photo"
         app:layout_constraintTop_toTopOf="@id/rv_user_photo"
-        tools:text="Le capitaine Haddock n'a pas encore choisi" />
+        tools:text="Toto n'a pas encore choisi" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

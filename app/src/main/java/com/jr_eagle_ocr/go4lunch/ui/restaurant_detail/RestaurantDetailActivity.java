@@ -1,7 +1,6 @@
 package com.jr_eagle_ocr.go4lunch.ui.restaurant_detail;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -86,27 +85,27 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
     private void setRestaurantDetails() {
         restaurantId = getIntent().getStringExtra(PLACE_ID);
         if (restaurantId == null) {
-            restaurantId = tempUserRestaurantManager.getAuthUserChosenRestaurant().getValue();
+            restaurantId = tempUserRestaurantManager.getCurrentUserChosenRestaurant().getValue();
         }
-            Map<String, Restaurant> restaurants = tempUserRestaurantManager.getFoundRestaurantsLiveData().getValue();
-            if (restaurants != null) {
-                restaurant = restaurants.get(restaurantId);
-            }
-            if (restaurant != null) {
-                restaurantName = restaurant.getName();
-                restaurantAddress = restaurant.getAddress();
-                binding.restaurantImage.setImageBitmap(restaurant.getPhoto());
-            }
-            binding.restaurantName.setText(restaurantName);
+        Map<String, Restaurant> restaurants = tempUserRestaurantManager.getFoundRestaurantsLiveData().getValue();
+        if (restaurants != null) {
+            restaurant = restaurants.get(restaurantId);
+        }
+        if (restaurant != null) {
+            restaurantName = restaurant.getName();
+            restaurantAddress = restaurant.getAddress();
+            binding.restaurantImage.setImageBitmap(restaurant.getPhoto());
+        }
+        binding.restaurantName.setText(restaurantName);
 
-            restaurantLike = binding.restaurantLike;
-            tempUserRestaurantManager.getIsLiked(restaurantId).observe(this, aBoolean -> {
-                isLiked = aBoolean;
-                likeVisibility = isLiked ? View.VISIBLE : View.INVISIBLE;
-                restaurantLike.setVisibility(likeVisibility);
-            });
+        restaurantLike = binding.restaurantLike;
+        tempUserRestaurantManager.getIsLiked(restaurantId).observe(this, aBoolean -> {
+            isLiked = aBoolean;
+            likeVisibility = isLiked ? View.VISIBLE : View.INVISIBLE;
+            restaurantLike.setVisibility(likeVisibility);
+        });
 
-            binding.restaurantAddress.setText(restaurantAddress);
+        binding.restaurantAddress.setText(restaurantAddress);
     }
 
     private void setRecyclerView() {

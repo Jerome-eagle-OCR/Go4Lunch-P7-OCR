@@ -4,8 +4,6 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,12 +15,8 @@ import android.view.ViewGroup;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.ColorInt;
-import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.res.ResourcesCompat;
-import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.gms.common.api.ApiException;
@@ -30,7 +24,6 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -239,6 +232,9 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     private void showCurrentPlaces() {
         if (map == null) return;
 
+        BitmapDescriptor orangeMarker = BitmapDescriptorFactory.fromResource(R.drawable.orange_marker);
+        BitmapDescriptor greenMarker = BitmapDescriptorFactory.fromResource(R.drawable.green_marker);
+
         if (locationPermissionGranted) {
             // Use fields to define the data types to return.
             List<Place.Field> placeFields = Arrays.asList(
@@ -270,18 +266,16 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                                 // clear the map so remove all markers
                                 map.clear();
                                 // set color according to place chosen or not
-                                int orange = getResources().getColor(android.R.color.holo_orange_dark);
-                                int green = getResources().getColor(android.R.color.holo_green_dark);
-                                int color = orange;
+                                BitmapDescriptor colorMarker = orangeMarker;
                                 if (chosenPlaceIds != null) {
-                                    color = (chosenPlaceIds.contains(placeId)) ? green : orange;
+                                    colorMarker = (chosenPlaceIds.contains(placeId)) ? greenMarker : orangeMarker;
                                 }
                                 // create and add marker
                                 Marker marker =
                                         map.addMarker(new MarkerOptions()
                                                 .position(Objects.requireNonNull(placeLikelihood.getPlace().getLatLng()))
                                                 .title(placeLikelihood.getPlace().getName())
-                                                .icon(drawableToBitmap(R.drawable.resto_pin, color)));
+                                                .icon(colorMarker));
                                 if (marker != null) marker.setTag(place.getId());
                             });
 
@@ -363,22 +357,5 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
             // The user has not granted permission.
             Log.i(TAG, "The user did not grant location permission.");
         }
-    }
-
-    private BitmapDescriptor drawableToBitmap(@DrawableRes int id, @ColorInt int color) {
-        Drawable drawable = ResourcesCompat.getDrawable(getResources(), id, null);
-        Bitmap bitmap = null;
-        if (drawable != null) {
-            bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
-                    drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(bitmap);
-            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-            DrawableCompat.setTint(drawable, color);
-            drawable.draw(canvas);
-        }
-        if (bitmap != null) {
-            return BitmapDescriptorFactory.fromBitmap(bitmap);
-        }
-        return null;
     }
 }

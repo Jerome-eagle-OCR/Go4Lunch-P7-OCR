@@ -29,17 +29,15 @@ public final class RestaurantRepository {
 
     private final FirebaseFirestore db;
     private final FirebaseAuth auth;
-    private final MutableLiveData<Map<String, Restaurant>> foundRestaurantsLiveData;
+    private final MutableLiveData<Map<String, Restaurant>> foundRestaurantsMutableLiveData;
     private final MutableLiveData<List<String>> chosenRestaurantIdsMutableLiveData;
-    private final MutableLiveData<String> authUserChosenRestaurantLiveData;
 
 
     private RestaurantRepository() {
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
-        foundRestaurantsLiveData = new MutableLiveData<>(new HashMap<>());
-        chosenRestaurantIdsMutableLiveData = new MutableLiveData<>(new ArrayList<>());
-        authUserChosenRestaurantLiveData = new MutableLiveData<>(null);
+        foundRestaurantsMutableLiveData = new MutableLiveData<>(new HashMap<>());
+        chosenRestaurantIdsMutableLiveData = new MutableLiveData<>();
     }
 
     public static RestaurantRepository getInstance() {
@@ -62,7 +60,7 @@ public final class RestaurantRepository {
      * @return the restaurant Map where key = placeId and value = restaurant
      */
     public LiveData<Map<String, Restaurant>> getFoundRestaurants() {
-        return foundRestaurantsLiveData;
+        return foundRestaurantsMutableLiveData;
     }
 
     /**
@@ -72,9 +70,9 @@ public final class RestaurantRepository {
      */
     public void addFoundRestaurant(Restaurant restaurant) {
         String restaurantId = restaurant.getId();
-        Map<String, Restaurant> modifiedRestaurants = foundRestaurantsLiveData.getValue();
+        Map<String, Restaurant> modifiedRestaurants = foundRestaurantsMutableLiveData.getValue();
         if (modifiedRestaurants != null) modifiedRestaurants.put(restaurantId, restaurant);
-        foundRestaurantsLiveData.setValue(modifiedRestaurants);
+        foundRestaurantsMutableLiveData.setValue(modifiedRestaurants);
     }
 
 
@@ -189,7 +187,7 @@ public final class RestaurantRepository {
                     })
                     .addOnSuccessListener(o -> {
                         isSetLiveData.setValue(true);
-                        authUserChosenRestaurantLiveData.setValue(placeId);
+//                        authUserChosenRestaurantLiveData.setValue(placeId);
                     });
         }
         return isSetLiveData;
@@ -217,19 +215,10 @@ public final class RestaurantRepository {
                     })
                     .addOnSuccessListener(o -> {
                         isClearedLiveData.setValue(true);
-                        authUserChosenRestaurantLiveData.setValue(null);
+//                        authUserChosenRestaurantLiveData.setValue(null);
                     });
         }
         return isClearedLiveData;
-    }
-
-    /**
-     * Get authenticated user chosen restaurant id
-     *
-     * @return the place id of the chosen restaurant
-     */
-    public LiveData<String> getAuthUserChosenRestaurantLiveData() {
-        return authUserChosenRestaurantLiveData;
     }
 
     /**

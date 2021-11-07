@@ -10,7 +10,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +24,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityMainBinding;
@@ -42,7 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private View header;
 
     private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
-    private FirebaseUser firebaseUser;
+    private FirebaseUser currentFirebaseUser;
+    private String currentUserChosenRestaurant;
 
 
     @Override
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         setToolbar();
         setNavigationViews();
         setDrawerHeader();
-        setAuthListener();
+        setCurrentUserListeners();
     }
 
     private void setToolbar() {
@@ -107,19 +108,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void setAuthListener() {
+    private void setCurrentUserListeners() {
         tempUserRestaurantManager.getCurrentFirebaseUser().observe(this, firebaseUser -> {
-            this.firebaseUser = firebaseUser;
+            this.currentFirebaseUser = firebaseUser;
             if (firebaseUser == null) {
                 navController.navigate(R.id.authentication);
             }
             setEmail();
         });
+        tempUserRestaurantManager.getCurrentUserChosenRestaurant().observe(this, restaurantId ->
+                currentUserChosenRestaurant = restaurantId);
     }
 
     private void setEmail() {
         TextView userEmailTextView = header.findViewById(R.id.drwr_user_email);
-        String userEmail = (firebaseUser != null) ? firebaseUser.getEmail() : "";
+        String userEmail = (currentFirebaseUser != null) ? currentFirebaseUser.getEmail() : "";
         userEmailTextView.setText(userEmail);
     }
 
@@ -137,9 +140,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        boolean hasAuthUserChosen = tempUserRestaurantManager.getAuthUserChosenRestaurant().getValue() != null;
-        if (item.getItemId() == R.id.nav_your_lunch && !hasAuthUserChosen) {
-            Toast.makeText(this, "No choice made !", Toast.LENGTH_SHORT).show();
+        boolean hasCurrentUserChosen = currentUserChosenRestaurant != null;
+        if (item.getItemId() == R.id.nav_your_lunch && !hasCurrentUserChosen) {
+            Snackbar.make(this.header, R.string.you_have_not_decided_yet, Snackbar.LENGTH_LONG).show();
         } else {
             navController.navigate(item.getItemId());
         }

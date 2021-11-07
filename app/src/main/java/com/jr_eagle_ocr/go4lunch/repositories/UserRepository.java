@@ -60,7 +60,6 @@ public final class UserRepository {
     // --- FIREBASE ---
 
     /**
-     *
      * @param firebaseAuth
      */
     public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -77,7 +76,6 @@ public final class UserRepository {
     }
 
     /**
-     *
      * @param context
      * @return
      */
@@ -105,13 +103,13 @@ public final class UserRepository {
     public LiveData<Boolean> createUser() {
         MutableLiveData<Boolean> isCreatedMutableLiveData = new MutableLiveData<>();
         isCreatedMutableLiveData.setValue(false);
-        FirebaseUser user = getCurrentFirebaseUser().getValue();
-        if (user != null) {
-            String uid = user.getUid();
-            String name = user.getDisplayName();
+        FirebaseUser firebaseUser = getCurrentFirebaseUser().getValue();
+        if (firebaseUser != null) {
+            String uid = firebaseUser.getUid();
+            String name = firebaseUser.getDisplayName();
             String urlPicture;
             String NOPHOTOURL = "https://ia801503.us.archive.org/3/items/default_avatar_202110/no_photo.png";
-            urlPicture = user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : NOPHOTOURL;
+            urlPicture = firebaseUser.getPhotoUrl() != null ? firebaseUser.getPhotoUrl().toString() : NOPHOTOURL;
 
             User userToCreate = new User(uid, name, urlPicture);
 
@@ -131,7 +129,7 @@ public final class UserRepository {
                     if (userName == null || userName.equals("")) {
                         // Compose alternative name from email
                         String nameFromEmail;
-                        String email = (Objects.equals(user.getEmail(), "")) ? null : user.getEmail();
+                        String email = (Objects.equals(firebaseUser.getEmail(), "")) ? null : firebaseUser.getEmail();
                         String unknown = "unknown"; // TODO: to set null in case email is null and VM will set R.string.unknown
                         nameFromEmail = (email != null) ? this.getNameFromEmail(email) : unknown;
                         userToCreate.setUserName(nameFromEmail);
