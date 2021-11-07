@@ -2,6 +2,7 @@ package com.jr_eagle_ocr.go4lunch.ui;
 
 import static androidx.navigation.ui.NavigationUI.setupActionBarWithNavController;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +20,11 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
@@ -28,7 +34,14 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityMainBinding;
+import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
+import com.jr_eagle_ocr.go4lunch.notification.NotificationsWorker;
 import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
+import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
+
+import java.time.Duration;
+import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jrigault
@@ -36,12 +49,16 @@ import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
+
     private AppBarConfiguration appBarConfiguration;
     private NavController navController;
     private ActivityMainBinding binding;
     private View header;
 
+    //TODO: to be both replaced by VM
     private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
+    private final GetCurrentUserChosenRestaurantId mGetCurrentUserChosenRestaurantId = Go4LunchApplication.getDependencyContainer().getUseCaseGetCurrentUserChosenRestaurantId();
+
     private FirebaseUser currentFirebaseUser;
     private String currentUserChosenRestaurant;
 
@@ -53,10 +70,40 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        setWorker();
         setToolbar();
         setNavigationViews();
         setDrawerHeader();
-        setCurrentUserListeners();
+        setCurrentUserObservers();
+    }
+
+    private void setWorker() {
+        int hour = 11;
+        int minute = 59;
+
+        Calendar calendar = Calendar.getInstance();
+        long nowMillis = calendar.getTimeInMillis();
+
+        if (calendar.get(Calendar.HOUR_OF_DAY) > hour ||
+                (calendar.get(Calendar.HOUR_OF_DAY) == hour && calendar.get(Calendar.MINUTE) + 1 >= minute)) {
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+
+        calendar.set(Calendar.SECOND, 45);
+        calendar.set(Calendar.MILLISECOND, 0);
+        long initialDelay = calendar.getTimeInMillis() - nowMillis;
+
+        Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
+        @SuppressLint({"NewApi", "LocalSuppress"}) PeriodicWorkRequest periodicWorkRequest =
+                new PeriodicWorkRequest.Builder(NotificationsWorker.class, Duration.ofDays(1))
+                        .setConstraints(constraints)
+                        .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+                        .build();
+        WorkManager workManager = WorkManager.getInstance(this);
+        workManager.enqueueUniquePeriodicWork("periodicWorkRequest", ExistingPeriodicWorkPolicy.REPLACE, periodicWorkRequest);
     }
 
     private void setToolbar() {
@@ -94,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
     private void setDrawerHeader() {
         TextView userName = header.findViewById(R.id.drwr_user_name);
         ImageView userPhoto = header.findViewById(R.id.drwr_user_photo);
-        tempUserRestaurantManager.getUserData().observe(this, user -> {
+        tempUserRestaurantManager.getCurrentUserData().observe(this, user -> {
             if (user != null) {
                 userName.setText(user.getUserName());
 
@@ -108,7 +155,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void setCurrentUserListeners() {
+    //TODO: to be replaced by VM getters
+    private void setCurrentUserObservers() {
         tempUserRestaurantManager.getCurrentFirebaseUser().observe(this, firebaseUser -> {
             this.currentFirebaseUser = firebaseUser;
             if (firebaseUser == null) {
@@ -116,8 +164,8 @@ public class MainActivity extends AppCompatActivity {
             }
             setEmail();
         });
-        tempUserRestaurantManager.getCurrentUserChosenRestaurant().observe(this, restaurantId ->
-                currentUserChosenRestaurant = restaurantId);
+        mGetCurrentUserChosenRestaurantId.getCurrentUserChosenRestaurantId()
+                .observe(this, restaurantId -> currentUserChosenRestaurant = restaurantId);
     }
 
     private void setEmail() {

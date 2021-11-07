@@ -8,9 +8,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.jr_eagle_ocr.go4lunch.model.ChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
 
 import java.util.ArrayList;
@@ -25,7 +23,7 @@ import java.util.Map;
  */
 public final class RestaurantRepository {
     private static final String TAG = "RestaurantRepository";
-    private static volatile RestaurantRepository instance;
+//    private static volatile RestaurantRepository instance;
 
     private final FirebaseFirestore db;
     private final FirebaseAuth auth;
@@ -33,38 +31,38 @@ public final class RestaurantRepository {
     private final MutableLiveData<List<String>> chosenRestaurantIdsMutableLiveData;
 
 
-    private RestaurantRepository() {
+    public RestaurantRepository() {
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
         foundRestaurantsMutableLiveData = new MutableLiveData<>(new HashMap<>());
         chosenRestaurantIdsMutableLiveData = new MutableLiveData<>();
     }
 
-    public static RestaurantRepository getInstance() {
-        RestaurantRepository result = instance;
-        if (result != null) {
-            return result;
-        }
-        synchronized (RestaurantRepository.class) {
-            if (instance == null) {
-                instance = new RestaurantRepository();
-            }
-        }
-        return instance;
-    }
+//    public static RestaurantRepository getInstance() {
+//        RestaurantRepository result = instance;
+//        if (result != null) {
+//            return result;
+//        }
+//        synchronized (RestaurantRepository.class) {
+//            if (instance == null) {
+//                instance = new RestaurantRepository();
+//            }
+//        }
+//        return instance;
+//    }
 
 
     /**
-     * Get restaurant Map found in MapsView
+     * Get restaurants found in MapsView
      *
-     * @return the restaurant Map where key = placeId and value = restaurant
+     * @return the restaurant HashMap where key = placeId and value = restaurant
      */
     public LiveData<Map<String, Restaurant>> getFoundRestaurants() {
         return foundRestaurantsMutableLiveData;
     }
 
     /**
-     * Add a restaurant to the restaurant Map
+     * Add a restaurant to the restaurant HashMap
      *
      * @param restaurant the restaurant to add
      */
@@ -81,12 +79,16 @@ public final class RestaurantRepository {
     private static final String CHOSEN_COLLECTION_NAME = "chosen_restaurants";
     private static final String LIKED_COLLECTION_NAME = "liked_restaurants";
     public static final String PLACEID_FIELD = "placeId";
+    public static final String PLACENAME_FIELD = "placeName";
+    public static final String PLACEADDRESS_FIELD = "placeAddress";
     private static final String TIMESTAMP_FIELD = "timestamp";
     public static final String BYUSERS_FIELD = "byUsers";
+    public static final String CHOSENBY_COLLECTION_NAME = "chosen_by";
     private static final String LIKEDBY_COLLECTION_NAME = "liked_by";
     public static final String USERID_FIELD = "uid";
+    public static final String USERNAME_FIELD = "userName";
 
-    // --- CHOOSE RESTAURANT ---
+    // --- CHOOSE RESTAURANT MANAGEMENT ---
 
     /**
      * Listen to Collection "chosen_restaurants" and for each restaurant document
@@ -99,18 +101,23 @@ public final class RestaurantRepository {
     public LiveData<List<String>> getChosenRestaurantIds() {
         this.getChosenRestaurantsCollection()
                 .addSnapshotListener((value, error) -> {
-                    List<String> chosenRestaurantIds = new ArrayList<>();
+                    List<String> chosenRestaurantIds = new ArrayList<>(); // Déclenche toujours un changement ?
                     if (value != null && !value.isEmpty()) {
                         List<DocumentSnapshot> documents = value.getDocuments();
                         for (DocumentSnapshot document : documents) {
-                            boolean isGood = getIsGood(document);
-                            if (isGood) {
-                                chosenRestaurantIds.add(document.getId());
-                                Log.d(TAG, "getChosenRestaurantIds: restaurantId " + document.getId() + " added");
-                            } else {
-                                document.getReference().delete();
-                                Log.d(TAG, "getChosenRestaurantIds: document " + document.getId() + " deleted");
-                            }
+                            document.getReference().collection(CHOSENBY_COLLECTION_NAME)
+                                    .get()
+                                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                                        boolean isToday = getIsToday(document);
+                                        boolean isByUsersEmpty = getIsByUsersEmpty(document);
+                                        if (isToday && !isByUsersEmpty) {
+                                            chosenRestaurantIds.add(document.getId());
+                                            Log.d(TAG, "getChosenRestaurantIds: restaurantId " + document.getId() + " added");
+                                        } else if (!isToday) {
+                                            document.getReference().delete();
+                                            Log.d(TAG, "getChosenRestaurantIds: document " + document.getId() + " deleted");
+                                        }
+                                    });
                         }
                     }
                     chosenRestaurantIdsMutableLiveData.setValue(chosenRestaurantIds);
@@ -123,13 +130,12 @@ public final class RestaurantRepository {
     }
 
     /**
-     * Determine if a restaurant document must be considered or deleted
+     * Determine if a restaurant document is today
      *
      * @param document the document to "analyse"
-     * @return true if document must be considered and false is must be deleted
+     * @return true if document is today, false if it is yesterday or older
      */
-    private boolean getIsGood(DocumentSnapshot document) {
-        // 1- Determine if document is today's
+    private boolean getIsToday(DocumentSnapshot document) {
         boolean isToday;
         Calendar calendar = Calendar.getInstance();
 
@@ -143,9 +149,16 @@ public final class RestaurantRepository {
 
         long diffTimeHour = (currentTimeMillis - documentTimeMillis) / 3600000;
         isToday = (diffTimeHour < 24) && (currentDay == documentDay);
-        Log.d(TAG, "getIsGood: timestamp = " + documentTimeMillis + "ms, dayOfTheWeek = " + documentDay + " , isToday ? " + isToday);
 
-        // 2- Determine if chosen by user array is empty
+        return isToday;
+    }
+
+    /**
+     * @param document
+     * @return
+     */
+    public boolean getIsByUsersEmpty(DocumentSnapshot document) {
+        boolean isByUsersEmpty;
         String byUsersString = "";
         Map<String, Object> data = document.getData();
         if (data != null) {
@@ -154,72 +167,70 @@ public final class RestaurantRepository {
                 byUsersString = byUsersData.toString();
             }
         }
-        boolean isByUsersEmpty = byUsersString.equals("[]");
-        Log.d(TAG, "getIsGood: byUsers = " + byUsersString + " , empty ? " + isByUsersEmpty);
+        isByUsersEmpty = byUsersString.equals("[]");
 
-        return isToday && !isByUsersEmpty;
+        return isByUsersEmpty;
     }
 
-    /**
-     * Set current user document in Collection "chosen_by"
-     * of given restaurant document (itself in Collection "chosen_restaurants")
-     *
-     * @param placeId the given restaurant id
-     * @return boolean livedata when successful
-     */
-    public LiveData<Boolean> setChosenRestaurant(String placeId) {
-        MutableLiveData<Boolean> isSetLiveData = new MutableLiveData<>();
-        String userId = auth.getUid();
-        ChosenRestaurant chosenRestaurant = new ChosenRestaurant(placeId, System.currentTimeMillis(), new ArrayList<>());
-        if (userId != null) {
-            getChosenRestaurantsCollection().document(placeId)
-                    .get()
-                    .continueWith(task -> {
-                        DocumentSnapshot document = task.getResult();
-                        if (!document.exists()) {
-                            chosenRestaurant.getByUsers().add(userId);
-                            document.getReference().set(chosenRestaurant);
-                        }
-                        if (document.exists()) {
-                            document.getReference().update(BYUSERS_FIELD, FieldValue.arrayUnion(userId));
-                        }
-                        return null;
-                    })
-                    .addOnSuccessListener(o -> {
-                        isSetLiveData.setValue(true);
-//                        authUserChosenRestaurantLiveData.setValue(placeId);
-                    });
-        }
-        return isSetLiveData;
-    }
-
-    /**
-     * Delete current user document in Collection "chosen_by"
-     * of given restaurant document (itself in Collection "chosen_restaurants")
-     *
-     * @param placeId placeId the given restaurant id
-     * @return boolean livedata when successful
-     */
-    public LiveData<Boolean> clearChosenRestaurant(String placeId) {
-        MutableLiveData<Boolean> isClearedLiveData = new MutableLiveData<>();
-        String userId = auth.getUid();
-        if (userId != null) {
-            getChosenRestaurantsCollection().document(placeId)
-                    .get()
-                    .continueWith(task -> {
-                        DocumentSnapshot document = task.getResult();
-                        if (document.exists()) {
-                            document.getReference().update(BYUSERS_FIELD, FieldValue.arrayRemove(userId));
-                        }
-                        return null;
-                    })
-                    .addOnSuccessListener(o -> {
-                        isClearedLiveData.setValue(true);
-//                        authUserChosenRestaurantLiveData.setValue(null);
-                    });
-        }
-        return isClearedLiveData;
-    }
+//    /**
+//     * Set current user document in Collection "chosen_by"
+//     * of given restaurant document (itself in Collection "chosen_restaurants")
+//     *
+//     * @param placeId the given restaurant id
+//     * @return boolean livedata when successful
+//     */
+//    public LiveData<Boolean> setChosenRestaurant(String placeId) {
+//        MutableLiveData<Boolean> isSetLiveData = new MutableLiveData<>();
+//        String userId = auth.getUid();
+//        ChosenRestaurant chosenRestaurant = new ChosenRestaurant(placeId, System.currentTimeMillis(), new ArrayList<>());
+//        if (userId != null) {
+//            getChosenRestaurantsCollection().document(placeId)
+//                    .get()
+//                    .continueWith(task -> {
+//                        DocumentSnapshot document = task.getResult();
+//                        if (!document.exists()) {
+//                            chosenRestaurant.getByUsers().add(userId);
+//                            document.getReference().set(chosenRestaurant);
+//                        }
+//                        if (document.exists()) {
+//                            document.getReference().update(BYUSERS_FIELD, FieldValue.arrayUnion(userId));
+//                        }
+//                        return null;
+//                    })
+//                    .addOnSuccessListener(o -> {
+//                        isSetLiveData.setValue(true);
+//                    });
+//        }
+//        return isSetLiveData;
+//    }
+//
+//    /**
+//     * Delete current user document in Collection "chosen_by"
+//     * of given restaurant document (itself in Collection "chosen_restaurants")
+//     *
+//     * @param placeId placeId the given restaurant id
+//     * @return boolean livedata when successful
+//     */
+//    public LiveData<Boolean> clearChosenRestaurant(String placeId) {
+//        MutableLiveData<Boolean> isClearedLiveData = new MutableLiveData<>();
+//        String userId = auth.getUid();
+//        if (userId != null) {
+//            getChosenRestaurantsCollection().document(placeId)
+//                    .get()
+//                    .continueWith(task -> {
+//                        DocumentSnapshot document = task.getResult();
+//                        if (document.exists()) {
+//                            document.getReference().update(BYUSERS_FIELD, FieldValue.arrayRemove(userId));
+//                        }
+//                        return null;
+//                    })
+//                    .addOnSuccessListener(o -> {
+//                        isClearedLiveData.setValue(true);
+//                    });
+//        }
+//        return isClearedLiveData;
+//    }
+//
 
     /**
      * Convert the byUsers field from a restaurant document to a list of user id
@@ -253,7 +264,7 @@ public final class RestaurantRepository {
     }
 
 
-    // --- LIKE RESTAURANT ---
+    // --- LIKE RESTAURANT MANAGEMENT ---
 
     /**
      * Listen if current user document exists in Collection "liked_by"

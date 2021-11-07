@@ -104,7 +104,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        tempUserRestaurantManager.getFoundRestaurantsLiveData().observe(this.requireActivity(), foundRestaurants ->
+        tempUserRestaurantManager.getFoundRestaurants().observe(this.requireActivity(), foundRestaurants ->
                 this.foundRestaurants = foundRestaurants);
 
         // Construct a FusedLocationProviderClient.

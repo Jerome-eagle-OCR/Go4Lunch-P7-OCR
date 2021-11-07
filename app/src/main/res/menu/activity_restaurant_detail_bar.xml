@@ -3,17 +3,17 @@
 
     <item
         android:id="@+id/call"
-        android:orderInCategory="1"
+        android:orderInCategory="100"
         android:icon="@drawable/ic_call"
         android:title="@string/call" />
     <item
         android:id="@+id/like"
-        android:orderInCategory="2"
+        android:orderInCategory="200"
         android:icon="@drawable/ic_star"
         android:title="@string/like" />
     <item
         android:id="@+id/website"
-        android:orderInCategory="3"
+        android:orderInCategory="300"
         android:icon="@drawable/ic_public"
         android:title="@string/website" />
 </menu>

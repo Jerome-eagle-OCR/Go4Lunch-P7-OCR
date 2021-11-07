@@ -1,38 +1,45 @@
 package com.jr_eagle_ocr.go4lunch.model;
 
-import java.util.List;
-
 /**
  * @author jrigault
  */
 public class ChosenRestaurant {
 
     private String placeId;
+    private String placeName;
+    private String placeAddress;
     private Long timestamp;
-    private List<String> byUsers;
+
 
     public ChosenRestaurant() {
     }
 
     public ChosenRestaurant(
             String placeId,
-            Long timestamp,
-            List<String> byUsers
+            String placeName,
+            String placeAddress,
+            Long timestamp
     ) {
         this.placeId = placeId;
+        this.placeName = placeName;
+        this.placeAddress = placeAddress;
         this.timestamp = timestamp;
-        this.byUsers = byUsers;
     }
+
 
     public String getPlaceId() {
         return placeId;
     }
 
-    public Long getTimestamp() {
-        return timestamp;
+    public String getPlaceName() {
+        return placeName;
     }
 
-    public List<String> getByUsers() {
-        return byUsers;
+    public String getPlaceAddress() {
+        return placeAddress;
+    }
+
+    public Long getTimestamp() {
+        return timestamp;
     }
 }

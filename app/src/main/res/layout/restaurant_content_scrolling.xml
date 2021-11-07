@@ -24,7 +24,7 @@
             app:elevation="0dp"
             app:itemIconTint="@color/orange_dark"
             app:itemTextColor="@color/orange_dark"
-            app:menu="@menu/activity_detail_bar" />
+            app:menu="@menu/activity_restaurant_detail_bar" />
 
         <View
             android:layout_width="match_parent"

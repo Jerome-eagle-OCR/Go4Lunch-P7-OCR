@@ -20,10 +20,13 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.snackbar.Snackbar;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityRestaurantDetailBinding;
+import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
 import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserAdapter;
 import com.jr_eagle_ocr.go4lunch.ui.adaptersviewstates.UserViewState;
+import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
+import com.jr_eagle_ocr.go4lunch.usecases.SetClearChosenRestaurant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +47,11 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
     private static final String LIKE = "LIKE";
     private static final String CHOICE = "CHOICE";
 
+
     private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
+    private final SetClearChosenRestaurant mSetClearChosenRestaurant = Go4LunchApplication.getDependencyContainer().getUseCaseSetClearChosenRestaurant();
+    private final GetCurrentUserChosenRestaurantId mGetCurrentUserChosenRestaurantId = Go4LunchApplication.getDependencyContainer().getUseCaseGetCurrentUserChosenRestaurantId();
+
     private List<UserViewState> joiningUsers = new ArrayList<>();
     private Restaurant restaurant;
     private String restaurantId;
@@ -68,7 +75,7 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
         setBottomNavigationView();
         setRestaurantDetails();
         setRecyclerView();
-        initFab();
+        setFab();
     }
 
     private void setToolbar() {
@@ -85,9 +92,9 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
     private void setRestaurantDetails() {
         restaurantId = getIntent().getStringExtra(PLACE_ID);
         if (restaurantId == null) {
-            restaurantId = tempUserRestaurantManager.getCurrentUserChosenRestaurant().getValue();
+            restaurantId = mGetCurrentUserChosenRestaurantId.getCurrentUserChosenRestaurantId().getValue();
         }
-        Map<String, Restaurant> restaurants = tempUserRestaurantManager.getFoundRestaurantsLiveData().getValue();
+        Map<String, Restaurant> restaurants = tempUserRestaurantManager.getFoundRestaurants().getValue();
         if (restaurants != null) {
             restaurant = restaurants.get(restaurantId);
         }
@@ -122,32 +129,29 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
         });
     }
 
-    private void initFab() {
+    private void setFab() {
         fab = binding.fab;
-//        isChosen = false;
-//        setFab(false);
         // Update fab
         tempUserRestaurantManager.getIsChosen().observe(this, aBoolean -> {
             if (aBoolean != null) {
                 isChosen = aBoolean;
-                setFab(isChosen);
+                manageFabDisplay(isChosen);
             }
         });
         //Manage click on fab
         fab.setOnClickListener(view -> {
             isChosen = !isChosen;
             if (isChosen) {
-                tempUserRestaurantManager.setChosenRestaurant(restaurantId)
+                mSetClearChosenRestaurant.setChosenRestaurant(restaurantId)
                         .observe(this, aBoolean -> snackLikeChoice(CHOICE, true));
             } else {
-                tempUserRestaurantManager.clearChosenRestaurant(restaurantId)
+                mSetClearChosenRestaurant.clearChosenRestaurant(restaurantId)
                         .observe(this, aBoolean -> snackLikeChoice(CHOICE, false));
             }
-//            setFab(isChosen);
         });
     }
 
-    private void setFab(boolean isChosen) {
+    private void manageFabDisplay(boolean isChosen) {
         Drawable drawable = isChosen ?
                 ResourcesCompat.getDrawable(getResources(), R.drawable.ic_check_circle, getTheme())
                 : ResourcesCompat.getDrawable(getResources(), R.drawable.ic_circle, getTheme());
@@ -170,18 +174,18 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
             default:
                 return;
         }
-        Snackbar.make(binding.getRoot(), snackMsg, Snackbar.LENGTH_SHORT).show();
+        Snackbar.make(binding.getRoot(), snackMsg, Snackbar.LENGTH_LONG).show();
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getOrder()) {
-            case 1:
+            case 100:
                 String phoneNumber = restaurant.getPhoneNumber();
                 Intent dial = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", phoneNumber, null));
                 startActivity(dial);
                 return true;
-            case 2:
+            case 200:
                 isLiked = !isLiked;
                 if (isLiked) {
                     tempUserRestaurantManager.setLikedRestaurant(restaurantId)
@@ -195,7 +199,7 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
                             });
                 }
                 return true;
-            case 3:
+            case 300:
                 String websiteUrl = restaurant.getWebSiteUrl();
                 Intent browse = new Intent(Intent.ACTION_VIEW, Uri.parse(websiteUrl));
                 startActivity(browse);

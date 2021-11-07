@@ -1,56 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Go4Lunch</string>
+    <string name="application_logo">Application logo</string>
+
     <!-- Facebook application ID and custom URL scheme (app ID prefixed by 'fb'). -->
     <string name="facebook_application_id" translatable="false">949848765796508</string>
     <string name="facebook_login_protocol_scheme" translatable="false">fb949848765796508</string>
-    <string name="authentication_page_wallpaper">Authentication page wallpaper</string>
-    <string name="application_logo">Application logo</string>
-    <string name="title_activity_main">MainActivity</string>
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Android STUDIO</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
-    <string name="nav_header_desc">Navigation header</string>
-    <string name="action_settings">Settings</string>
 
+    <!-- MAIN ACTIVITY -->
     <string name="fragment_map_view">J\'ai faim !</string>
     <string name="fragment_list_view">J\'ai faim !</string>
     <string name="fragment_workmates">Collègues disponibles</string>
+    <string name="action_search">Recherche</string>
+    <string name="you_have_not_decided_yet">Vous n\'avez pas encore choisi</string>
 
+    <!--  DRAWER NAVIGATION  -->
+    <string name="menu_your_lunch">VOTRE CHOIX</string>
+    <string name="menu_settings">REGLAGES</string>
+    <string name="menu_logout">DECONNEXION</string>
+
+    <!--  BOTTOM NAVIGATION  -->
     <string name="menu_map_view">Vue Carte</string>
     <string name="menu_list_view">Vue Liste</string>
     <string name="menu_workmates">Collègues</string>
 
-    <string name="menu_your_lunch">VOTRE CHOIX</string>
-    <string name="menu_settings">REGLAGES</string>
-    <string name="menu_logout">DECONNEXION</string>
+    <!--  AUTHENTICATION  -->
+    <string name="authentication_page_wallpaper">Authentication page wallpaper</string>
     <string name="connection_succeed">Authentification réussie !</string>
     <string name="error_authentication_canceled">Authentification annulée…</string>
+
+    <!--  MAPSVIEW  -->
     <string name="error_no_internet">Aucune connexion internet !</string>
     <string name="error_unknown_error">Une erreur inconnue s\'est produite…</string>
     <string name="default_info_title">Localisation par défaut</string>
     <string name="default_info_snippet">Aucun lieu trouvé car l\'autorisation pour la localisation est désactivée.</string>
     <string name="pick_place">Choisissez un lieu</string>
+
+    <!--  RESTAURANT DETAIL  -->
+    <string name="title_activity_restaurant_detail" translatable="false">RestaurantDetailActivity</string>
+    <string name="restaurant_picture" translatable="false">Restaurant Picture</string>
     <string name="choose_restaurant">Vous voulez déjeuner chez\u0020</string>
     <string name="unchoose_restaurant">Vous ne voulez plus déjeuner chez\u0020</string>
     <string name="call">APPELER</string>
     <string name="like">FAVORI</string>
     <string name="website">SITE WEB</string>
     <string name="is_joining">\u0020déjeune ici !</string>
-    <string name="is_eating_at">\u0020déjeune chez\u0020</string>
     <string name="like_restaurant">\u0020a été ajouté à vos favoris.</string>
     <string name="unlike_restaurant">\u0020a été retiré de vos favoris.</string>
+
+    <!--  WORKMATES  -->
+    <string name="is_eating_at">\u0020déjeune chez\u0020</string>
     <string name="not_decided_yet">\u0020n\'a pas encore choisi</string>
-    <string name="you_lunch_here">Vous déjeunez ici !</string>
-    <string name="unknown">Inconnu</string>
-    <string name="you_are_eating_at">"Vous déjeunez chez\u0020"</string>
-    <string name="you_have_not_decided_yet">Vous n\'avez pas encore choisi</string>
+
+    <!--  LISTVIEW  -->
     <string name="closed">Fermé</string>
     <string name="closing_soon">Ferme bientôt</string>
     <string name="open_until">"Ouvert jusqu'à\u0020"</string>
     <string name="always_open">Ouvert 24h/24</string>
+
+    <!--  LOGOUT  -->
     <string name="you_will_be_disconnected">Vous allez être déconnecté.e</string>
     <string name="disconnection_successful">La déconnexion a réussi !</string>
     <string name="disconnection_unsuccessful">La déconnexion a échoué, un problème a eu lieu</string>
+
+    <!-- NOTIFICATION SERVICE -->
+    <string name="default_notification_channel_id" translatable="false">g4l_default_channel</string>
+    <string name="you_lunch_at">"Vous déjeunez chez\u0020"</string>
+    <string name="with">"avec:\u0020"</string>
+    <string name="and">and\u0020</string>
 </resources>

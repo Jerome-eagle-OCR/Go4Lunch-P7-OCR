@@ -7,6 +7,7 @@
          location permissions for the "MyLocation" functionality.
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <!--    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />-->
     <!--    <uses-permission android:name="android.permission.INTERNET" />-->
     <!--    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />-->
@@ -19,11 +20,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Go4Lunch">
-        <activity
-            android:name=".ui.restaurant_detail.RestaurantDetailActivity"
-            android:exported="true"
-            android:label="@string/title_activity_restaurant_detail"
-            android:theme="@style/Theme.Go4Lunch.NoActionBar" />
+
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -51,6 +48,13 @@
             android:name=".ui.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Go4Lunch.NoActionBar" />
+
+        <activity
+            android:name=".ui.restaurant_detail.RestaurantDetailActivity"
+            android:exported="false"
+            android:label="@string/title_activity_restaurant_detail"
+            android:theme="@style/Theme.Go4Lunch.NoActionBar" />
+
     </application>
 
 </manifest>

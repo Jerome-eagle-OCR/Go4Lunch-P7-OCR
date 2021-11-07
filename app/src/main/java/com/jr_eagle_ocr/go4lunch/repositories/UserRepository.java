@@ -27,35 +27,35 @@ import java.util.Objects;
  */
 public final class UserRepository {
     private static final String TAG = "UserRepository";
-    private static volatile UserRepository instance;
+//    private static volatile UserRepository instance;
 
     private final FirebaseFirestore db;
     private final MutableLiveData<FirebaseUser> currentFirebaseUserMutableLiveData;
-    private final MutableLiveData<User> currentUser;
-    private final MutableLiveData<Map<String, User>> allUsers;
+    private final MutableLiveData<User> currentUserMutableLiveData;
+    private final MutableLiveData<Map<String, User>> allUsersMutableLiveData;
 
 
-    private UserRepository() {
+    public UserRepository() {
         db = FirebaseFirestore.getInstance();
         FirebaseAuth auth = FirebaseAuth.getInstance();
         auth.addAuthStateListener(this::onAuthStateChanged);
-        currentFirebaseUserMutableLiveData = new MutableLiveData<>();
-        currentUser = new MutableLiveData<>(null);
-        allUsers = new MutableLiveData<>(null);
+        currentFirebaseUserMutableLiveData = new MutableLiveData<>(auth.getCurrentUser());
+        currentUserMutableLiveData = new MutableLiveData<>(null);
+        allUsersMutableLiveData = new MutableLiveData<>(null);
     }
 
-    public static UserRepository getInstance() {
-        UserRepository result = instance;
-        if (result != null) {
-            return result;
-        }
-        synchronized (UserRepository.class) {
-            if (instance == null) {
-                instance = new UserRepository();
-            }
-            return instance;
-        }
-    }
+//    public static UserRepository getInstance() {
+//        UserRepository result = instance;
+//        if (result != null) {
+//            return result;
+//        }
+//        synchronized (UserRepository.class) {
+//            if (instance == null) {
+//                instance = new UserRepository();
+//            }
+//            return instance;
+//        }
+//    }
 
     // --- FIREBASE ---
 
@@ -134,7 +134,7 @@ public final class UserRepository {
                         nameFromEmail = (email != null) ? this.getNameFromEmail(email) : unknown;
                         userToCreate.setUserName(nameFromEmail);
                     }
-                    currentUser.setValue(userToCreate);
+                    currentUserMutableLiveData.setValue(userToCreate);
                     this.getUsersCollection().document(uid).set(userToCreate)
                             .addOnSuccessListener(unused -> isCreatedMutableLiveData.setValue(true));
                 });
@@ -174,13 +174,13 @@ public final class UserRepository {
                     if (user != null) users.put(user.getUid(), user);
                 }
             }
-            allUsers.setValue(users);
+            allUsersMutableLiveData.setValue(users);
             if (error != null) {
-                allUsers.setValue(null);
+                allUsersMutableLiveData.setValue(null);
                 Log.e(TAG, "getAllUsers: ", error);
             }
         });
-        return allUsers;
+        return allUsersMutableLiveData;
     }
 
     /**

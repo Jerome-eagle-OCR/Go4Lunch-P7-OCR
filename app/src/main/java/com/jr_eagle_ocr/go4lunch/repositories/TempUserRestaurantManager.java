@@ -1,18 +1,15 @@
 package com.jr_eagle_ocr.go4lunch.repositories;
 
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.BYUSERS_FIELD;
 import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.PLACEID_FIELD;
 
 import android.graphics.Bitmap;
 import android.location.Location;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.model.LocalTime;
 import com.google.android.libraries.places.api.model.Period;
 import com.google.firebase.auth.FirebaseUser;
@@ -23,6 +20,7 @@ import com.jr_eagle_ocr.go4lunch.model.Restaurant;
 import com.jr_eagle_ocr.go4lunch.model.User;
 import com.jr_eagle_ocr.go4lunch.ui.adaptersviewstates.RestaurantViewSate;
 import com.jr_eagle_ocr.go4lunch.ui.adaptersviewstates.UserViewState;
+import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUser;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,9 +32,12 @@ import java.util.Map;
 public class TempUserRestaurantManager {
 
     private static final String TAG = "UserRestaurantManager";
+
     private static final TempUserRestaurantManager instance = new TempUserRestaurantManager();
 
     private final UserRepository userRepository;
+    private final GetCurrentUser mGetCurrentUser;
+    private final LiveData<User> currentUserDataLiveData;
     private final LiveData<FirebaseUser> currentFirebaseUserLiveData;
     private final LiveData<Map<String, User>> allUsersLiveData;
 
@@ -46,16 +47,17 @@ public class TempUserRestaurantManager {
     private final LiveData<Map<String, Restaurant>> foundRestaurantsLiveData;
     private final LiveData<List<String>> chosenRestaurantIdsLiveData;
 
-    private final MutableLiveData<User> currentUserMutableLiveData;
-    private final MediatorLiveData<String> currentUserChosenRestaurantMediatorLiveData;
-    private final MutableLiveData<String> displayedRestaurantIdMutableLivedata;
+    private String displayedRestaurantId;
     private final MediatorLiveData<List<UserViewState>> joiningUserViewStatesMediatorLiveData;
     private final MediatorLiveData<List<UserViewState>> allUserViewStatesMediatorLiveData;
     private final MutableLiveData<Boolean> isChosenMutableLiveData;
     private final MediatorLiveData<List<RestaurantViewSate>> allRestaurantViewStatesMediatorLiveData;
 
+
     private TempUserRestaurantManager() {
         userRepository = Go4LunchApplication.getDependencyContainer().getUserRepository();
+        mGetCurrentUser = Go4LunchApplication.getDependencyContainer().getUseCaseGetCurrentUser();
+        currentUserDataLiveData = mGetCurrentUser.getCurrentUser();
         currentFirebaseUserLiveData = userRepository.getCurrentFirebaseUser();
         allUsersLiveData = userRepository.getAllUsers();
 
@@ -65,41 +67,29 @@ public class TempUserRestaurantManager {
         foundRestaurantsLiveData = restaurantRepository.getFoundRestaurants();
         chosenRestaurantIdsLiveData = restaurantRepository.getChosenRestaurantIds();
 
-        currentUserMutableLiveData = new MutableLiveData<>();
-
-        currentUserChosenRestaurantMediatorLiveData = new MediatorLiveData<>();
-        currentUserChosenRestaurantMediatorLiveData.addSource(currentFirebaseUserLiveData, firebaseUser ->
-                getCurrentUserChosenRestaurant());
-        currentUserChosenRestaurantMediatorLiveData.addSource(chosenRestaurantIdsLiveData, chosenRestaurantIds ->
-                getCurrentUserChosenRestaurant());
-
-        displayedRestaurantIdMutableLivedata = new MutableLiveData<>();
-
         joiningUserViewStatesMediatorLiveData = new MediatorLiveData<>();
         joiningUserViewStatesMediatorLiveData.addSource(allUsersLiveData, uidUserMap ->
-                getByUsersThenUserViewStatesForGivenRestaurant()
+                getJoiningUserViewStates(displayedRestaurantId)
         );
         joiningUserViewStatesMediatorLiveData.addSource(chosenRestaurantIdsLiveData, chosenRestaurantIds ->
-                getByUsersThenUserViewStatesForGivenRestaurant()
+                getJoiningUserViewStates(displayedRestaurantId)
         );
-        joiningUserViewStatesMediatorLiveData.addSource(displayedRestaurantIdMutableLivedata, restaurantId ->
-                getByUsersThenUserViewStatesForGivenRestaurant());
 
         isChosenMutableLiveData = new MutableLiveData<>();
 
         allUserViewStatesMediatorLiveData = new MediatorLiveData<>();
         allUserViewStatesMediatorLiveData.addSource(allUsersLiveData, uidUserMap ->
-                getByUsersThenUserViewStatesForAllRestaurants()
+                getAllUserViewStates()
         );
         allUserViewStatesMediatorLiveData.addSource(chosenRestaurantIdsLiveData, chosenRestaurantIds ->
-                getByUsersThenUserViewStatesForAllRestaurants()
+                getAllUserViewStates()
         );
 
         allRestaurantViewStatesMediatorLiveData = new MediatorLiveData<>();
         allRestaurantViewStatesMediatorLiveData.addSource(foundRestaurantsLiveData, foundRestaurants ->
-                getByUsersSizeThenRestaurantViewStates());
+                getAllRestaurantViewStates());
         allRestaurantViewStatesMediatorLiveData.addSource(chosenRestaurantIdsLiveData, chosenRestaurantIds ->
-                getByUsersSizeThenRestaurantViewStates());
+                getAllRestaurantViewStates());
     }
 
     public static TempUserRestaurantManager getInstance() {
@@ -108,7 +98,6 @@ public class TempUserRestaurantManager {
 
 
     // --- UserRepository section ---
-
 
     /**
      * @return
@@ -124,29 +113,8 @@ public class TempUserRestaurantManager {
         return userRepository.createUser();
     }
 
-    /**
-     * Get User Data from Firestore (livedata valorized by getUserDataFromFirestore())
-     *
-     * @return the current user in a livedata
-     */
-    public LiveData<User> getUserData() {
-        Task<DocumentSnapshot> getUserData = userRepository.getUserData();
-        if (getUserData != null) {
-            getUserData.continueWith(task ->
-                    task.getResult().getReference()
-                            .addSnapshotListener((value, error) -> {
-                                if (value != null && value.exists()) {
-                                    User currentUser = value.toObject(User.class);
-                                    currentUserMutableLiveData.setValue(currentUser);
-                                } else if (error != null) {
-                                    Log.e(TAG, "getUserDataFromFirestore: ", error);
-                                    currentUserMutableLiveData.setValue(null);
-                                }
-                            }));
-        } else {
-            currentUserMutableLiveData.setValue(null);
-        }
-        return currentUserMutableLiveData;
+    public LiveData<User> getCurrentUserData() {
+        return currentUserDataLiveData;
     }
 
 
@@ -158,13 +126,6 @@ public class TempUserRestaurantManager {
      * @return a UserViewState list in a livedata
      */
     public LiveData<List<UserViewState>> getAllUserViewStates() {
-        return allUserViewStatesMediatorLiveData;
-    }
-
-    /**
-     *
-     */
-    private void getByUsersThenUserViewStatesForAllRestaurants() {
         Map<String, User> allUsers = allUsersLiveData.getValue();
         restaurantRepository.getChosenRestaurantsCollection()
                 .get()
@@ -183,7 +144,34 @@ public class TempUserRestaurantManager {
                     userViewStates = generateUserViewStates(null, allUsers, userChosenRestaurantMap);
                     allUserViewStatesMediatorLiveData.setValue(userViewStates);
                 });
+
+        return allUserViewStatesMediatorLiveData;
     }
+
+//    /**
+//     *
+//     */
+//    private void getByUsersThenUserViewStatesForAllRestaurants() {
+//        Map<String, User> allUsers = allUsersLiveData.getValue();
+//        restaurantRepository.getChosenRestaurantsCollection()
+//                .get()
+//                .addOnSuccessListener(queryDocumentSnapshots -> {
+//                    List<UserViewState> userViewStates; //To be produced to valorize livedata
+//                    Map<String, String> userChosenRestaurantMap = new HashMap<>();
+//                    List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+//                    for (DocumentSnapshot d : documents) {
+//                        String restaurantId = d.getId();
+//                        List<String> byUserIds = restaurantRepository.getByUserIds(d);
+//                        for (int i = 0; i < byUserIds.size(); i++) {
+//                            String iUser = byUserIds.get(i);
+//                            userChosenRestaurantMap.put(iUser, restaurantId);
+//                        }
+//                    }
+//                    userViewStates = generateUserViewStates(null, allUsers, userChosenRestaurantMap);
+//                    allUserViewStatesMediatorLiveData.setValue(userViewStates);
+//                });
+//
+//    }
 
 
     /**
@@ -194,17 +182,10 @@ public class TempUserRestaurantManager {
      * @return a list of user view state to feed UserAdapter
      */
     public LiveData<List<UserViewState>> getJoiningUserViewStates(String restaurantId) {
-        displayedRestaurantIdMutableLivedata.setValue(restaurantId);
-        return joiningUserViewStatesMediatorLiveData;
-    }
-
-    /**
-     *
-     */
-    private void getByUsersThenUserViewStatesForGivenRestaurant() {
+        displayedRestaurantId = restaurantId;
         Map<String, User> allUsers = allUsersLiveData.getValue();
         restaurantRepository.getChosenRestaurantsCollection()
-                .whereIn(PLACEID_FIELD, Collections.singletonList(this.displayedRestaurantIdMutableLivedata.getValue()))
+                .whereIn(PLACEID_FIELD, Collections.singletonList(displayedRestaurantId))
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<UserViewState> userViewStates; //To be produced to valorize livedata
@@ -212,17 +193,45 @@ public class TempUserRestaurantManager {
                     if (!queryDocumentSnapshots.isEmpty()) {
                         DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
                         String placeId = document.getId();
-                        if (placeId.equals(displayedRestaurantIdMutableLivedata.getValue())) {
+                        if (placeId.equals(restaurantId)) {
                             List<String> byUserIds = restaurantRepository.getByUserIds(document);
                             for (String uid : byUserIds) {
                                 userChosenRestaurantMap.put(uid, placeId);
                             }
                         }
                     }
-                    userViewStates = generateUserViewStates(displayedRestaurantIdMutableLivedata.getValue(), allUsers, userChosenRestaurantMap);
+                    userViewStates = generateUserViewStates(displayedRestaurantId, allUsers, userChosenRestaurantMap);
                     joiningUserViewStatesMediatorLiveData.setValue(userViewStates);
                 });
+
+        return joiningUserViewStatesMediatorLiveData;
     }
+
+//    /**
+//     *
+//     */
+//    private void getByUsersThenUserViewStatesForGivenRestaurant() {
+//        Map<String, User> allUsers = allUsersLiveData.getValue();
+//        restaurantRepository.getChosenRestaurantsCollection()
+//                .whereIn(PLACEID_FIELD, Collections.singletonList(this.displayedRestaurantIdMutableLivedata.getValue()))
+//                .get()
+//                .addOnSuccessListener(queryDocumentSnapshots -> {
+//                    List<UserViewState> userViewStates; //To be produced to valorize livedata
+//                    Map<String, String> userChosenRestaurantMap = new HashMap<>();
+//                    if (!queryDocumentSnapshots.isEmpty()) {
+//                        DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
+//                        String placeId = document.getId();
+//                        if (placeId.equals(displayedRestaurantIdMutableLivedata.getValue())) {
+//                            List<String> byUserIds = restaurantRepository.getByUserIds(document);
+//                            for (String uid : byUserIds) {
+//                                userChosenRestaurantMap.put(uid, placeId);
+//                            }
+//                        }
+//                    }
+//                    userViewStates = generateUserViewStates(displayedRestaurantIdMutableLivedata.getValue(), allUsers, userChosenRestaurantMap);
+//                    joiningUserViewStatesMediatorLiveData.setValue(userViewStates);
+//                });
+//    }
 
     /**
      * @param displayedRestaurantId
@@ -250,8 +259,8 @@ public class TempUserRestaurantManager {
                 if (displayedRestaurantId == null) {
                     appendingString = hasChosen ? R.string.is_eating_at : R.string.not_decided_yet;
                     if (restaurantId != null) {
-                        if (this.getFoundRestaurantsLiveData().getValue() != null) {
-                            Restaurant restaurant = this.getFoundRestaurantsLiveData().getValue().get(restaurantId);
+                        if (this.getFoundRestaurants().getValue() != null) {
+                            Restaurant restaurant = this.getFoundRestaurants().getValue().get(restaurantId);
                             if (restaurant != null) restaurantName = restaurant.getName();
                         }
                     }
@@ -297,7 +306,7 @@ public class TempUserRestaurantManager {
      *
      * @return the restaurant Map where key = placeId and value = restaurant
      */
-    public LiveData<Map<String, Restaurant>> getFoundRestaurantsLiveData() {
+    public LiveData<Map<String, Restaurant>> getFoundRestaurants() {
         return foundRestaurantsLiveData;
     }
 
@@ -317,33 +326,49 @@ public class TempUserRestaurantManager {
      * @return
      */
     public LiveData<List<RestaurantViewSate>> getAllRestaurantViewStates() {
-        return allRestaurantViewStatesMediatorLiveData;
-    }
-
-    private void getByUsersSizeThenRestaurantViewStates() {
         restaurantRepository.getChosenRestaurantsCollection()
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<RestaurantViewSate> restaurantViewSates; //To be produced to valorize livedata
-                    Map<String, Integer> restaurantByUsersNumberMap = new HashMap<>();
+                    Map<String, Integer> restaurantByUsersCountMap = new HashMap<>();
                     List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
                     for (DocumentSnapshot d : documents) {
                         String restaurantId = d.getId();
                         List<String> byUserIds = restaurantRepository.getByUserIds(d);
-                        Integer byUsersNumber = byUserIds.size();
-                        restaurantByUsersNumberMap.put(restaurantId, byUsersNumber);
+                        Integer byUsersCount = byUserIds.size();
+                        restaurantByUsersCountMap.put(restaurantId, byUsersCount);
                     }
-                    restaurantViewSates = generateRestaurantViewStates(restaurantByUsersNumberMap);
+                    restaurantViewSates = generateRestaurantViewStates(restaurantByUsersCountMap);
                     allRestaurantViewStatesMediatorLiveData.setValue(restaurantViewSates);
                 });
+
+        return allRestaurantViewStatesMediatorLiveData;
     }
 
-    private List<RestaurantViewSate> generateRestaurantViewStates(Map<String, Integer> restaurantByUsersNumberMap) {
+//    private void getByUsersSizeThenRestaurantViewStates() {
+//        restaurantRepository.getChosenRestaurantsCollection()
+//                .get()
+//                .addOnSuccessListener(queryDocumentSnapshots -> {
+//                    List<RestaurantViewSate> restaurantViewSates; //To be produced to valorize livedata
+//                    Map<String, Integer> restaurantByUsersCountMap = new HashMap<>();
+//                    List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+//                    for (DocumentSnapshot d : documents) {
+//                        String restaurantId = d.getId();
+//                        List<String> byUserIds = restaurantRepository.getByUserIds(d);
+//                        Integer byUsersCount = byUserIds.size();
+//                        restaurantByUsersCountMap.put(restaurantId, byUsersCount);
+//                    }
+//                    restaurantViewSates = generateRestaurantViewStates(restaurantByUsersCountMap);
+//                    allRestaurantViewStatesMediatorLiveData.setValue(restaurantViewSates);
+//                });
+//    }
+
+    private List<RestaurantViewSate> generateRestaurantViewStates(Map<String, Integer> restaurantByUsersCountMap) {
         List<RestaurantViewSate> restaurantViewSates = new ArrayList<>();
         Map<String, Restaurant> foundRestaurants = foundRestaurantsLiveData.getValue();
         if (foundRestaurants != null) {
             for (Map.Entry<String, Restaurant> restaurantEntry : foundRestaurants.entrySet()) {
-                String id = restaurantEntry.getKey();
+                String placeId = restaurantEntry.getKey();
                 Restaurant restaurant = restaurantEntry.getValue();
                 // Restaurant photo
                 Bitmap photo = restaurant.getPhoto();
@@ -356,7 +381,7 @@ public class TempUserRestaurantManager {
                 if (address.endsWith(", France"))
                     address = address.substring(0, address.length() - 8);
                 // Restaurant number of joining users and text visibility
-                Object[] joinersArray = this.getJoinersArray(restaurantByUsersNumberMap, id);
+                Object[] joinersArray = this.getJoinersArray(restaurantByUsersCountMap, placeId);
                 String joiners = (String) joinersArray[0];
                 boolean isJoinersVisible = (boolean) joinersArray[1];
                 // Restaurant opening
@@ -370,7 +395,7 @@ public class TempUserRestaurantManager {
 
                 // Restaurant view state creation
                 RestaurantViewSate restaurantViewSate = new RestaurantViewSate(
-                        id, photo, name, distance, address,
+                        placeId, photo, name, distance, address,
                         joiners, isJoinersVisible, openingPrefix, closingTime, isWarningStyle, rating);
 
                 // Add view state in the list
@@ -433,7 +458,7 @@ public class TempUserRestaurantManager {
     }
 
     @NonNull
-    private Object[] getJoinersArray(Map<String, Integer> restaurantByUsersNumberMap, String id) {
+    private Object[] getJoinersArray(Map<String, Integer> restaurantByUsersNumberMap, String placeId) {
         Object[] joinersArray = new Object[2];
         String joiners;
         boolean isJoinersVisible;
@@ -441,8 +466,8 @@ public class TempUserRestaurantManager {
             joiners = "";
             isJoinersVisible = false;
         } else {
-            @SuppressWarnings("ConstantConditions") // id is a Key from entrySet so Value exists
-            int byUsersNumber = restaurantByUsersNumberMap.get(id);
+            //noinspection ConstantConditions: placeId is a Key got from entrySet in generateRestaurantViewStates()
+            int byUsersNumber = restaurantByUsersNumberMap.get(placeId);
             joiners = "(" + byUsersNumber + ")";
             isJoinersVisible = true;
         }
@@ -453,27 +478,7 @@ public class TempUserRestaurantManager {
     }
 
 
-    // --- Manage restaurant choosing ---
-
-    /**
-     * Set the chosen restaurant for the current user
-     *
-     * @param restaurantId the chosen restaurant place id
-     * @return true if setting has succeeded, false if not
-     */
-    public LiveData<Boolean> setChosenRestaurant(String restaurantId) {
-        return restaurantRepository.setChosenRestaurant(restaurantId);
-    }
-
-    /**
-     * Clear the chosen restaurant for the current user
-     *
-     * @param restaurantId the chosen restaurant place id
-     * @return true if clearing has succeeded, false if not
-     */
-    public LiveData<Boolean> clearChosenRestaurant(String restaurantId) {
-        return restaurantRepository.clearChosenRestaurant(restaurantId);
-    }
+    // --- RESTAURANT CHOOSING ---
 
     /**
      * Get all chosen restaurants all users combined
@@ -485,35 +490,27 @@ public class TempUserRestaurantManager {
     }
 
 
-    /**
-     * Get authenticated user chosen restaurant id
-     *
-     * @return the place id of the chosen restaurant
-     */
-    public LiveData<String> getCurrentUserChosenRestaurant() {
-        FirebaseUser firebaseUser = currentFirebaseUserLiveData.getValue();
-        if (firebaseUser != null) {
-            String userId = firebaseUser.getUid();
-            List<String> chosenRestaurantIds = chosenRestaurantIdsLiveData.getValue();
-            if (chosenRestaurantIds != null && !chosenRestaurantIds.isEmpty()) {
-                restaurantRepository.getChosenRestaurantsCollection()
-                        .whereIn(PLACEID_FIELD, chosenRestaurantIds)
-                        .whereArrayContains(BYUSERS_FIELD, userId)
-                        .get()
-                        .addOnSuccessListener(queryDocumentSnapshots -> {
-                            List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
-                            if (documents.isEmpty()) {
-                                currentUserChosenRestaurantMediatorLiveData.setValue(null);
-                            } else {
-                                currentUserChosenRestaurantMediatorLiveData.setValue(documents.get(0).getId());
-                            }
-                        });
-            }
-        } else {
-            currentUserChosenRestaurantMediatorLiveData.setValue(null);
-        }
-        return currentUserChosenRestaurantMediatorLiveData;
-    }
+//    /**
+//     * Get authenticated user chosen restaurant id
+//     *
+//     * @return the place id of the chosen restaurant
+//     */
+//    public LiveData<String> getCurrentUserChosenRestaurant() {
+//        FirebaseUser firebaseUser = currentFirebaseUserLiveData.getValue();
+//        String userId = firebaseUser != null ? firebaseUser.getUid() : "";
+//        restaurantRepository.getChosenRestaurantsCollection()
+//                .whereArrayContains(BYUSERS_FIELD, userId)
+//                .get()
+//                .addOnSuccessListener(queryDocumentSnapshots -> {
+//                    List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+//                    if (!documents.isEmpty()) {
+//                        currentUserChosenRestaurantIdMediatorLiveData.setValue(documents.get(0).getId());
+//                    } else {
+//                        currentUserChosenRestaurantIdMediatorLiveData.setValue(null);
+//                    }
+//                });
+//        return currentUserChosenRestaurantIdMediatorLiveData;
+//    }
 
     /**
      * @return
@@ -523,7 +520,7 @@ public class TempUserRestaurantManager {
     }
 
 
-    // --- Manage restaurant liking ---
+    // --- Manage restaurant liking --- //TODO: to be moved in RestaurantDetailVM
 
     /**
      * @param restaurantId
