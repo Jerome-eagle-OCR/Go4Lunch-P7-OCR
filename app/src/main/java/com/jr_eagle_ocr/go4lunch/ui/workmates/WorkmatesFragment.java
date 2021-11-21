@@ -1,5 +1,6 @@
 package com.jr_eagle_ocr.go4lunch.ui.workmates;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,23 +14,20 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.jr_eagle_ocr.go4lunch.databinding.FragmentWorkmatesBinding;
-import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
+import com.jr_eagle_ocr.go4lunch.ui.ViewModelFactory;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserAdapter;
-import com.jr_eagle_ocr.go4lunch.ui.adaptersviewstates.UserViewState;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author jrigault
+ * A fragment representing a list of Items.
  */
 public class WorkmatesFragment extends Fragment implements UserAdapter.DisplayChosenRestaurantListener {
 
     private FragmentWorkmatesBinding binding;
-    private WorkmatesViewModel mViewModel;
-    private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
-    private List<UserViewState> allUsers = new ArrayList<>();
+    private WorkmatesViewModel viewModel;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -42,8 +40,7 @@ public class WorkmatesFragment extends Fragment implements UserAdapter.DisplayCh
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        mViewModel = new ViewModelProvider(this).get(WorkmatesViewModel.class);
+        viewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(WorkmatesViewModel.class);
 
         setRecyclerView();
     }
@@ -51,18 +48,17 @@ public class WorkmatesFragment extends Fragment implements UserAdapter.DisplayCh
     private void setRecyclerView() {
         final RecyclerView recyclerView = binding.workmatesUserRecyclerview;
         recyclerView.setHasFixedSize(true);
-        final UserAdapter userAdapter = new UserAdapter(allUsers, this);
+        final UserAdapter userAdapter = new UserAdapter(new ArrayList<>(), this);
         recyclerView.setAdapter(userAdapter);
 
-        tempUserRestaurantManager.getAllUserViewStates().observe(getViewLifecycleOwner(), userViewStates -> {
-            allUsers = userViewStates;
-            userAdapter.updateItems(allUsers);
+        viewModel.getAllUserViewStates().observe(getViewLifecycleOwner(), allUsers -> {
+            if (allUsers != null) userAdapter.updateItems(allUsers);
         });
     }
 
     @Override
     public void onDisplayChosenRestaurant(String restaurantId) {
-        Intent intent = RestaurantDetailActivity.navigate(this.requireActivity(), restaurantId);
+        Intent intent = RestaurantDetailActivity.navigate((Activity) this.requireContext(), restaurantId);
         this.startActivity(intent);
     }
 

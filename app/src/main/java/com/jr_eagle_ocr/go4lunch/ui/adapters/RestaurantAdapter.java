@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ItemRestaurantBinding;
-import com.jr_eagle_ocr.go4lunch.ui.adaptersviewstates.RestaurantViewSate;
+import com.jr_eagle_ocr.go4lunch.ui.viewstates.RestaurantViewSate;
 
 import java.util.List;
 

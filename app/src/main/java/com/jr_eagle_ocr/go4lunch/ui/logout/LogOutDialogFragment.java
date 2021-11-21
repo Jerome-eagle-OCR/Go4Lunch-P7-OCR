@@ -16,17 +16,17 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.snackbar.Snackbar;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.FragmentLogoutBinding;
+import com.jr_eagle_ocr.go4lunch.ui.ViewModelFactory;
 
 
 public class LogOutDialogFragment extends DialogFragment {
-
     private LogOutViewModel viewModel;
     private FragmentLogoutBinding binding;
 
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        viewModel = new ViewModelProvider(this).get(LogOutViewModel.class);
+        viewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(LogOutViewModel.class);
         binding = FragmentLogoutBinding.inflate(getLayoutInflater());
 
         return new AlertDialog.Builder(requireContext())
@@ -37,7 +37,6 @@ public class LogOutDialogFragment extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
         final TextView textView = binding.textLogout;
         textView.setText(getString(R.string.you_will_be_disconnected));
 
@@ -46,14 +45,8 @@ public class LogOutDialogFragment extends DialogFragment {
             dismiss();
         });
 
-        viewModel.isLoggedOut().observe(this, aBoolean -> {
-            String message;
-            if (aBoolean) {
-                message = getString(R.string.disconnection_successful);
-                dismiss();
-            } else {
-                message = getString(R.string.disconnection_unsuccessful);
-            }
+        viewModel.signOutResult().observe(this, signOutResult -> {
+            String message = getString(signOutResult);
             Snackbar.make(requireView(), message, Snackbar.LENGTH_SHORT).show();
         });
 

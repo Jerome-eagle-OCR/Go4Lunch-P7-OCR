@@ -8,7 +8,7 @@ public class ChosenRestaurant {
     private String placeId;
     private String placeName;
     private String placeAddress;
-    private Long timestamp;
+    private String timestamp;
 
 
     public ChosenRestaurant() {
@@ -18,7 +18,7 @@ public class ChosenRestaurant {
             String placeId,
             String placeName,
             String placeAddress,
-            Long timestamp
+            String timestamp
     ) {
         this.placeId = placeId;
         this.placeName = placeName;
@@ -39,7 +39,7 @@ public class ChosenRestaurant {
         return placeAddress;
     }
 
-    public Long getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 }

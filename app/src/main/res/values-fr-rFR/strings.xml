@@ -45,8 +45,8 @@
     <string name="like">FAVORI</string>
     <string name="website">SITE WEB</string>
     <string name="is_joining">\u0020déjeune ici !</string>
-    <string name="like_restaurant">\u0020a été ajouté à vos favoris.</string>
-    <string name="unlike_restaurant">\u0020a été retiré de vos favoris.</string>
+    <string name="like_restaurant">Vous aimez\u0020</string>
+    <string name="unlike_restaurant">Vous n\'aimez plus\u0020</string>
 
     <!--  WORKMATES  -->
     <string name="is_eating_at">\u0020déjeune chez\u0020</string>
@@ -61,7 +61,7 @@
     <!--  LOGOUT  -->
     <string name="you_will_be_disconnected">Vous allez être déconnecté.e</string>
     <string name="disconnection_successful">La déconnexion a réussi !</string>
-    <string name="disconnection_unsuccessful">La déconnexion a échoué, un problème a eu lieu</string>
+    <string name="disconnection_unsuccessful">La déconnexion a échoué, un problème a eu lieu…</string>
 
     <!-- NOTIFICATION SERVICE -->
     <string name="default_notification_channel_id" translatable="false">g4l_default_channel</string>

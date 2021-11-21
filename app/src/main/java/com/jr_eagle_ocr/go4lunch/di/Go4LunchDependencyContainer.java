@@ -5,44 +5,62 @@ import android.app.Application;
 import com.jr_eagle_ocr.go4lunch.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUser;
 import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.usecases.GetNotificationLinesUseCase;
+import com.jr_eagle_ocr.go4lunch.usecases.IsLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.usecases.GetRestaurantViewStates;
+import com.jr_eagle_ocr.go4lunch.usecases.GetUserViewStates;
 import com.jr_eagle_ocr.go4lunch.usecases.SetClearChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.usecases.SetClearLikedRestaurant;
 
 /**
  * @author jrigault
  */
 public class Go4LunchDependencyContainer {
 
+    private final Application context;
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
     private final RestaurantRepository restaurantRepository;
-    private final GetCurrentUser getCurrentUser;
+    private final GetUserViewStates getUserViewStates;
+    private final GetRestaurantViewStates getRestaurantViewStates;
     private final SetClearChosenRestaurant setClearChosenRestaurant;
     private final GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId;
-    private final GetNotificationLinesUseCase getNotificationLinesUseCase;
+    private final SetClearLikedRestaurant setClearLikedRestaurant;
+    private final IsLikedRestaurant isLikedRestaurant;
 
     public Go4LunchDependencyContainer(Application context) {
+        this.context = context;
         userRepository = new UserRepository();
         locationRepository = new LocationRepository();
         restaurantRepository = new RestaurantRepository();
 
-        getCurrentUser =
-                new GetCurrentUser(
+        getUserViewStates =
+                new GetUserViewStates(
                         userRepository);
+
+        getRestaurantViewStates =
+                new GetRestaurantViewStates(
+                        locationRepository, restaurantRepository);
 
         setClearChosenRestaurant =
                 new SetClearChosenRestaurant(
-                        restaurantRepository, getCurrentUser);
+                        userRepository, restaurantRepository);
 
         getCurrentUserChosenRestaurantId =
                 new GetCurrentUserChosenRestaurantId(
                         userRepository, restaurantRepository);
 
-        getNotificationLinesUseCase =
-                new GetNotificationLinesUseCase(
-                        context, userRepository, restaurantRepository, getCurrentUserChosenRestaurantId);
+        setClearLikedRestaurant =
+                new SetClearLikedRestaurant(
+                        userRepository, restaurantRepository);
+
+
+        isLikedRestaurant =
+                new IsLikedRestaurant(userRepository, restaurantRepository);
+    }
+
+    public Application getContext() {
+        return context;
     }
 
     public UserRepository getUserRepository() {
@@ -57,19 +75,27 @@ public class Go4LunchDependencyContainer {
         return restaurantRepository;
     }
 
-    public GetCurrentUser getUseCaseGetCurrentUser() {
-        return getCurrentUser;
+    public GetUserViewStates getUserViewStates() {
+        return getUserViewStates;
     }
 
-    public SetClearChosenRestaurant getUseCaseSetClearChosenRestaurant() {
+    public GetRestaurantViewStates getRestaurantViewStates() {
+        return getRestaurantViewStates;
+    }
+
+    public SetClearChosenRestaurant setClearChosenRestaurant() {
         return setClearChosenRestaurant;
     }
 
-    public synchronized GetCurrentUserChosenRestaurantId getUseCaseGetCurrentUserChosenRestaurantId() {
+    public GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId() {
         return getCurrentUserChosenRestaurantId;
     }
 
-    public GetNotificationLinesUseCase getGetNotificationTextUseCase() {
-        return getNotificationLinesUseCase;
+    public SetClearLikedRestaurant setClearLikedRestaurant() {
+        return setClearLikedRestaurant;
+    }
+
+    public IsLikedRestaurant getIsLikedRestaurant() {
+        return isLikedRestaurant;
     }
 }

@@ -12,7 +12,9 @@ public class Go4LunchApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        sDependencyContainer = new Go4LunchDependencyContainer(this);
+        if (sDependencyContainer == null) {
+            sDependencyContainer = new Go4LunchDependencyContainer(this);
+        }
     }
 
     public static Go4LunchDependencyContainer getDependencyContainer() {

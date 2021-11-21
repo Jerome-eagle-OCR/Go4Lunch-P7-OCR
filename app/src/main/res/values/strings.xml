@@ -44,8 +44,8 @@
     <string name="like">LIKE</string>
     <string name="website">WEBSITE</string>
     <string name="is_joining">\u0020is eating here !</string>
-    <string name="like_restaurant">\u0020is now marked as liked by you.</string>
-    <string name="unlike_restaurant">\u0020is not anymore marked as liked by you.</string>
+    <string name="like_restaurant">You like\u0020</string>
+    <string name="unlike_restaurant">You don\'t anymore like\u0020</string>
 
     <!--  WORKMATES  -->
     <string name="is_eating_at">\u0020is eating at\u0020</string>
@@ -60,7 +60,7 @@
     <!--  LOGOUT  -->
     <string name="you_will_be_disconnected">You will be disconnected</string>
     <string name="disconnection_successful">Disconnection successful !</string>
-    <string name="disconnection_unsuccessful">Disconnection unsuccessful, something went wrong</string>
+    <string name="disconnection_unsuccessful">Disconnection unsuccessful, something went wrong…</string>
 
     <!-- NOTIFICATION SERVICE -->
     <string name="default_notification_channel_id" translatable="false">g4l_default_channel</string>

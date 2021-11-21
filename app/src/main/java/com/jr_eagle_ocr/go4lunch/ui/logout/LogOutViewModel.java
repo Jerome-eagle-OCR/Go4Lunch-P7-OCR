@@ -9,19 +9,18 @@ import androidx.lifecycle.ViewModel;
 
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
-import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
+import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 
 public class LogOutViewModel extends ViewModel {
-
     private static final String TAG = LogOutViewModel.class.getSimpleName();
     private final UserRepository userRepository;
 
-    private final MutableLiveData<Boolean> isLoggedOutMutableLiveData;
+    private final MutableLiveData<Integer> signOutResultMutableLiveData;
 
-    public LogOutViewModel() {
-        userRepository = Go4LunchApplication.getDependencyContainer().getUserRepository();
-        isLoggedOutMutableLiveData = new MutableLiveData<>();
+    public LogOutViewModel(UserRepository userRepository) {
+        this.userRepository = userRepository;
+        signOutResultMutableLiveData = new MutableLiveData<>();
     }
 
     public void signOut(Context context) {
@@ -29,15 +28,15 @@ public class LogOutViewModel extends ViewModel {
         if (firebaseUser != null) {
             Task<Void> task = userRepository.signOut(context);
             task.addOnSuccessListener(unused -> {
-                isLoggedOutMutableLiveData.setValue(true);
+                signOutResultMutableLiveData.setValue(R.string.disconnection_successful);
             }).addOnFailureListener(e -> {
-                isLoggedOutMutableLiveData.setValue(false);
+                signOutResultMutableLiveData.setValue(R.string.disconnection_unsuccessful);
                 Log.e(TAG, "signOut: ", e);
             });
         }
     }
 
-    public LiveData<Boolean> isLoggedOut() {
-        return isLoggedOutMutableLiveData;
+    public LiveData<Integer> signOutResult() {
+        return signOutResultMutableLiveData;
     }
 }

@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.ui.adaptersviewstates;
+package com.jr_eagle_ocr.go4lunch.ui.viewstates;
 
 import android.graphics.Bitmap;
 
@@ -8,7 +8,6 @@ import androidx.annotation.Nullable;
  * @author jrigault
  */
 public class RestaurantViewSate {
-
     private final String id;
     @Nullable
     private final Bitmap photo;
@@ -91,5 +90,22 @@ public class RestaurantViewSate {
 
     public float getRating() {
         return rating;
+    }
+
+    @Override
+    public String toString() {
+        return "RestaurantViewSate{" +
+                "id='" + id + '\'' +
+                ", photo?=" + (photo != null) +
+                ", name='" + name + '\'' +
+                ", distance='" + distance + '\'' +
+                ", address='" + address + '\'' +
+                ", joiners='" + joiners + '\'' +
+                ", isJoinersVisible=" + isJoinersVisible +
+                ", openingPrefix=" + openingPrefix +
+                ", closingTime='" + closingTime + '\'' +
+                ", isWarningStyle=" + isWarningStyle +
+                ", rating=" + rating +
+                '}';
     }
 }

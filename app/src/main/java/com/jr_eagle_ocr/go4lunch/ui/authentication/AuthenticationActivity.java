@@ -2,7 +2,6 @@ package com.jr_eagle_ocr.go4lunch.ui.authentication;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,7 +17,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityAuthenticationBinding;
-import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
+import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
+import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.ui.MainActivity;
 
 import java.util.Arrays;
@@ -36,16 +36,14 @@ public class AuthenticationActivity extends AppCompatActivity {
     );
 
     private ActivityAuthenticationBinding binding;
-    private View view;
-    private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
+    private final UserRepository userRepository = Go4LunchApplication.getDependencyContainer().getUserRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         binding = ActivityAuthenticationBinding.inflate(getLayoutInflater());
-        view = binding.getRoot();
-        setContentView(view);
+        setContentView(binding.getRoot());
 
         initAuthentication();
     }
@@ -88,9 +86,9 @@ public class AuthenticationActivity extends AppCompatActivity {
     }
 
     private void createUserAndGoToMainActivity() {
-        tempUserRestaurantManager.createUser().observe(this, aBoolean -> {
+        userRepository.createUser().observe(this, aBoolean -> {
             toastThis(getString(R.string.connection_succeed));
-            Intent intent = MainActivity.navigate(this);
+            Intent intent = MainActivity.navigate(this, false);
             startActivity(intent);
             finish();
         });
@@ -128,6 +126,5 @@ public class AuthenticationActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         binding = null;
-        tempUserRestaurantManager.createUser().removeObservers(this);
     }
 }

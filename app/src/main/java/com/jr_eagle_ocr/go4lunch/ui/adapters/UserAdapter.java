@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.jr_eagle_ocr.go4lunch.databinding.ItemUserBinding;
-import com.jr_eagle_ocr.go4lunch.ui.adaptersviewstates.UserViewState;
+import com.jr_eagle_ocr.go4lunch.ui.viewstates.UserViewState;
 
 import java.util.List;
 

@@ -18,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -44,7 +45,7 @@ import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
-import com.jr_eagle_ocr.go4lunch.repositories.TempUserRestaurantManager;
+import com.jr_eagle_ocr.go4lunch.ui.ViewModelFactory;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
 
 import java.util.Arrays;
@@ -89,7 +90,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     private List<Place.Type> placeTypes;
     private FindCurrentPlaceResponse likelyPlaces;
 
-    private final TempUserRestaurantManager tempUserRestaurantManager = TempUserRestaurantManager.getInstance();
+    private MapsViewViewModel viewViewModel;
     private Map<String, Restaurant> foundRestaurants;
 
     @Nullable
@@ -103,8 +104,9 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        viewViewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(MapsViewViewModel.class);
 
-        tempUserRestaurantManager.getFoundRestaurants().observe(this.requireActivity(), foundRestaurants ->
+        viewViewModel.getFoundRestaurants().observe(getViewLifecycleOwner(), foundRestaurants ->
                 this.foundRestaurants = foundRestaurants);
 
         // Construct a FusedLocationProviderClient.
@@ -213,7 +215,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                             map.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                     new LatLng(lastKnownLocation.getLatitude(),
                                             lastKnownLocation.getLongitude()), DEFAULT_ZOOM));
-                            tempUserRestaurantManager.setLocation(lastKnownLocation);
+                            viewViewModel.setLocation(lastKnownLocation); //TODO: use location repo
                             showCurrentPlaces(); //Get places around, filter only restaurants and add them to the list
                         }
                     } else {
@@ -262,7 +264,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
 
                         if (placeId != null && placeTypes.contains(Place.Type.RESTAURANT)) {
                             // Add a marker on the map for each restaurant with green color for those chosen by other users
-                            tempUserRestaurantManager.getChosenRestaurantIds().observe(this, chosenPlaceIds -> {
+                            viewViewModel.getChosenRestaurantIds().observe(this, chosenPlaceIds -> {
                                 // clear the map so remove all markers
                                 map.clear();
                                 // set color according to place chosen or not
@@ -345,7 +347,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                                     }
                                 });
 
-                                tempUserRestaurantManager.addFoundRestaurant(restaurant);
+                                viewViewModel.addFoundRestaurant(restaurant);
                             }
                         }
                     }

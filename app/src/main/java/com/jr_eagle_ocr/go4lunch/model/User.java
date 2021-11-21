@@ -7,44 +7,59 @@ import androidx.annotation.Nullable;
  */
 public class User {
 
-    private String mUid;
-    private String mUserName;
+    private String uid;
+    private String userName;
+    private String userEmail;
     @Nullable
-    private String mUserUrlPicture;
+    private String userUrlPicture;
 
 
     public User() {
     }
 
-    public User(String uid, String userName, @Nullable String userUrlPicture) {
-        mUid = uid;
-        mUserName = userName;
-        mUserUrlPicture = userUrlPicture;
+    public User(
+            String uid,
+            String userName,
+            String userEmail,
+            @Nullable String userUrlPicture
+    ) {
+        this.uid = uid;
+        this.userName = userName;
+        this.userEmail = userEmail;
+        this.userUrlPicture = userUrlPicture;
     }
 
 
     public String getUid() {
-        return mUid;
+        return uid;
     }
 
     public String getUserName() {
-        return mUserName;
+        return userName;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
     }
 
     @Nullable
     public String getUserUrlPicture() {
-        return mUserUrlPicture;
+        return userUrlPicture;
     }
 
     public void setUid(String uid) {
-        mUid = uid;
+        this.uid = uid;
     }
 
     public void setUserName(String userName) {
-        mUserName = userName;
+        this.userName = userName;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 
     public void setUserUrlPicture(@Nullable String userUrlPicture) {
-        mUserUrlPicture = userUrlPicture;
+        this.userUrlPicture = userUrlPicture;
     }
 }

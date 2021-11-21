@@ -5,34 +5,35 @@ import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.BYUSER
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.jr_eagle_ocr.go4lunch.model.User;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 
 import java.util.List;
 
-public class GetCurrentUserChosenRestaurantId {
-
-    private final LiveData<FirebaseUser> currentFirebaseUserLiveData;
+/**
+ * @author jrigault
+ */
+public final class GetCurrentUserChosenRestaurantId extends UseCase {
+    private final LiveData<User> currentUserLiveData;
     private final CollectionReference chosenRestaurantsCollection;
-
     private final MediatorLiveData<String> currentUserChosenRestaurantIdMediatorLiveData;
 
     public GetCurrentUserChosenRestaurantId(
             UserRepository userRepository,
             RestaurantRepository restaurantRepository
     ) {
-        currentFirebaseUserLiveData = userRepository.getCurrentFirebaseUser();
+        currentUserLiveData = userRepository.getCurrentUser();
         chosenRestaurantsCollection = restaurantRepository.getChosenRestaurantsCollection();
         LiveData<List<String>> chosenRestaurantIdsLiveData = restaurantRepository.getChosenRestaurantIds();
 
         currentUserChosenRestaurantIdMediatorLiveData = new MediatorLiveData<>();
-        currentUserChosenRestaurantIdMediatorLiveData.addSource(currentFirebaseUserLiveData, firebaseUser ->
-                getCurrentUserChosenRestaurantId());
+        currentUserChosenRestaurantIdMediatorLiveData.addSource(currentUserLiveData, currentUser ->
+                setCurrentUserChosenRestaurantId());
         currentUserChosenRestaurantIdMediatorLiveData.addSource(chosenRestaurantIdsLiveData, chosenRestaurantIds ->
-                getCurrentUserChosenRestaurantId());
+                setCurrentUserChosenRestaurantId());
     }
 
     /**
@@ -41,8 +42,15 @@ public class GetCurrentUserChosenRestaurantId {
      * @return the place id of the chosen restaurant
      */
     public LiveData<String> getCurrentUserChosenRestaurantId() {
-        FirebaseUser firebaseUser = currentFirebaseUserLiveData.getValue();
-        String uid = firebaseUser != null ? firebaseUser.getUid() : "";
+        return currentUserChosenRestaurantIdMediatorLiveData;
+    }
+
+    /**
+     * Set authenticated user chosen restaurant id from Firestore query
+     */
+    public void setCurrentUserChosenRestaurantId() {
+        User user = currentUserLiveData.getValue();
+        String uid = user != null ? user.getUid() : "";
         chosenRestaurantsCollection
                 .whereArrayContains(BYUSERS_FIELD, uid)
                 .get()
@@ -54,6 +62,5 @@ public class GetCurrentUserChosenRestaurantId {
                         currentUserChosenRestaurantIdMediatorLiveData.setValue(null);
                     }
                 });
-        return currentUserChosenRestaurantIdMediatorLiveData;
     }
 }
