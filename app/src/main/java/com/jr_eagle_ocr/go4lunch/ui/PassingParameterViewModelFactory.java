@@ -9,8 +9,8 @@ import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailViewModel;
 import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.usecases.IsLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.usecases.GetUserViewStates;
+import com.jr_eagle_ocr.go4lunch.usecases.IsLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.usecases.SetClearChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.usecases.SetClearLikedRestaurant;
 
@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
  * @author jrigault
  */
 public class PassingParameterViewModelFactory extends ViewModelProvider.NewInstanceFactory implements ViewModelProvider.Factory {
-
     @NonNull
     private final Object parameter;
     @NonNull
@@ -59,7 +58,8 @@ public class PassingParameterViewModelFactory extends ViewModelProvider.NewInsta
     public <T extends ViewModel> T create(@NonNull @NotNull Class<T> modelClass) {
         if (modelClass.isAssignableFrom(MainViewModel.class)) {
             return (T) new MainViewModel(
-                    (boolean) parameter, userRepository, getCurrentUserChosenRestaurantId);
+                    (boolean) parameter, userRepository, restaurantRepository,
+                    getCurrentUserChosenRestaurantId);
         }
         if (modelClass.isAssignableFrom(RestaurantDetailViewModel.class)) {
             return (T) new RestaurantDetailViewModel(

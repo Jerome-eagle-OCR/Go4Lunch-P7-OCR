@@ -6,7 +6,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Transformations;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.Task;
@@ -14,7 +13,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.jr_eagle_ocr.go4lunch.model.User;
+import com.jr_eagle_ocr.go4lunch.repositories.parent.Repository;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,15 +26,14 @@ import java.util.Map;
  */
 public final class UserRepository extends Repository {
     private final MutableLiveData<FirebaseUser> currentFirebaseUserMutableLiveData;
-    private LiveData<User> currentUserLiveData;
     private final MutableLiveData<Map<String, User>> allUsersMutableLiveData = new MutableLiveData<>();
+    private final MutableLiveData<User> currentUserMutableLiveData = new MutableLiveData<>();
+    private ListenerRegistration listenerRegistration;
 
     public UserRepository() {
-        auth.addAuthStateListener(this::onAuthStateChanged);
-        currentFirebaseUserMutableLiveData = new MutableLiveData<>(auth.getCurrentUser());
-
-        setAllUsers();
-        setCurrentUser(auth.getCurrentUser());
+        auth.addAuthStateListener(UserRepository.this::onAuthStateChanged);
+        FirebaseUser currentFirebaseUser = auth.getCurrentUser();
+        currentFirebaseUserMutableLiveData = new MutableLiveData<>(currentFirebaseUser);
     }
 
     // --- FIREBASE ---
@@ -46,7 +46,7 @@ public final class UserRepository extends Repository {
     public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
         FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
         currentFirebaseUserMutableLiveData.setValue(firebaseUser);
-        setCurrentUser(firebaseUser);
+        setAllUsers(firebaseUser);
     }
 
     /**
@@ -66,7 +66,10 @@ public final class UserRepository extends Repository {
         return AuthUI.getInstance().signOut(context);
     }
 
-    // TODO: to be used in settings
+    /**
+     * @param context
+     * @return
+     */
     public Task<Void> deleteUser(Context context) {
         return AuthUI.getInstance().delete(context);
     }
@@ -85,8 +88,8 @@ public final class UserRepository extends Repository {
      */
     public LiveData<Boolean> createUser() {
         MutableLiveData<Boolean> isCreatedMutableLiveData = new MutableLiveData<>();
-        isCreatedMutableLiveData.setValue(false);
-        FirebaseUser firebaseUser = getCurrentFirebaseUser().getValue();
+        isCreatedMutableLiveData.setValue(Boolean.FALSE);
+        FirebaseUser firebaseUser = auth.getCurrentUser();
         if (firebaseUser != null) {
             String uid = firebaseUser.getUid();
             String name = firebaseUser.getDisplayName();
@@ -95,19 +98,18 @@ public final class UserRepository extends Repository {
             String NOPHOTOURL = "https://ia801503.us.archive.org/3/items/default_avatar_202110/no_photo.png";
             urlPicture = firebaseUser.getPhotoUrl() != null ? firebaseUser.getPhotoUrl().toString() : NOPHOTOURL;
 
-            User userToCreate = new User(uid, name, userEmail, urlPicture);
+            User userToCreate = new User(uid, name, userEmail, urlPicture, false);
 
-            // If the user already exists in Firestore, we get his data (url_picture, user_name)
-            if (getCurrentUser() != null) {
-                User firestoreUser = getCurrentUser().getValue();
-                if (firestoreUser != null) {
-                    if (firestoreUser.getUserUrlPicture() != null) {
-                        userToCreate.setUserUrlPicture(firestoreUser.getUserUrlPicture());
-                    }
-                    if (firestoreUser.getUserName() != null) {
-                        userToCreate.setUserName(firestoreUser.getUserName());
-                    }
+            // If the user already exists in Firestore, we get his data (userUrlPicture, userName, isReminindingNotificationEnabled)
+            User firestoreUser = getCurrentUser().getValue();
+            if (firestoreUser != null) {
+                if (firestoreUser.getUserUrlPicture() != null) {
+                    userToCreate.setUserUrlPicture(firestoreUser.getUserUrlPicture());
                 }
+                if (firestoreUser.getUserName() != null) {
+                    userToCreate.setUserName(firestoreUser.getUserName());
+                }
+                userToCreate.setReminindingNotificationEnabled(firestoreUser.isReminindingNotificationEnabled());
             }
             String userName = userToCreate.getUserName();
             if (userName == null || userName.equals("")) {
@@ -116,10 +118,20 @@ public final class UserRepository extends Repository {
                         "ANONYMOUS" : this.getNameFromEmail(userEmail);
                 userToCreate.setUserName(nameFromEmail);
             }
-            this.getUsersCollection().document(uid).set(userToCreate)
-                    .addOnSuccessListener(unused -> isCreatedMutableLiveData.setValue(true));
+            this.setUser(userToCreate).addOnSuccessListener(unused -> isCreatedMutableLiveData.setValue(Boolean.TRUE));
         }
         return isCreatedMutableLiveData;
+    }
+
+    /**
+     * Set a user in Firestore
+     *
+     * @param userToSet the user to set
+     * @return a Task to be listened to
+     */
+    public Task<Void> setUser(User userToSet) {
+        String uid = userToSet.getUid();
+        return this.getUsersCollection().document(uid).set(userToSet);
     }
 
     /**
@@ -128,22 +140,22 @@ public final class UserRepository extends Repository {
      * @return a task to get the documentSnapshot
      */
     public LiveData<User> getCurrentUser() {
-        return currentUserLiveData;
+        return currentUserMutableLiveData;
     }
 
     /**
-     * Set current user getting it from all users livedata if user authenticated, set null if not
+     * Set current user getting it from Firestore db all users if user is authenticated, or null if not
      *
      * @param firebaseUser the currently authenticated user
+     * @param allUsers     all users from Firestore db
      */
-    private void setCurrentUser(FirebaseUser firebaseUser) {
-        if (firebaseUser != null) {
+    private void setCurrentUser(FirebaseUser firebaseUser, Map<String, User> allUsers) {
+        User currentUser = null;
+        if (firebaseUser != null && allUsers != null) {
             String uid = firebaseUser.getUid();
-            currentUserLiveData = Transformations.map(allUsersMutableLiveData, allUsers ->
-                    allUsers != null ? allUsers.get(uid) : null);
-        } else {
-            currentUserLiveData = new MutableLiveData<>(null);
+            if (allUsers.containsKey(uid)) currentUser = allUsers.get(uid);
         }
+        currentUserMutableLiveData.setValue(currentUser);
     }
 
     /**
@@ -158,23 +170,32 @@ public final class UserRepository extends Repository {
     /**
      * Set Firestore "users" collection listener and valorize allUsers livedata
      */
-    private void setAllUsers() {
-        this.getUsersCollection().addSnapshotListener((value, error) -> {
-            Map<String, User> users = new LinkedHashMap<>();
-            if (value != null && !value.isEmpty()) {
-                List<DocumentSnapshot> documents = value.getDocuments();
-                for (DocumentSnapshot d : documents) {
-                    User user = d.toObject(User.class);
-                    if (user != null) users.put(user.getUid(), user);
-                }
-            }
-            allUsersMutableLiveData.setValue(users);
-            if (error != null) {
-                allUsersMutableLiveData.setValue(null);
-                Log.e(TAG, "getAllUsers: ", error);
-            }
-        });
+    private void setAllUsers(FirebaseUser firebaseUser) {
+        if (firebaseUser != null) {
+            listenerRegistration = this.getUsersCollection()
+                    .addSnapshotListener((value, error) -> {
+                        Map<String, User> allUsers = new LinkedHashMap<>();
+                        if (value != null && !value.isEmpty()) {
+                            List<DocumentSnapshot> documents = value.getDocuments();
+                            for (DocumentSnapshot d : documents) {
+                                User user = d.toObject(User.class);
+                                if (user != null) allUsers.put(user.getUid(), user);
+                            }
+                        }
+                        allUsersMutableLiveData.setValue(allUsers);
+                        setCurrentUser(firebaseUser, allUsers);
+                        if (error != null) {
+                            allUsersMutableLiveData.setValue(null);
+                            setCurrentUser(firebaseUser, null);
+                            Log.e(TAG, "getAllUsers: ", error);
+                        }
+                    });
 
+        } else if (listenerRegistration != null) {
+            setCurrentUser(null, null);
+            allUsersMutableLiveData.setValue(null);
+            listenerRegistration.remove();
+        }
     }
 
     /**
@@ -182,7 +203,7 @@ public final class UserRepository extends Repository {
      *
      * @return the "users" Collection Reference
      */
-    private CollectionReference getUsersCollection() {
+    public CollectionReference getUsersCollection() {
         return db.collection(COLLECTION_NAME);
     }
 
@@ -197,7 +218,7 @@ public final class UserRepository extends Repository {
      * @return a name only or with surname (e.g.: Tryphon Tournesol)
      */
     private String getNameFromEmail(@NonNull String email) {
-        String[] words = email.split("@")[0].split("_");
+        String[] words = email.split("[@]")[0].split("[_.]");
         StringBuilder capitalizedStr = new StringBuilder();
 
         for (String word : words) {

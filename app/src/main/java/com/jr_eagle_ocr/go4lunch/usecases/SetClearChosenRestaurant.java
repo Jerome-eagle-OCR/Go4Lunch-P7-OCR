@@ -12,11 +12,12 @@ import androidx.lifecycle.LiveData;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
-import com.jr_eagle_ocr.go4lunch.model.ChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.model.pojo.ChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
 import com.jr_eagle_ocr.go4lunch.model.User;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -70,9 +71,9 @@ public final class SetClearChosenRestaurant extends UseCase {
                             Map<String, String> userData = new HashMap<>();
                             userData.put(USERID_FIELD, uid);
                             userData.put(USERNAME_FIELD, userName);
-                            task.getResult().update(BYUSERS_FIELD, FieldValue.arrayUnion(uid));
                             task.getResult().collection(CHOSENBY_COLLECTION_NAME).document(uid)
                                     .set(userData);
+                            task.getResult().update(BYUSERS_FIELD, FieldValue.arrayUnion(uid));
                             return null;
                         })
                         .addOnSuccessListener(o -> {

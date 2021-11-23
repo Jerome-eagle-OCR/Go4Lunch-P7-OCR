@@ -13,7 +13,8 @@ import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
 import com.jr_eagle_ocr.go4lunch.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
-import com.jr_eagle_ocr.go4lunch.ui.viewstates.RestaurantViewSate;
+import com.jr_eagle_ocr.go4lunch.ui.adapters.RestaurantViewSate;
+import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
 
 import java.util.ArrayList;
 import java.util.Calendar;

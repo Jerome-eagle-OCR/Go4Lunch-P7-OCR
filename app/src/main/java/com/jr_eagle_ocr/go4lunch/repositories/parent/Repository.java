@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.repositories;
+package com.jr_eagle_ocr.go4lunch.repositories.parent;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;

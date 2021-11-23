@@ -2,6 +2,7 @@ package com.jr_eagle_ocr.go4lunch.ui.authentication;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,8 +13,6 @@ import com.firebase.ui.auth.ErrorCodes;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityAuthenticationBinding;
@@ -28,7 +27,6 @@ import java.util.List;
  * @author jrigault
  */
 public class AuthenticationActivity extends AppCompatActivity {
-
     // See: https://developer.android.com/training/basics/intents/result
     private final ActivityResultLauncher<Intent> signInLauncher = registerForActivityResult(
             new FirebaseAuthUIActivityResultContract(),
@@ -50,15 +48,15 @@ public class AuthenticationActivity extends AppCompatActivity {
 
 
     private void initAuthentication() {
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseUser firebaseUser = userRepository.getCurrentFirebaseUser().getValue();
         if (firebaseUser == null) {
             // Choose authentication providers
             List<AuthUI.IdpConfig> providers = Arrays.asList(
                     new AuthUI.IdpConfig.GoogleBuilder().build(),
                     new AuthUI.IdpConfig.FacebookBuilder().build(),
                     new AuthUI.IdpConfig.TwitterBuilder().build(),
-                    new AuthUI.IdpConfig.EmailBuilder().build(),
-                    new AuthUI.IdpConfig.AnonymousBuilder().build());
+                    new AuthUI.IdpConfig.EmailBuilder().build());
+//                    new AuthUI.IdpConfig.AnonymousBuilder().build());
 
             // Create custom layout
             AuthMethodPickerLayout customLayout = new AuthMethodPickerLayout
@@ -67,7 +65,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                     .setFacebookButtonId(R.id.fui_facebook)
                     .setTwitterButtonId(R.id.fui_twitter)
                     .setEmailButtonId(R.id.fui_email)
-                    .setAnonymousButtonId(R.id.fui_anonymous)
+//                    .setAnonymousButtonId(R.id.fui_anonymous)
                     .build();
 
             // Create and launch sign-in intent
@@ -81,22 +79,28 @@ public class AuthenticationActivity extends AppCompatActivity {
                     .build();
             signInLauncher.launch(signInIntent);
         } else {
-            createUserAndGoToMainActivity();
+            goToMainActivity();
         }
     }
 
     private void createUserAndGoToMainActivity() {
         userRepository.createUser().observe(this, aBoolean -> {
-            toastThis(getString(R.string.connection_succeed));
-            Intent intent = MainActivity.navigate(this, false);
-            startActivity(intent);
-            finish();
+            if (aBoolean != null && aBoolean) {
+                toastThis(getString(R.string.connection_succeed));
+                goToMainActivity();
+            }
         });
+    }
+
+    private void goToMainActivity() {
+        Intent intent = MainActivity.navigate(this, false);
+        startActivity(intent);
+        finish();
     }
 
     // Show Snack Bar with a message
     private void toastThis(String message) {
-        Snackbar.make(this, binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {

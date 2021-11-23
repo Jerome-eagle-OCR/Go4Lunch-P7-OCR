@@ -1,5 +1,6 @@
 package com.jr_eagle_ocr.go4lunch.usecases;
 
+import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.BYUSERS_FIELD;
 import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.LIKEDBY_COLLECTION_NAME;
 import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.PLACEID_FIELD;
 import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.USERID_FIELD;
@@ -8,9 +9,11 @@ import androidx.lifecycle.LiveData;
 
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.jr_eagle_ocr.go4lunch.model.User;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,14 +52,17 @@ public final class SetClearLikedRestaurant extends UseCase {
                         if (!document.exists()) {
                             Map<String, String> placeData = new HashMap<>();
                             placeData.put(PLACEID_FIELD, placeId);
+                            placeData.put(BYUSERS_FIELD, uid);
                             document.getReference().set(placeData);
                         }
                         return document.getReference();
                     })
                     .continueWith(task -> {
-                        task.getResult().collection(LIKEDBY_COLLECTION_NAME).document(uid)
+                        task.getResult()
+                                .collection(LIKEDBY_COLLECTION_NAME)
+                                .document(uid)
                                 .set(userData);
-
+                        task.getResult().update(BYUSERS_FIELD, FieldValue.arrayUnion(uid));
                         return null;
                     });
         }
@@ -66,7 +72,7 @@ public final class SetClearLikedRestaurant extends UseCase {
      * Delete current user document in Collection "liked_by"
      * of given restaurant document (itself in Collection "liked_restaurants")
      *
-     * @param placeId placeId the given restaurant id
+     * @param placeId the given restaurant id
      */
     public void clearLikedRestaurant(String placeId) {
         User user = currentUserLiveData.getValue();
@@ -79,6 +85,8 @@ public final class SetClearLikedRestaurant extends UseCase {
                         DocumentSnapshot document = task.getResult();
                         if (document.exists()) {
                             document.getReference().delete();
+                            likedRestaurantsCollection.document(placeId)
+                                    .update(BYUSERS_FIELD, FieldValue.arrayRemove(uid));
                         }
                         return null;
                     });

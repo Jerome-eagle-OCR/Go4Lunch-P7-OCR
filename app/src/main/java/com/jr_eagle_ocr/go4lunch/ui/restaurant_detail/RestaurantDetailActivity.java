@@ -20,8 +20,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityRestaurantDetailBinding;
 import com.jr_eagle_ocr.go4lunch.ui.PassingParameterViewModelFactory;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserAdapter;
-import com.jr_eagle_ocr.go4lunch.ui.viewstates.RestaurantDetailViewSate;
-import com.jr_eagle_ocr.go4lunch.ui.viewstates.UserViewState;
+import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
 
 import java.util.ArrayList;
 import java.util.List;

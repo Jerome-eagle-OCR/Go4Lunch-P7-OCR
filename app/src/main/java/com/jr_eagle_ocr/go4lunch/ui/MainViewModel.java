@@ -11,11 +11,12 @@ import androidx.work.Constraints;
 import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
 
+import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.model.User;
 import com.jr_eagle_ocr.go4lunch.notification.NotificationsWorker;
+import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.ui.viewstates.UserViewState;
 import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
 import com.jr_eagle_ocr.go4lunch.util.Event;
 
@@ -27,24 +28,28 @@ import java.util.concurrent.TimeUnit;
  * @author jrigault
  */
 public class MainViewModel extends ViewModel {
+    private final LiveData<FirebaseUser> currentFirebaseUserLiveData;
     private final LiveData<User> currentUserLiveData;
     private final LiveData<String> currentUserChosenRestaurantIdLiveData;
-    private final MediatorLiveData<UserViewState> currentUserViewStateMediatorLiveData;
+    private final MediatorLiveData<MainViewState> currentUserViewStateMediatorLiveData;
     private final MutableLiveData<Event<Integer>> navigateToEventMutableLiveData = new MutableLiveData<>();
 
     public MainViewModel(
             boolean jumpToRestaurantDetail,
             UserRepository userRepository,
+            RestaurantRepository restaurantRepository,
             GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId
     ) {
+        currentFirebaseUserLiveData = userRepository.getCurrentFirebaseUser();
         currentUserLiveData = userRepository.getCurrentUser();
+        restaurantRepository.setChosenRestaurantIdsAndCleanCollection();
         currentUserChosenRestaurantIdLiveData = getCurrentUserChosenRestaurantId.getCurrentUserChosenRestaurantId();
 
         currentUserViewStateMediatorLiveData = new MediatorLiveData<>();
         currentUserViewStateMediatorLiveData.addSource(currentUserLiveData, currentUser ->
-                getCurrentUserViewState());
+                getMainViewState());
         currentUserViewStateMediatorLiveData.addSource(currentUserChosenRestaurantIdLiveData, chosenRestaurantId ->
-                getCurrentUserViewState());
+                getMainViewState());
 
         if (jumpToRestaurantDetail) {
             Event<Integer> navigateToEvent = new Event<>(R.id.nav_your_lunch);
@@ -82,21 +87,22 @@ public class MainViewModel extends ViewModel {
         return periodicWorkRequest;
     }
 
-    public LiveData<UserViewState> getCurrentUserViewState() {
-        UserViewState userViewState;
+    public LiveData<MainViewState> getMainViewState() {
+        MainViewState mainViewState;
         User user = currentUserLiveData.getValue();
         if (user != null) {
-            String name = user.getUserName();
-            String urlPicture = user.getUserUrlPicture();
-            String email = user.getUserEmail();
-            String chosenRestaurantId = currentUserChosenRestaurantIdLiveData.getValue();
-            userViewState = new UserViewState(
-                    name, 0, urlPicture, email, chosenRestaurantId,
-                    null, 0, 0);
+            String userName = user.getUserName();
+            String userUrlPicture = user.getUserUrlPicture();
+            String userEmail = user.getUserEmail();
+            String userChosenRestaurantId = currentUserChosenRestaurantIdLiveData.getValue();
+            mainViewState = new MainViewState(
+                    userName, userUrlPicture, userEmail, userChosenRestaurantId);
         } else {
-            userViewState = null;
+            mainViewState = null;
+            if (currentFirebaseUserLiveData.getValue() == null)
+                this.navigationItemSelected(R.id.authentication);
         }
-        currentUserViewStateMediatorLiveData.setValue(userViewState);
+        currentUserViewStateMediatorLiveData.setValue(mainViewState);
 
         return currentUserViewStateMediatorLiveData;
     }

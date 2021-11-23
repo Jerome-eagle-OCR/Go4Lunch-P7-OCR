@@ -29,9 +29,9 @@
         android:label="@string/menu_your_lunch"
         tools:layout="@layout/activity_restaurant_detail" />
 
-    <fragment
+    <dialog
         android:id="@+id/nav_settings"
-        android:name="com.jr_eagle_ocr.go4lunch.ui.settings.SettingsFragment"
+        android:name="com.jr_eagle_ocr.go4lunch.ui.settings.SettingsDialogFragment"
         android:label="@string/menu_settings"
         tools:layout="@layout/fragment_settings" />
 

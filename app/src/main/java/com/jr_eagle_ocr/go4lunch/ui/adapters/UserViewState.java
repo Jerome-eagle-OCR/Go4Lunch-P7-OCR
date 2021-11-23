@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.ui.viewstates;
+package com.jr_eagle_ocr.go4lunch.ui.adapters;
 
 import androidx.annotation.Nullable;
 

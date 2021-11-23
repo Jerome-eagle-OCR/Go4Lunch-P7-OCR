@@ -34,7 +34,6 @@ import com.google.android.material.snackbar.Snackbar;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityMainBinding;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
-import com.jr_eagle_ocr.go4lunch.ui.viewstates.UserViewState;
 
 /**
  * @author jrigault
@@ -48,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private View header;
 
     private MainViewModel viewModel;
-    private UserViewState currentUser;
+    private MainViewState viewState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,11 +100,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setCurrentUserObserver() {
-        viewModel.getCurrentUserViewState().observe(this, currentUser -> {
-            this.currentUser = currentUser;
-            if (currentUser == null) {
-                navController.navigate(R.id.authentication);
-            } else {
+        viewModel.getMainViewState().observe(this, viewState -> {
+            this.viewState = viewState;
+            if (viewState != null) {
                 setDrawerHeader();
             }
         });
@@ -114,18 +111,18 @@ public class MainActivity extends AppCompatActivity {
     private void setDrawerHeader() {
         TextView userName = header.findViewById(R.id.drwr_user_name);
         ImageView userPhoto = header.findViewById(R.id.drwr_user_photo);
-        userName.setText(currentUser.getName());
+        userName.setText(viewState.getUserName());
 
         Glide.with(MainActivity.this)
-                .load(currentUser.getUrlPicture())
+                .load(viewState.getUserUrlPicture())
                 .apply(RequestOptions.circleCropTransform())
                 .into(userPhoto);
 
         TextView userEmailTextView = header.findViewById(R.id.drwr_user_email);
-        String userEmail = currentUser.getEmail();
+        String userEmail = viewState.getUserEmail();
         userEmailTextView.setText(userEmail);
 
-        Log.d(TAG, "onCreate: " + "User details set for " + currentUser.getName());
+        Log.d(TAG, "onCreate: " + "User details set for " + userName);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -159,11 +156,12 @@ public class MainActivity extends AppCompatActivity {
                 Integer navigateTo = event.getContentIfNotHandled();
                 if (navigateTo != null) {
                     Bundle args = new Bundle();
-                    String placeId = currentUser.getChosenRestaurantId();
+                    String currentUserChosenRestaurantId = viewState.getCurrentUserChosenRestaurantId();
+                    String placeId = viewState != null ? currentUserChosenRestaurantId : null;
                     args.putString(RestaurantDetailActivity.PLACE_ID, placeId);
                     navController.navigate(navigateTo, args);
                 } else {
-                    Snackbar.make(this.header, R.string.you_have_not_decided_yet, Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(this.header, R.string.you_have_not_decided_yet, Snackbar.LENGTH_SHORT).show();
                 }
             }
         });

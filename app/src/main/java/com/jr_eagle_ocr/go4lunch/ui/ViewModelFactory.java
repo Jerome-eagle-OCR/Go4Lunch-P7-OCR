@@ -11,10 +11,13 @@ import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.ui.listview.ListViewViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.logout.LogOutViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.mapview.MapsViewViewModel;
+import com.jr_eagle_ocr.go4lunch.ui.settings.SettingsViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.workmates.WorkmatesViewModel;
 import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
 import com.jr_eagle_ocr.go4lunch.usecases.GetRestaurantViewStates;
 import com.jr_eagle_ocr.go4lunch.usecases.GetUserViewStates;
+import com.jr_eagle_ocr.go4lunch.usecases.SetClearChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.usecases.SetClearLikedRestaurant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +37,9 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                             Go4LunchApplication.getDependencyContainer().getRestaurantRepository(),
                             Go4LunchApplication.getDependencyContainer().getCurrentUserChosenRestaurantId(),
                             Go4LunchApplication.getDependencyContainer().getUserViewStates(),
-                            Go4LunchApplication.getDependencyContainer().getRestaurantViewStates());
+                            Go4LunchApplication.getDependencyContainer().getRestaurantViewStates(),
+                            Go4LunchApplication.getDependencyContainer().setClearChosenRestaurant(),
+                            Go4LunchApplication.getDependencyContainer().setClearLikedRestaurant());
                 }
             }
         }
@@ -53,6 +58,10 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
     private final GetUserViewStates getUserViewStates;
     @NonNull
     private final GetRestaurantViewStates getRestaurantViewStates;
+    @NonNull
+    private final SetClearChosenRestaurant setClearChosenRestaurant;
+    @NonNull
+    private final SetClearLikedRestaurant setClearLikedRestaurant;
 
 
     private ViewModelFactory(
@@ -61,7 +70,9 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
             @NonNull RestaurantRepository restaurantRepository,
             @NonNull GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId,
             @NonNull GetUserViewStates getUserViewStates,
-            @NonNull GetRestaurantViewStates getRestaurantViewStates
+            @NonNull GetRestaurantViewStates getRestaurantViewStates,
+            @NonNull SetClearChosenRestaurant setClearChosenRestaurant,
+            @NonNull SetClearLikedRestaurant setClearLikedRestaurant
     ) {
         this.userRepository = userRepository;
         this.locationRepository = locationRepository;
@@ -69,6 +80,8 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         this.getCurrentUserChosenRestaurantId = getCurrentUserChosenRestaurantId;
         this.getUserViewStates = getUserViewStates;
         this.getRestaurantViewStates = getRestaurantViewStates;
+        this.setClearChosenRestaurant = setClearChosenRestaurant;
+        this.setClearLikedRestaurant = setClearLikedRestaurant;
     }
 
     @SuppressWarnings("unchecked")
@@ -78,7 +91,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
     public <T extends ViewModel> T create(@NonNull @NotNull Class<T> modelClass) {
         if (modelClass.isAssignableFrom(LogOutViewModel.class)) {
             return (T) new LogOutViewModel(
-                    userRepository);
+                    userRepository, restaurantRepository);
         }
         if (modelClass.isAssignableFrom(WorkmatesViewModel.class)) {
             return (T) new WorkmatesViewModel(
@@ -91,6 +104,11 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(MapsViewViewModel.class)) {
             return (T) new MapsViewViewModel(
                     locationRepository, restaurantRepository);
+        }
+        if (modelClass.isAssignableFrom(SettingsViewModel.class)) {
+            return (T) new SettingsViewModel(
+                    userRepository, restaurantRepository, getCurrentUserChosenRestaurantId,
+                    setClearChosenRestaurant, setClearLikedRestaurant);
         }
         throw new IllegalArgumentException("Unknown ViewModel class");
     }

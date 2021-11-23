@@ -7,7 +7,9 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
+import com.jr_eagle_ocr.go4lunch.repositories.parent.Repository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,13 +24,12 @@ import java.util.Map;
 public final class RestaurantRepository extends Repository {
     private final MutableLiveData<Map<String, Restaurant>> foundRestaurantsMutableLiveData;
     private final MutableLiveData<List<String>> chosenRestaurantIdsMutableLiveData;
+    private ListenerRegistration listenerRegistration;
 
 
     public RestaurantRepository() {
         foundRestaurantsMutableLiveData = new MutableLiveData<>(new HashMap<>());
         chosenRestaurantIdsMutableLiveData = new MutableLiveData<>();
-
-        setChosenRestaurantIdsAndCleanCollection();
     }
 
     /**
@@ -84,8 +85,8 @@ public final class RestaurantRepository extends Repository {
      * if the document is today's AND if the (chosen) by user list is not empty,
      * add restaurant id in a list, if not delete the restaurant document
      */
-    private void setChosenRestaurantIdsAndCleanCollection() {
-        this.getChosenRestaurantsCollection()
+    public void setChosenRestaurantIdsAndCleanCollection() {
+        listenerRegistration = this.getChosenRestaurantsCollection()
                 .addSnapshotListener((value, error) -> {
                     List<String> chosenRestaurantIds = new ArrayList<>(); // Déclenche toujours un changement ?
                     if (value != null && !value.isEmpty()) {
@@ -122,6 +123,10 @@ public final class RestaurantRepository extends Repository {
                         Log.e(TAG, "onEvent: ", error);
                     }
                 });
+    }
+
+    public void unsetChosenRestaurantIdsAndCleanCollection() {
+        if (listenerRegistration != null) listenerRegistration.remove();
     }
 
     /**

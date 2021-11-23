@@ -9,7 +9,6 @@ import com.google.android.libraries.places.api.model.OpeningHours;
  * @author jrigault
  */
 public class Restaurant {
-
     private final String mId;
     private String mName;
     private String mAddress;

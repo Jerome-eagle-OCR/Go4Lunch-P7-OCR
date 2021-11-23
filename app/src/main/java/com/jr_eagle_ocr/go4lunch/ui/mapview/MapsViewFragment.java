@@ -264,7 +264,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
 
                         if (placeId != null && placeTypes.contains(Place.Type.RESTAURANT)) {
                             // Add a marker on the map for each restaurant with green color for those chosen by other users
-                            viewViewModel.getChosenRestaurantIds().observe(this, chosenPlaceIds -> {
+                            viewViewModel.getChosenRestaurantIds().observe(getViewLifecycleOwner(), chosenPlaceIds -> {
                                 // clear the map so remove all markers
                                 map.clear();
                                 // set color according to place chosen or not

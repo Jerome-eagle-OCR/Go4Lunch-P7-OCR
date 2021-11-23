@@ -1,9 +1,14 @@
-package com.jr_eagle_ocr.go4lunch.ui.viewstates;
+package com.jr_eagle_ocr.go4lunch.ui.restaurant_detail;
 
 import android.graphics.Bitmap;
 
+import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
+
 import java.util.List;
 
+/**
+ * @author jrigault
+ */
 public class RestaurantDetailViewSate {
     private final String id;
     private final Bitmap photo;

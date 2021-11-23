@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.model;
+package com.jr_eagle_ocr.go4lunch.model.pojo;
 
 /**
  * @author jrigault

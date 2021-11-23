@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,12 +13,12 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.google.android.material.snackbar.Snackbar;
-import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.FragmentLogoutBinding;
 import com.jr_eagle_ocr.go4lunch.ui.ViewModelFactory;
 
-
+/**
+ * @author jrigault
+ */
 public class LogOutDialogFragment extends DialogFragment {
     private LogOutViewModel viewModel;
     private FragmentLogoutBinding binding;
@@ -37,20 +37,25 @@ public class LogOutDialogFragment extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        final TextView textView = binding.textLogout;
-        textView.setText(getString(R.string.you_will_be_disconnected));
-
-        binding.buttonOk.setOnClickListener(v -> {
-            viewModel.signOut(requireContext());
-            dismiss();
-        });
-
-        viewModel.signOutResult().observe(this, signOutResult -> {
-            String message = getString(signOutResult);
-            Snackbar.make(requireView(), message, Snackbar.LENGTH_SHORT).show();
-        });
+        init();
 
         return binding.getRoot();
+    }
+
+    /**
+     * Set listener and livedata observer
+     */
+    private void init() {
+        // Set OK button click listener
+        binding.buttonOk.setOnClickListener(v -> {
+            viewModel.signOut(requireActivity());
+        });
+        // Set sign out result observer
+        viewModel.signOutResult().observe(getViewLifecycleOwner(), signOutResult -> {
+            String message = getString(signOutResult);
+            Toast.makeText(requireActivity(), message, Toast.LENGTH_SHORT).show();
+            dismiss();
+        });
     }
 
     @Override

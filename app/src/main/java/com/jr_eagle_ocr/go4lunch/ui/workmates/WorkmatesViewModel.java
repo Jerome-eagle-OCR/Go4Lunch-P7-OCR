@@ -13,7 +13,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.jr_eagle_ocr.go4lunch.model.User;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.ui.viewstates.UserViewState;
+import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
 import com.jr_eagle_ocr.go4lunch.usecases.GetUserViewStates;
 
 import java.util.HashMap;
@@ -65,7 +65,7 @@ public class WorkmatesViewModel extends ViewModel {
                     }
                     userViewStates = getUserViewStates.getUserViewStates(null, allUsers, userChosenRestaurantMap);
                     allUserViewStatesMediatorLiveData.setValue(userViewStates);
-                    Log.d(TAG, "buildAndSetAllUserViewStates: " + userViewStates.toString());
+                    Log.d(TAG, "buildAndSetAllUserViewStates: " + userViewStates.size() + " workmates");
                 });
     }
 

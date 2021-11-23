@@ -9,7 +9,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.model.User;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.ui.viewstates.UserViewState;
+import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
+import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
 
 import java.util.ArrayList;
 import java.util.List;

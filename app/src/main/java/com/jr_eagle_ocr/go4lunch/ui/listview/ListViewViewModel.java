@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
-import com.jr_eagle_ocr.go4lunch.ui.viewstates.RestaurantViewSate;
+import com.jr_eagle_ocr.go4lunch.ui.adapters.RestaurantViewSate;
 import com.jr_eagle_ocr.go4lunch.usecases.GetRestaurantViewStates;
 
 import java.util.HashMap;

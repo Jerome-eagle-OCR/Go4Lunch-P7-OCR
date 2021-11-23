@@ -12,6 +12,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.jr_eagle_ocr.go4lunch.model.User;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
 
 public class IsLikedRestaurant extends UseCase {
     private final LiveData<User> currentUserLiveData;
@@ -65,7 +66,7 @@ public class IsLikedRestaurant extends UseCase {
     }
 
     public void removeListenerRegistration() {
-        listenerRegistration.remove();
+        if (listenerRegistration != null) listenerRegistration.remove();
         isLikedRestaurantMutableLiveData.setValue(false);
     }
 }

@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.jr_eagle_ocr.go4lunch.databinding.ItemUserBinding;
-import com.jr_eagle_ocr.go4lunch.ui.viewstates.UserViewState;
 
 import java.util.List;
 
@@ -24,7 +23,6 @@ import java.util.List;
  * {@link RecyclerView.Adapter} that can display a {@link UserViewState}.
  */
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
-
     private final List<UserViewState> items;
     @Nullable
     private final DisplayChosenRestaurantListener listener;

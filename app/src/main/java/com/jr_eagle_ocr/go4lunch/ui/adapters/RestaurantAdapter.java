@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ItemRestaurantBinding;
-import com.jr_eagle_ocr.go4lunch.ui.viewstates.RestaurantViewSate;
 
 import java.util.List;
 
@@ -26,7 +25,6 @@ import java.util.List;
  * {@link RecyclerView.Adapter} that can display a {@link RestaurantViewSate}.
  */
 public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.RestaurantViewHolder> {
-
     private final List<RestaurantViewSate> items;
     private final RestaurantAdapter.DisplayRestaurantListener listener;
 
