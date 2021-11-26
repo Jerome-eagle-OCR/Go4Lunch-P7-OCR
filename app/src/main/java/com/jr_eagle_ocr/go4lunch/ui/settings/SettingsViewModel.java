@@ -20,7 +20,6 @@ import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
 import com.jr_eagle_ocr.go4lunch.usecases.SetClearChosenRestaurant;
-import com.jr_eagle_ocr.go4lunch.usecases.SetClearLikedRestaurant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +32,6 @@ public class SettingsViewModel extends ViewModel {
     private final UserRepository userRepository;
     private final RestaurantRepository restaurantRepository;
     private final SetClearChosenRestaurant setClearChosenRestaurant;
-    private final SetClearLikedRestaurant setClearLikedRestaurant;
     private final User currentUser;
     private final String currentUserChosenRestaurantId;
     private String userName;
@@ -46,13 +44,11 @@ public class SettingsViewModel extends ViewModel {
             UserRepository userRepository,
             RestaurantRepository restaurantRepository,
             GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId,
-            SetClearChosenRestaurant setClearChosenRestaurant,
-            SetClearLikedRestaurant setClearLikedRestaurant
+            SetClearChosenRestaurant setClearChosenRestaurant
     ) {
         this.userRepository = userRepository;
         this.restaurantRepository = restaurantRepository;
         this.setClearChosenRestaurant = setClearChosenRestaurant;
-        this.setClearLikedRestaurant = setClearLikedRestaurant;
         currentUser = userRepository.getCurrentUser().getValue();
         if (currentUser != null) {
             userName = currentUser.getUserName();
@@ -87,7 +83,6 @@ public class SettingsViewModel extends ViewModel {
             return Tasks.whenAllComplete(tasks);
         }).continueWith(task -> {
             if (task.isComplete()) {
-                restaurantRepository.unsetChosenRestaurantIdsAndCleanCollection();
                 return Tasks.await(userRepository.deleteUser(context));
             } else {
                 return false;

@@ -8,6 +8,7 @@ import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
 import com.jr_eagle_ocr.go4lunch.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.ui.authentication.AuthenticationViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.listview.ListViewViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.logout.LogOutViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.mapview.MapsViewViewModel;
@@ -91,7 +92,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
     public <T extends ViewModel> T create(@NonNull @NotNull Class<T> modelClass) {
         if (modelClass.isAssignableFrom(LogOutViewModel.class)) {
             return (T) new LogOutViewModel(
-                    userRepository, restaurantRepository);
+                    userRepository);
         }
         if (modelClass.isAssignableFrom(WorkmatesViewModel.class)) {
             return (T) new WorkmatesViewModel(
@@ -107,8 +108,12 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         }
         if (modelClass.isAssignableFrom(SettingsViewModel.class)) {
             return (T) new SettingsViewModel(
-                    userRepository, restaurantRepository, getCurrentUserChosenRestaurantId,
-                    setClearChosenRestaurant, setClearLikedRestaurant);
+                    userRepository, restaurantRepository,
+                    getCurrentUserChosenRestaurantId, setClearChosenRestaurant);
+        }
+        if (modelClass.isAssignableFrom(AuthenticationViewModel.class)) {
+            return (T) new AuthenticationViewModel(
+                    userRepository, restaurantRepository);
         }
         throw new IllegalArgumentException("Unknown ViewModel class");
     }

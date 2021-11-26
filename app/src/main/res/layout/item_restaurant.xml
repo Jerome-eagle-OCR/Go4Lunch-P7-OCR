@@ -26,12 +26,14 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:gravity="center_vertical"
+        android:singleLine="true"
+        android:textSize="18sp"
         android:textAppearance="@style/TextAppearance.AppCompat.Title"
         app:layout_constraintBottom_toTopOf="@+id/restaurant_item_address"
         app:layout_constraintEnd_toStartOf="@id/restaurant_item_distance"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="Le Machin Truc" />
+        tools:text="Le Machin Truc - Triffouilli-les-Oies" />
 
     <TextView
         android:id="@+id/restaurant_item_distance"
@@ -52,12 +54,14 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:gravity="center_vertical"
+        android:maxLines="2"
+        android:textSize="14sp"
         android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
         app:layout_constraintBottom_toTopOf="@+id/restaurant_item_opening"
         app:layout_constraintEnd_toStartOf="@+id/restaurant_item_joiners"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/restaurant_item_name"
-        tools:text="1 rue Schtrafnu" />
+        tools:text="1000 rue Schtrafnu, 00000 Cergy-Pontise-Visaponge" />
 
     <TextView
         android:id="@+id/restaurant_item_joiners"

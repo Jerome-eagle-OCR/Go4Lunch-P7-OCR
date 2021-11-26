@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
+import com.jr_eagle_ocr.go4lunch.model.pojo.RestaurantPojo;
 import com.jr_eagle_ocr.go4lunch.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 
@@ -18,7 +19,7 @@ import java.util.Map;
 public class MapsViewViewModel extends ViewModel {
     private final LocationRepository locationRepository;
     private final RestaurantRepository restaurantRepository;
-    private final LiveData<Map<String, Restaurant>> foundRestaurantsLiveData;
+    private final LiveData<Map<String, RestaurantPojo>> allRestaurantsLiveData;
     private final LiveData<List<String>> chosenRestaurantIdsLiveData;
 
     public MapsViewViewModel(
@@ -27,7 +28,7 @@ public class MapsViewViewModel extends ViewModel {
     ) {
         this.locationRepository = locationRepository;
         this.restaurantRepository = restaurantRepository;
-        foundRestaurantsLiveData = restaurantRepository.getFoundRestaurants();
+        allRestaurantsLiveData = restaurantRepository.getAllRestaurants();
         chosenRestaurantIdsLiveData = restaurantRepository.getChosenRestaurantIds();
     }
 
@@ -36,16 +37,25 @@ public class MapsViewViewModel extends ViewModel {
     }
 
     /**
-     * Get restaurants found in MapsView
+     * Set the list of restaurant place ids found in MapsViewFragment
      *
-     * @return a livedata of restaurant HashMap where key = placeId and value = restaurant
+     * @param foundRestaurantIds the list of found restaurant place ids
      */
-    public LiveData<Map<String, Restaurant>> getFoundRestaurants() {
-        return foundRestaurantsLiveData;
+    public void setFoundRestaurantIds(List<String> foundRestaurantIds) {
+        restaurantRepository.setFoundRestaurantIds(foundRestaurantIds);
     }
 
     /**
-     * Add a restaurant to the restaurant HashMap
+     * Get restaurants from the listened "restaurants" Firestore collection
+     *
+     * @return a restaurant HashMap (placeId, restaurant (POJO)) in a livedata
+     */
+    public LiveData<Map<String, RestaurantPojo>> getAllRestaurants() {
+        return allRestaurantsLiveData;
+    }
+
+    /**
+     * Add a restaurant to the "restaurants" Firestore collection
      *
      * @param restaurant the restaurant to add
      */

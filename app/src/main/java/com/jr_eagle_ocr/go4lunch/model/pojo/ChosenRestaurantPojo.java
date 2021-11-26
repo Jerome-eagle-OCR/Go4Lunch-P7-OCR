@@ -3,18 +3,16 @@ package com.jr_eagle_ocr.go4lunch.model.pojo;
 /**
  * @author jrigault
  */
-public class ChosenRestaurant {
-
+public class ChosenRestaurantPojo {
     private String placeId;
     private String placeName;
     private String placeAddress;
     private String timestamp;
 
-
-    public ChosenRestaurant() {
+    public ChosenRestaurantPojo() {
     }
 
-    public ChosenRestaurant(
+    public ChosenRestaurantPojo(
             String placeId,
             String placeName,
             String placeAddress,
@@ -25,7 +23,6 @@ public class ChosenRestaurant {
         this.placeAddress = placeAddress;
         this.timestamp = timestamp;
     }
-
 
     public String getPlaceId() {
         return placeId;
@@ -41,5 +38,22 @@ public class ChosenRestaurant {
 
     public String getTimestamp() {
         return timestamp;
+    }
+
+
+    public void setPlaceId(String placeId) {
+        this.placeId = placeId;
+    }
+
+    public void setPlaceName(String placeName) {
+        this.placeName = placeName;
+    }
+
+    public void setPlaceAddress(String placeAddress) {
+        this.placeAddress = placeAddress;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
     }
 }

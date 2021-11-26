@@ -12,9 +12,9 @@ import androidx.lifecycle.LiveData;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
-import com.jr_eagle_ocr.go4lunch.model.pojo.ChosenRestaurant;
-import com.jr_eagle_ocr.go4lunch.model.Restaurant;
 import com.jr_eagle_ocr.go4lunch.model.User;
+import com.jr_eagle_ocr.go4lunch.model.pojo.ChosenRestaurantPojo;
+import com.jr_eagle_ocr.go4lunch.model.pojo.RestaurantPojo;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
@@ -27,7 +27,7 @@ import java.util.Map;
  */
 public final class SetClearChosenRestaurant extends UseCase {
     private final LiveData<User> currentUserLiveData;
-    private final LiveData<Map<String, Restaurant>> foundRestaurantsLiveData;
+    private final LiveData<Map<String, RestaurantPojo>> allRestaurantsLiveData;
     private final CollectionReference chosenRestaurantsCollection;
 
     public SetClearChosenRestaurant(
@@ -35,7 +35,7 @@ public final class SetClearChosenRestaurant extends UseCase {
             RestaurantRepository restaurantRepository
     ) {
         currentUserLiveData = userRepository.getCurrentUser();
-        foundRestaurantsLiveData = restaurantRepository.getFoundRestaurants();
+        allRestaurantsLiveData = restaurantRepository.getAllRestaurants();
         chosenRestaurantsCollection = restaurantRepository.getChosenRestaurantsCollection();
     }
 
@@ -47,14 +47,14 @@ public final class SetClearChosenRestaurant extends UseCase {
      */
     public void setChosenRestaurant(String placeId) {
         User user = currentUserLiveData.getValue();
-        if (user != null && foundRestaurantsLiveData.getValue() != null) {
+        if (user != null && allRestaurantsLiveData.getValue() != null) {
             String uid = user.getUid();
             String userName = user.getUserName();
-            Restaurant restaurant = foundRestaurantsLiveData.getValue().get(placeId);
+            RestaurantPojo restaurant = allRestaurantsLiveData.getValue().get(placeId);
             if (restaurant != null) {
                 String placeName = restaurant.getName();
                 String placeAddress = restaurant.getAddress();
-                ChosenRestaurant chosenRestaurant = new ChosenRestaurant(
+                ChosenRestaurantPojo chosenRestaurant = new ChosenRestaurantPojo(
                         placeId, placeName, placeAddress,
                         String.valueOf(System.currentTimeMillis()));
 

@@ -40,24 +40,28 @@
     <TextView
         android:id="@+id/drwr_user_name"
         style="@style/TextAppearance.AppCompat.Title"
-        android:textSize="18sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:layout_marginBottom="2dp"
+        android:fontFamily="sans-serif-medium"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
+        android:singleLine="true"
         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@id/drwr_user_email"
         app:layout_constraintStart_toEndOf="@id/drwr_user_photo"
         tools:text="Manu Tentionnaire" />
 
     <TextView
         android:id="@+id/drwr_user_email"
-        style="@style/TextAppearance.AppCompat.Caption"
+        style="@style/TextAppearance.AppCompat.Title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="28dp"
-        android:textSize="12sp"
+        android:fontFamily="sans-serif-condensed-light"
+        android:singleLine="true"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@id/drwr_user_name"
         tools:text="manu.tentionnaire@usine.fr" />

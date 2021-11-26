@@ -16,16 +16,17 @@ import androidx.lifecycle.ViewModel;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldPath;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.model.Restaurant;
 import com.jr_eagle_ocr.go4lunch.model.User;
+import com.jr_eagle_ocr.go4lunch.model.pojo.RestaurantPojo;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
 import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.usecases.IsLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.usecases.GetUserViewStates;
+import com.jr_eagle_ocr.go4lunch.usecases.IsLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.usecases.SetClearChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.usecases.SetClearLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 import com.jr_eagle_ocr.go4lunch.util.Event;
 
 import java.util.HashMap;
@@ -50,7 +51,7 @@ public class RestaurantDetailViewModel extends ViewModel {
     private final MediatorLiveData<List<UserViewState>> joiningUserViewStatesMediatorLiveData = new MediatorLiveData<>();
     private final MediatorLiveData<Event<Integer>> snackbarMessageMediatorLiveData = new MediatorLiveData<>();
     private final String displayedRestaurantId;
-    private Restaurant restaurant;
+    private RestaurantPojo restaurant;
     private int count = 0;
 
     public RestaurantDetailViewModel(
@@ -81,8 +82,8 @@ public class RestaurantDetailViewModel extends ViewModel {
      */
     private void init() {
         // Retrieve displayed restaurant
-        if (restaurantRepository.getFoundRestaurants().getValue() != null) {
-            restaurant = restaurantRepository.getFoundRestaurants().getValue().get(displayedRestaurantId);
+        if (restaurantRepository.getAllRestaurants().getValue() != null) {
+            restaurant = restaurantRepository.getAllRestaurants().getValue().get(displayedRestaurantId);
         }
         // Listen to current user document in "liked_by" subcollection in displayed restaurant document in Firestore
         isLikedRestaurant.addListenerRegistration(displayedRestaurantId);
@@ -125,7 +126,7 @@ public class RestaurantDetailViewModel extends ViewModel {
      */
     private void buildAndSetRestaurantViewState() {
         if (restaurant != null) {
-            Bitmap photo = restaurant.getPhoto();
+            Bitmap photo = BitmapUtil.decodeBase64(restaurant.getPhotoString());
             String name = restaurant.getName();
             String address = restaurant.getAddress();
             boolean isChosen = isChosen();

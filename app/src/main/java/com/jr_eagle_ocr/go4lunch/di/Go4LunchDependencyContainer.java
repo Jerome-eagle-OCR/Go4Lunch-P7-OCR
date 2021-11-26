@@ -6,17 +6,16 @@ import com.jr_eagle_ocr.go4lunch.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.usecases.IsLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.usecases.GetRestaurantViewStates;
 import com.jr_eagle_ocr.go4lunch.usecases.GetUserViewStates;
+import com.jr_eagle_ocr.go4lunch.usecases.IsLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.usecases.SetClearChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.usecases.SetClearLikedRestaurant;
 
 /**
  * @author jrigault
  */
-public class Go4LunchDependencyContainer {
-
+public final class Go4LunchDependencyContainer {
     private final Application context;
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
@@ -28,7 +27,9 @@ public class Go4LunchDependencyContainer {
     private final SetClearLikedRestaurant setClearLikedRestaurant;
     private final IsLikedRestaurant isLikedRestaurant;
 
-    public Go4LunchDependencyContainer(Application context) {
+    public Go4LunchDependencyContainer(
+            Application context
+    ) {
         this.context = context;
         userRepository = new UserRepository();
         locationRepository = new LocationRepository();
@@ -53,7 +54,6 @@ public class Go4LunchDependencyContainer {
         setClearLikedRestaurant =
                 new SetClearLikedRestaurant(
                         userRepository, restaurantRepository);
-
 
         isLikedRestaurant =
                 new IsLikedRestaurant(userRepository, restaurantRepository);
@@ -90,6 +90,7 @@ public class Go4LunchDependencyContainer {
     public GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId() {
         return getCurrentUserChosenRestaurantId;
     }
+
 
     public SetClearLikedRestaurant setClearLikedRestaurant() {
         return setClearLikedRestaurant;

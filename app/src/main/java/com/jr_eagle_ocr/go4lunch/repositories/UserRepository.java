@@ -26,6 +26,7 @@ import java.util.Map;
  */
 public final class UserRepository extends Repository {
     private final MutableLiveData<FirebaseUser> currentFirebaseUserMutableLiveData;
+    private final MutableLiveData<Boolean> isUserCreatedMutableLiveData = new MutableLiveData<>();
     private final MutableLiveData<Map<String, User>> allUsersMutableLiveData = new MutableLiveData<>();
     private final MutableLiveData<User> currentUserMutableLiveData = new MutableLiveData<>();
     private ListenerRegistration listenerRegistration;
@@ -59,16 +60,24 @@ public final class UserRepository extends Repository {
     }
 
     /**
-     * @param context
-     * @return
+     * Signs the current user out, if one is signed in.
+     *
+     * @param context the context requesting the user be signed out
+     * @return A task which, upon completion, signals that the user has been signed out ({@link
+     * Task#isSuccessful()}, or that the sign-out attempt failed unexpectedly !{@link
+     * Task#isSuccessful()}).
      */
     public Task<Void> signOut(Context context) {
         return AuthUI.getInstance().signOut(context);
     }
 
     /**
-     * @param context
-     * @return
+     * Delete the use from FirebaseAuth and delete any associated credentials from the Credentials
+     * API. Returns a {@link Task} that succeeds if the Firebase Auth user deletion succeeds and
+     * fails if the Firebase Auth deletion fails. Credentials deletion failures are handled
+     * silently.
+     *
+     * @param context the calling {@link Context}.
      */
     public Task<Void> deleteUser(Context context) {
         return AuthUI.getInstance().delete(context);
@@ -77,18 +86,17 @@ public final class UserRepository extends Repository {
 
     // --- FIRESTORE ---
 
-    private static final String COLLECTION_NAME = "users";
+    private static final String USERS_COLLECTION_NAME = "users";
     private static final String USERID_FIELD = "uid";
     private static final String USERNAME_FIELD = "userName";
     private static final String USERURLPICTURE_FIELD = "userUrlPicture";
 
 
     /**
-     * Create User in Firestore from FirebaseAuth eventually modified/completed with Firestore db infos
+     * Create User in Firestore from FirebaseAuth eventually modified/completed
+     * with Firestore db infos
      */
-    public LiveData<Boolean> createUser() {
-        MutableLiveData<Boolean> isCreatedMutableLiveData = new MutableLiveData<>();
-        isCreatedMutableLiveData.setValue(Boolean.FALSE);
+    public void createUser() {
         FirebaseUser firebaseUser = auth.getCurrentUser();
         if (firebaseUser != null) {
             String uid = firebaseUser.getUid();
@@ -118,16 +126,19 @@ public final class UserRepository extends Repository {
                         "ANONYMOUS" : this.getNameFromEmail(userEmail);
                 userToCreate.setUserName(nameFromEmail);
             }
-            this.setUser(userToCreate).addOnSuccessListener(unused -> isCreatedMutableLiveData.setValue(Boolean.TRUE));
+            this.setUser(userToCreate).addOnSuccessListener(unused -> isUserCreatedMutableLiveData.setValue(Boolean.TRUE));
         }
-        return isCreatedMutableLiveData;
+    }
+
+    public LiveData<Boolean> isUserCreated() {
+        return isUserCreatedMutableLiveData;
     }
 
     /**
-     * Set a user in Firestore
+     * Set a user in Firestore "users" collection
      *
      * @param userToSet the user to set
-     * @return a Task to be listened to
+     * @return a {@link Task} to be listened to
      */
     public Task<Void> setUser(User userToSet) {
         String uid = userToSet.getUid();
@@ -135,16 +146,17 @@ public final class UserRepository extends Repository {
     }
 
     /**
-     * Get User Data from Firestore
+     * Get User Data from Firestore "users" collection
      *
-     * @return a task to get the documentSnapshot
+     * @return a {@link Task} to get the documentSnapshot
      */
     public LiveData<User> getCurrentUser() {
         return currentUserMutableLiveData;
     }
 
     /**
-     * Set current user getting it from Firestore db all users if user is authenticated, or null if not
+     * Set current user getting it from allUsers (see getAllUsers() ) if user is authenticated,
+     * or null if not
      *
      * @param firebaseUser the currently authenticated user
      * @param allUsers     all users from Firestore db
@@ -159,7 +171,7 @@ public final class UserRepository extends Repository {
     }
 
     /**
-     * Get all users from Firestore db
+     * Get all users from Firestore "users" collection
      *
      * @return a user map with key = uid and value = user, in a livedata
      */
@@ -168,7 +180,9 @@ public final class UserRepository extends Repository {
     }
 
     /**
-     * Set Firestore "users" collection listener and valorize allUsers livedata
+     * Set Firestore "users" collection listener which valorize allUsers (see getAllUsers() )
+     *
+     * @param firebaseUser the current authenticated Firebase user
      */
     private void setAllUsers(FirebaseUser firebaseUser) {
         if (firebaseUser != null) {
@@ -204,7 +218,7 @@ public final class UserRepository extends Repository {
      * @return the "users" Collection Reference
      */
     public CollectionReference getUsersCollection() {
-        return db.collection(COLLECTION_NAME);
+        return db.collection(USERS_COLLECTION_NAME);
     }
 
 

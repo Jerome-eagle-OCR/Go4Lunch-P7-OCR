@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
  * @author jrigault
  */
 public class MainViewModel extends ViewModel {
+    private final RestaurantRepository restaurantRepository;
     private final LiveData<FirebaseUser> currentFirebaseUserLiveData;
     private final LiveData<User> currentUserLiveData;
     private final LiveData<String> currentUserChosenRestaurantIdLiveData;
@@ -40,9 +41,9 @@ public class MainViewModel extends ViewModel {
             RestaurantRepository restaurantRepository,
             GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId
     ) {
+        this.restaurantRepository = restaurantRepository;
         currentFirebaseUserLiveData = userRepository.getCurrentFirebaseUser();
         currentUserLiveData = userRepository.getCurrentUser();
-        restaurantRepository.setChosenRestaurantIdsAndCleanCollection();
         currentUserChosenRestaurantIdLiveData = getCurrentUserChosenRestaurantId.getCurrentUserChosenRestaurantId();
 
         currentUserViewStateMediatorLiveData = new MediatorLiveData<>();
@@ -99,8 +100,11 @@ public class MainViewModel extends ViewModel {
                     userName, userUrlPicture, userEmail, userChosenRestaurantId);
         } else {
             mainViewState = null;
-            if (currentFirebaseUserLiveData.getValue() == null)
+            if (currentFirebaseUserLiveData.getValue() == null) {
+                restaurantRepository.unsetChosenRestaurantIdsAndCleanCollection();
+                restaurantRepository.unsetFoundRestaurants();
                 this.navigationItemSelected(R.id.authentication);
+            }
         }
         currentUserViewStateMediatorLiveData.setValue(mainViewState);
 

@@ -50,7 +50,7 @@ public class ListViewViewModel extends ViewModel {
                     for (DocumentSnapshot document : documents) {
                         String restaurantId = document.getId();
                         List<String> byUserIds = restaurantRepository.getByUserIds(document);
-                        Integer byUsersCount = byUserIds.size();
+                        int byUsersCount = byUserIds.size();
                         restaurantByUsersCountMap.put(restaurantId, byUsersCount);
                     }
                     restaurantViewSates = getRestaurantViewStates.getRestaurantViewStates(restaurantByUsersCountMap);

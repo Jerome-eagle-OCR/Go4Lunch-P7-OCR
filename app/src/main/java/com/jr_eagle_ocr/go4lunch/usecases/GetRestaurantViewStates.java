@@ -7,14 +7,14 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 
-import com.google.android.libraries.places.api.model.LocalTime;
-import com.google.android.libraries.places.api.model.Period;
+import com.google.android.libraries.places.api.model.DayOfWeek;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.model.Restaurant;
+import com.jr_eagle_ocr.go4lunch.model.pojo.RestaurantPojo;
 import com.jr_eagle_ocr.go4lunch.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.RestaurantViewSate;
 import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
+import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -26,14 +26,16 @@ import java.util.Map;
  */
 public final class GetRestaurantViewStates extends UseCase {
     private final LocationRepository locationRepository;
-    private final LiveData<Map<String, Restaurant>> foundRestaurantsLiveData;
+    private final RestaurantRepository restaurantRepository;
+    private final LiveData<Map<String, RestaurantPojo>> allRestaurantsLiveData;
 
     public GetRestaurantViewStates(
             LocationRepository locationRepository,
             RestaurantRepository restaurantRepository
     ) {
         this.locationRepository = locationRepository;
-        foundRestaurantsLiveData = restaurantRepository.getFoundRestaurants();
+        this.restaurantRepository = restaurantRepository;
+        allRestaurantsLiveData = restaurantRepository.getAllRestaurants();
     }
 
     /**
@@ -45,43 +47,45 @@ public final class GetRestaurantViewStates extends UseCase {
      */
     public List<RestaurantViewSate> getRestaurantViewStates(Map<String, Integer> restaurantByUsersCountMap) {
         List<RestaurantViewSate> restaurantViewSates = new ArrayList<>();
-        Map<String, Restaurant> foundRestaurants = foundRestaurantsLiveData.getValue();
-        if (foundRestaurants != null) {
-            for (Map.Entry<String, Restaurant> restaurantEntry : foundRestaurants.entrySet()) {
-                String placeId = restaurantEntry.getKey();
-                Restaurant restaurant = restaurantEntry.getValue();
+        List<String> foundRestaurantIds = restaurantRepository.getFoundRestaurantIds();
+        Map<String, RestaurantPojo> allRestaurants = allRestaurantsLiveData.getValue();
+        if (foundRestaurantIds != null && allRestaurants != null) {
+            for (String id : foundRestaurantIds) {
+                RestaurantPojo restaurant = allRestaurants.get(id);
+                if (restaurant != null) {
 
-                // Restaurant photo
-                Bitmap photo = restaurant.getPhoto();
-                // Restaurant name
-                String name = restaurant.getName();
-                // Restaurant distance from current maps location
-                String distance = this.getDistanceText(restaurant);
-                // Restaurant address
-                String address = restaurant.getAddress();
-                if (address.endsWith(", France"))
-                    address = address.substring(0, address.length() - 8);
-                // Restaurant number of joining users and text visibility
-                Object[] joinersArray = this.getJoinersArray(restaurantByUsersCountMap, placeId);
-                String joiners = (String) joinersArray[0];
-                boolean isJoinersVisible = (boolean) joinersArray[1];
-                // Restaurant opening
-                Object[] openingArray = this.getOpeningArray(restaurant);
-                int openingPrefix = (int) openingArray[0];
-                String closingTime = (String) openingArray[1];
-                boolean isWarningStyle = (boolean) openingArray[2];
-                // Restaurant rating range reduced to 3 stars
-                int rating;
-                rating = (int) (restaurant.getRating() * 3 / 5);
+                    // Restaurant photo
+                    Bitmap photo = BitmapUtil.decodeBase64(restaurant.getPhotoString());
+                    // Restaurant name
+                    String name = restaurant.getName();
+                    // Restaurant distance from current maps location
+                    String distance = this.getDistanceText(restaurant);
+                    // Restaurant address
+                    String address = restaurant.getAddress();
+                    if (address.endsWith(", France"))
+                        address = address.substring(0, address.length() - 8);
+                    // Restaurant number of joining users and text visibility
+                    Object[] joinersArray = this.getJoinersArray(restaurantByUsersCountMap, id);
+                    String joiners = (String) joinersArray[0];
+                    boolean isJoinersVisible = (boolean) joinersArray[1];
+                    // Restaurant opening
+                    Object[] openingArray = this.getOpeningArray(restaurant);
+                    int openingPrefix = (int) openingArray[0];
+                    String closingTime = (String) openingArray[1];
+                    boolean isWarningStyle = (boolean) openingArray[2];
+                    // Restaurant rating range reduced to 3 stars
+                    float rating;
+                    rating = restaurant.getRating();
 
-                // Restaurant view state creation
-                RestaurantViewSate restaurantViewSate = new RestaurantViewSate(
-                        placeId, photo, name, distance, address,
-                        joiners, isJoinersVisible, openingPrefix, closingTime, isWarningStyle, rating);
+                    // Restaurant view state creation
+                    RestaurantViewSate restaurantViewSate = new RestaurantViewSate(
+                            id, photo, name, distance, address,
+                            joiners, isJoinersVisible, openingPrefix, closingTime, isWarningStyle, rating);
 
-                // Add view state in the list
-                restaurantViewSates.add(restaurantViewSate);
-                Log.d(TAG, "getRestaurantViewStates: added " + restaurantViewSate.toString());
+                    // Add view state in the list
+                    restaurantViewSates.add(restaurantViewSate);
+                    Log.d(TAG, "getRestaurantViewStates: added " + restaurantViewSate.toString());
+                }
             }
         }
 
@@ -95,10 +99,10 @@ public final class GetRestaurantViewStates extends UseCase {
      * @return a formatted text for the view
      */
     @NonNull
-    private String getDistanceText(Restaurant restaurant) {
+    private String getDistanceText(RestaurantPojo restaurant) {
         String distance;
-        double startLat = restaurant.getLatLng().latitude;
-        double startLng = restaurant.getLatLng().longitude;
+        double startLat = restaurant.getGeoPoint().getLatitude();
+        double startLng = restaurant.getGeoPoint().getLongitude();
         double endLat = locationRepository.getLocation().getLatitude();
         double endLng = locationRepository.getLocation().getLongitude();
         float[] results = new float[1];
@@ -115,29 +119,41 @@ public final class GetRestaurantViewStates extends UseCase {
      * @return an object array containing infos for the view
      */
     @NonNull
-    private Object[] getOpeningArray(Restaurant restaurant) {
+    private Object[] getOpeningArray(RestaurantPojo restaurant) {
         Object[] openingArray = new Object[3];
         int openingPrefix;
         String closingTime = "";
         boolean isWarningStyle = true;
 
-        Calendar nowCalendar = Calendar.getInstance();
-        int todayDay = nowCalendar.get(Calendar.DAY_OF_WEEK) - 1;
+        Calendar calendar = Calendar.getInstance();
+        long nowTimeMillis = calendar.getTimeInMillis();
+        int todayDayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
+        int todayDayInt = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+        String todayDay = DayOfWeek.values()[todayDayInt].name();
+        String closeTime = restaurant.getCloseTimes().get(todayDay);
 
-        Period todayOpenings = restaurant.getOpeningHours().getPeriods().get(todayDay);
-
-        if (todayOpenings.getClose() != null) {
-            LocalTime closeTime = todayOpenings.getClose().getTime();
-            int closeMn = closeTime.getHours() * 60 + closeTime.getMinutes();
-            int nowMn = nowCalendar.get(Calendar.HOUR_OF_DAY) * 60 + nowCalendar.get(Calendar.MINUTE);
-            int compareMn = closeMn - nowMn;
-            if (compareMn <= 0) {
+        if (closeTime != null) {
+            String[] closeTimeArray = closeTime.split("[:]");
+            int closeTimeHour = Integer.parseInt(closeTimeArray[0]);
+            int closeTimeMinute = Integer.parseInt(closeTimeArray[1]);
+            int closeTimeDayOfYear;
+            if (closeTimeHour < 12) {
+                closeTimeDayOfYear = todayDayOfYear + 1;
+            } else {
+                closeTimeDayOfYear = todayDayOfYear;
+            }
+            calendar.set(Calendar.DAY_OF_YEAR, closeTimeDayOfYear);
+            calendar.set(Calendar.HOUR_OF_DAY, closeTimeHour);
+            calendar.set(Calendar.MINUTE, closeTimeMinute);
+            long closeTimeMillis = calendar.getTimeInMillis();
+            long compareMinutes = (closeTimeMillis - nowTimeMillis) / 60000;
+            if (compareMinutes <= 0) {
                 openingPrefix = R.string.closed;
-            } else if (compareMn < 60) {
+            } else if (compareMinutes < 60) {
                 openingPrefix = R.string.closing_soon;
             } else {
                 openingPrefix = R.string.open_until;
-                closingTime = closeTime.getHours() + ":" + closeTime.getMinutes();
+                closingTime = closeTime;
                 isWarningStyle = false;
             }
         } else {
@@ -154,29 +170,21 @@ public final class GetRestaurantViewStates extends UseCase {
     /**
      * Build a joining user count view state based on the number of users having chosen the given restaurant
      *
-     * @param restaurantByUsersNumberMap a map<restaurant id, by users count> to get
-     *                                   the count of users having chosen a specific restaurant
-     * @param placeId                    the id of a specific restaurant
+     * @param restaurantByUsersCountMap a map<restaurant id, by users count> to get
+     *                                  the count of users having chosen a specific restaurant
+     * @param placeId                   the id of a specific restaurant
      * @return an object array containing infos for the view
      */
     @NonNull
-    private Object[] getJoinersArray(Map<String, Integer> restaurantByUsersNumberMap, String placeId) {
+    private Object[] getJoinersArray(Map<String, Integer> restaurantByUsersCountMap, String placeId) {
         Object[] joinersArray = new Object[2];
-        String joiners;
-        boolean isJoinersVisible;
-        if (restaurantByUsersNumberMap.isEmpty()) {
-            joiners = "";
-            isJoinersVisible = false;
-        } else {
-            //noinspection ConstantConditions: placeId is a Key got from entrySet in generateRestaurantViewStates()
-            int byUsersNumber = restaurantByUsersNumberMap.get(placeId);
-            joiners = "(" + byUsersNumber + ")";
-            isJoinersVisible = true;
-        }
+        Integer byUsersCount = restaurantByUsersCountMap.get(placeId);
+        int byUsersNumber = byUsersCount != null ? byUsersCount : 0;
+        String joiners = (byUsersNumber != 0) ? ("(" + byUsersNumber + ")") : "";
+        boolean isJoinersVisible = byUsersNumber != 0;
         joinersArray[0] = joiners;
         joinersArray[1] = isJoinersVisible;
 
         return joinersArray;
     }
-
 }

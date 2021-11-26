@@ -5,8 +5,7 @@ import android.app.Application;
 /**
  * @author jrigault
  */
-public class Go4LunchApplication extends Application {
-
+public final class Go4LunchApplication extends Application {
     private static Go4LunchDependencyContainer sDependencyContainer;
 
     @Override

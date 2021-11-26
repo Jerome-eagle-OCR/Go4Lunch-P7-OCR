@@ -45,9 +45,11 @@ import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.model.Restaurant;
+import com.jr_eagle_ocr.go4lunch.model.pojo.RestaurantPojo;
 import com.jr_eagle_ocr.go4lunch.ui.ViewModelFactory;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +61,6 @@ import pub.devrel.easypermissions.AppSettingsDialog;
  * @author jrigault
  */
 public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
-
     private static final String TAG = MapsViewFragment.class.getSimpleName();
     private GoogleMap map;
 //    private CameraPosition cameraPosition;
@@ -90,8 +91,8 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     private List<Place.Type> placeTypes;
     private FindCurrentPlaceResponse likelyPlaces;
 
-    private MapsViewViewModel viewViewModel;
-    private Map<String, Restaurant> foundRestaurants;
+    private MapsViewViewModel viewModel;
+    private Map<String, RestaurantPojo> allRestaurants;
 
     @Nullable
     @Override
@@ -104,10 +105,10 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        viewViewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(MapsViewViewModel.class);
+        viewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(MapsViewViewModel.class);
 
-        viewViewModel.getFoundRestaurants().observe(getViewLifecycleOwner(), foundRestaurants ->
-                this.foundRestaurants = foundRestaurants);
+        viewModel.getAllRestaurants().observe(getViewLifecycleOwner(), allRestaurants ->
+                this.allRestaurants = allRestaurants);
 
         // Construct a FusedLocationProviderClient.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
@@ -215,7 +216,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                             map.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                     new LatLng(lastKnownLocation.getLatitude(),
                                             lastKnownLocation.getLongitude()), DEFAULT_ZOOM));
-                            viewViewModel.setLocation(lastKnownLocation); //TODO: use location repo
+                            viewModel.setLocation(lastKnownLocation); //TODO: use location repo
                             showCurrentPlaces(); //Get places around, filter only restaurants and add them to the list
                         }
                     } else {
@@ -231,6 +232,9 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
+    /**
+     *
+     */
     private void showCurrentPlaces() {
         if (map == null) return;
 
@@ -262,9 +266,11 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                         placeTypes = place.getTypes();
                         String placeId = place.getId();
 
+                        List<String> foundRestaurantIds = new ArrayList<>();
                         if (placeId != null && placeTypes.contains(Place.Type.RESTAURANT)) {
+                            foundRestaurantIds.add(placeId);
                             // Add a marker on the map for each restaurant with green color for those chosen by other users
-                            viewViewModel.getChosenRestaurantIds().observe(getViewLifecycleOwner(), chosenPlaceIds -> {
+                            viewModel.getChosenRestaurantIds().observe(getViewLifecycleOwner(), chosenPlaceIds -> {
                                 // clear the map so remove all markers
                                 map.clear();
                                 // set color according to place chosen or not
@@ -281,7 +287,8 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                                 if (marker != null) marker.setTag(place.getId());
                             });
 
-                            if (foundRestaurants != null && !foundRestaurants.containsKey(placeId)) {
+                            // Fetch only if not already available in Firestore "restaurants" collection
+                            if (allRestaurants != null && !allRestaurants.containsKey(placeId)) {
                                 // Create new restaurant with place id
                                 Restaurant restaurant = new Restaurant(placeId);
 
@@ -300,11 +307,11 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
 
                                     // Set restaurant details
                                     restaurant.setName(detailPlace.getName());
-                                    restaurant.setLatLng(detailPlace.getLatLng());
                                     restaurant.setAddress(detailPlace.getAddress());
-                                    restaurant.setPhoneNumber(detailPlace.getPhoneNumber());
-                                    restaurant.setOpeningHours(detailPlace.getOpeningHours());
+                                    restaurant.setLatLng(detailPlace.getLatLng());
                                     restaurant.setRating(detailPlace.getRating());
+                                    restaurant.setOpeningHours(detailPlace.getOpeningHours());
+                                    restaurant.setPhoneNumber(detailPlace.getPhoneNumber());
                                     Uri uri = detailPlace.getWebsiteUri();
                                     if (uri != null) restaurant.setWebSiteUrl(uri.toString());
 
@@ -312,6 +319,9 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                                     final List<PhotoMetadata> metadata = detailPlace.getPhotoMetadatas();
                                     if (metadata == null || metadata.isEmpty()) {
                                         Log.w(TAG, "No photo metadata.");
+                                        // Add restaurant in found restaurants without photo
+                                        restaurant.setPhoto(null);
+                                        viewModel.addFoundRestaurant(restaurant);
                                         return;
                                     }
                                     final PhotoMetadata photoMetadata = metadata.get(0);
@@ -327,14 +337,19 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                                     placesClient.fetchPhoto(photoRequest).addOnSuccessListener((fetchPhotoResponse) -> {
                                         Bitmap bitmap = fetchPhotoResponse.getBitmap();
 
-                                        // Set restaurant photo
+                                        // Retrieve restaurant from found restaurants and set restaurant photo
                                         restaurant.setPhoto(bitmap);
+                                        // Add restaurant in found restaurants
+                                        viewModel.addFoundRestaurant(restaurant);
                                     }).addOnFailureListener((exception) -> {
                                         if (exception instanceof ApiException) {
                                             final ApiException apiException = (ApiException) exception;
                                             Log.e(TAG, "Place not found: " + exception.getMessage());
                                             final int statusCode = apiException.getStatusCode();
                                             // TODO: Handle error with given status code.
+                                            // Add restaurant in found restaurants without photo
+                                            restaurant.setPhoto(null);
+                                            viewModel.addFoundRestaurant(restaurant);
                                         }
                                     });
 
@@ -346,10 +361,9 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                                         // TODO: Handle error with given status code.
                                     }
                                 });
-
-                                viewViewModel.addFoundRestaurant(restaurant);
                             }
                         }
+                        viewModel.setFoundRestaurantIds(foundRestaurantIds);
                     }
                 } else {
                     Log.e(TAG, Objects.requireNonNull(task.getException()).getMessage());

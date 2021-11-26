@@ -2,6 +2,8 @@ package com.jr_eagle_ocr.go4lunch.model;
 
 import android.graphics.Bitmap;
 
+import androidx.annotation.Nullable;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.libraries.places.api.model.OpeningHours;
 
@@ -13,9 +15,11 @@ public class Restaurant {
     private String mName;
     private String mAddress;
     private LatLng mLatLng;
-    private double mRating;
+    @Nullable
+    private Double mRating;
     private OpeningHours mOpeningHours;
     private String mPhoneNumber;
+    @Nullable
     private Bitmap mPhoto;
     private String mWebSiteUrl;
 
@@ -41,7 +45,8 @@ public class Restaurant {
         return mLatLng;
     }
 
-    public double getRating() {
+    @Nullable
+    public Double getRating() {
         return mRating;
     }
 
@@ -53,6 +58,7 @@ public class Restaurant {
         return mPhoneNumber;
     }
 
+    @Nullable
     public Bitmap getPhoto() {
         return mPhoto;
     }
@@ -74,7 +80,7 @@ public class Restaurant {
         mLatLng = latLng;
     }
 
-    public void setRating(double rating) {
+    public void setRating(@Nullable Double rating) {
         mRating = rating;
     }
 
@@ -86,7 +92,7 @@ public class Restaurant {
         mPhoneNumber = phoneNumber;
     }
 
-    public void setPhoto(Bitmap photo) {
+    public void setPhoto(@Nullable Bitmap photo) {
         mPhoto = photo;
     }
 
