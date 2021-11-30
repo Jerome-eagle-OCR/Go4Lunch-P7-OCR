@@ -16,6 +16,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.jr_eagle_ocr.go4lunch.model.User;
 import com.jr_eagle_ocr.go4lunch.repositories.parent.Repository;
+import com.jr_eagle_ocr.go4lunch.util.Event;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.Map;
  */
 public final class UserRepository extends Repository {
     private final MutableLiveData<FirebaseUser> currentFirebaseUserMutableLiveData;
-    private final MutableLiveData<Boolean> isUserCreatedMutableLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Event<Boolean>> isUserCreatedEventMutableLiveData = new MutableLiveData<>();
     private final MutableLiveData<Map<String, User>> allUsersMutableLiveData = new MutableLiveData<>();
     private final MutableLiveData<User> currentUserMutableLiveData = new MutableLiveData<>();
     private ListenerRegistration listenerRegistration;
@@ -106,32 +107,37 @@ public final class UserRepository extends Repository {
             String NOPHOTOURL = "https://ia801503.us.archive.org/3/items/default_avatar_202110/no_photo.png";
             urlPicture = firebaseUser.getPhotoUrl() != null ? firebaseUser.getPhotoUrl().toString() : NOPHOTOURL;
 
-            User userToCreate = new User(uid, name, userEmail, urlPicture, false);
+            User userToCreate = new User(uid, name, userEmail, urlPicture, true);
 
-            // If the user already exists in Firestore, we get his data (userUrlPicture, userName, isReminindingNotificationEnabled)
-            User firestoreUser = getCurrentUser().getValue();
-            if (firestoreUser != null) {
-                if (firestoreUser.getUserUrlPicture() != null) {
-                    userToCreate.setUserUrlPicture(firestoreUser.getUserUrlPicture());
-                }
-                if (firestoreUser.getUserName() != null) {
-                    userToCreate.setUserName(firestoreUser.getUserName());
-                }
-                userToCreate.setReminindingNotificationEnabled(firestoreUser.isReminindingNotificationEnabled());
-            }
-            String userName = userToCreate.getUserName();
-            if (userName == null || userName.equals("")) {
-                // Compose alternative name from email
-                String nameFromEmail = userEmail == null || userEmail.equals("") ?
-                        "ANONYMOUS" : this.getNameFromEmail(userEmail);
-                userToCreate.setUserName(nameFromEmail);
-            }
-            this.setUser(userToCreate).addOnSuccessListener(unused -> isUserCreatedMutableLiveData.setValue(Boolean.TRUE));
+            // If the user already exists in Firestore, we get his data (userUrlPicture, userName, isNoonReminderEnabled)
+            this.getUsersCollection().document(uid).get()
+                    .addOnSuccessListener(document -> {
+                        User firestoreUser = null;
+                        if (document.exists()) firestoreUser = document.toObject(User.class);
+                        if (firestoreUser != null) {
+                            if (firestoreUser.getUserUrlPicture() != null) {
+                                userToCreate.setUserUrlPicture(firestoreUser.getUserUrlPicture());
+                            }
+                            if (firestoreUser.getUserName() != null) {
+                                userToCreate.setUserName(firestoreUser.getUserName());
+                            }
+                            userToCreate.setNoonReminderEnabled(firestoreUser.isNoonReminderEnabled());
+                        }
+                        String userName = userToCreate.getUserName();
+                        if (userName == null || userName.equals("")) {
+                            // Compose alternative name from email
+                            String nameFromEmail = userEmail == null || userEmail.equals("") ?
+                                    "ANONYMOUS" : this.getNameFromEmail(userEmail);
+                            userToCreate.setUserName(nameFromEmail);
+                        }
+                        this.setUser(userToCreate).addOnSuccessListener(unused ->
+                                isUserCreatedEventMutableLiveData.setValue(new Event<>(Boolean.TRUE)));
+                    });
         }
     }
 
-    public LiveData<Boolean> isUserCreated() {
-        return isUserCreatedMutableLiveData;
+    public LiveData<Event<Boolean>> isUserCreatedEvent() {
+        return isUserCreatedEventMutableLiveData;
     }
 
     /**

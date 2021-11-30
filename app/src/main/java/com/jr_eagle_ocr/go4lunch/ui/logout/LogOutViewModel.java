@@ -7,7 +7,6 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
@@ -28,8 +27,7 @@ public class LogOutViewModel extends ViewModel {
     public void signOut(Context context) {
         FirebaseUser firebaseUser = userRepository.getCurrentFirebaseUser().getValue();
         if (firebaseUser != null) {
-            Task<Void> task = userRepository.signOut(context);
-            task.addOnSuccessListener(unused -> {
+            userRepository.signOut(context).addOnSuccessListener(unused -> {
                 signOutResultMutableLiveData.setValue(R.string.disconnection_successful);
             }).addOnFailureListener(e -> {
                 signOutResultMutableLiveData.setValue(R.string.disconnection_unsuccessful);

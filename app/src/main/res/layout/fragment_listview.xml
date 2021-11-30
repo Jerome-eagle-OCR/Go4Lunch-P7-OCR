@@ -6,6 +6,7 @@
     android:name="com.jr_eagle_ocr.go4lunch.ui.ListViewFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginBottom="@dimen/design_bottom_navigation_height"
     app:layoutManager="LinearLayoutManager"
     tools:context=".ui.listview.ListViewFragment"
     tools:listitem="@layout/item_restaurant" />

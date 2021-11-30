@@ -5,17 +5,21 @@ public class MainViewState {
     private final String currentUserUrlPicture;
     private final String currentUserEmail;
     private final String currentUserChosenRestaurantId;
+    private final String action;
+
 
     public MainViewState(
             String currentUserName,
             String currentUserUrlPicture,
             String currentUserEmail,
-            String currentUserChosenRestaurantId
+            String currentUserChosenRestaurantId,
+            String action
     ) {
         this.currentUserName = currentUserName;
         this.currentUserUrlPicture = currentUserUrlPicture;
         this.currentUserEmail = currentUserEmail;
         this.currentUserChosenRestaurantId = currentUserChosenRestaurantId;
+        this.action = action;
     }
 
     public String getUserName() {
@@ -32,5 +36,9 @@ public class MainViewState {
 
     public String getCurrentUserChosenRestaurantId() {
         return currentUserChosenRestaurantId;
+    }
+
+    public String getAction() {
+        return action;
     }
 }

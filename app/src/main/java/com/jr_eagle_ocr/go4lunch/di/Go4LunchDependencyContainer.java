@@ -6,6 +6,7 @@ import com.jr_eagle_ocr.go4lunch.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
+import com.jr_eagle_ocr.go4lunch.usecases.GetNotificationKit;
 import com.jr_eagle_ocr.go4lunch.usecases.GetRestaurantViewStates;
 import com.jr_eagle_ocr.go4lunch.usecases.GetUserViewStates;
 import com.jr_eagle_ocr.go4lunch.usecases.IsLikedRestaurant;
@@ -26,6 +27,7 @@ public final class Go4LunchDependencyContainer {
     private final GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId;
     private final SetClearLikedRestaurant setClearLikedRestaurant;
     private final IsLikedRestaurant isLikedRestaurant;
+    private final GetNotificationKit getNotificationKit;
 
     public Go4LunchDependencyContainer(
             Application context
@@ -43,20 +45,27 @@ public final class Go4LunchDependencyContainer {
                 new GetRestaurantViewStates(
                         locationRepository, restaurantRepository);
 
-        setClearChosenRestaurant =
-                new SetClearChosenRestaurant(
-                        userRepository, restaurantRepository);
-
         getCurrentUserChosenRestaurantId =
                 new GetCurrentUserChosenRestaurantId(
                         userRepository, restaurantRepository);
+
+        setClearChosenRestaurant =
+                new SetClearChosenRestaurant(
+                        userRepository, restaurantRepository,
+                        getCurrentUserChosenRestaurantId);
 
         setClearLikedRestaurant =
                 new SetClearLikedRestaurant(
                         userRepository, restaurantRepository);
 
         isLikedRestaurant =
-                new IsLikedRestaurant(userRepository, restaurantRepository);
+                new IsLikedRestaurant(
+                        userRepository, restaurantRepository);
+
+
+        getNotificationKit =
+                new GetNotificationKit(
+                        userRepository, restaurantRepository);
     }
 
     public Application getContext() {
@@ -91,12 +100,15 @@ public final class Go4LunchDependencyContainer {
         return getCurrentUserChosenRestaurantId;
     }
 
-
     public SetClearLikedRestaurant setClearLikedRestaurant() {
         return setClearLikedRestaurant;
     }
 
     public IsLikedRestaurant getIsLikedRestaurant() {
         return isLikedRestaurant;
+    }
+
+    public GetNotificationKit getNotificationKit() {
+        return getNotificationKit;
     }
 }

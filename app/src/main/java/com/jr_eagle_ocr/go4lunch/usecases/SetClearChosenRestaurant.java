@@ -9,6 +9,8 @@ import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
@@ -19,7 +21,10 @@ import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,15 +33,34 @@ import java.util.Map;
 public final class SetClearChosenRestaurant extends UseCase {
     private final LiveData<User> currentUserLiveData;
     private final LiveData<Map<String, RestaurantPojo>> allRestaurantsLiveData;
+    private final LiveData<String> currentUserChosenRestaurantIdLiveData;
     private final CollectionReference chosenRestaurantsCollection;
 
     public SetClearChosenRestaurant(
             UserRepository userRepository,
-            RestaurantRepository restaurantRepository
+            RestaurantRepository restaurantRepository,
+            GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId
     ) {
         currentUserLiveData = userRepository.getCurrentUser();
         allRestaurantsLiveData = restaurantRepository.getAllRestaurants();
+        currentUserChosenRestaurantIdLiveData = getCurrentUserChosenRestaurantId.getCurrentUserChosenRestaurantId();
         chosenRestaurantsCollection = restaurantRepository.getChosenRestaurantsCollection();
+    }
+
+    /**
+     * Manages to set the current user document in Collection "chosen_by"
+     * of the given restaurant document (itself in Collection "chosen_restaurants"),
+     * but previously tests if current user has already chosen a restaurant,
+     * if so, clears it and afterwards, really do set the newly chosen restaurant
+     *
+     * @param placeId the given restaurant id
+     */
+    public void setChosenRestaurant(String placeId) {
+        String currentUserChosenRestaurantId = currentUserChosenRestaurantIdLiveData.getValue();
+        if (currentUserChosenRestaurantId != null) {
+            this.clearChosenRestaurant(currentUserChosenRestaurantId);
+        }
+        this.doSetChosenRestaurant(placeId);
     }
 
     /**
@@ -45,7 +69,7 @@ public final class SetClearChosenRestaurant extends UseCase {
      *
      * @param placeId the given restaurant id
      */
-    public void setChosenRestaurant(String placeId) {
+    private void doSetChosenRestaurant(String placeId) {
         User user = currentUserLiveData.getValue();
         if (user != null && allRestaurantsLiveData.getValue() != null) {
             String uid = user.getUid();
@@ -88,6 +112,7 @@ public final class SetClearChosenRestaurant extends UseCase {
      * of given restaurant document (itself in Collection "chosen_restaurants")
      *
      * @param placeId placeId the given restaurant id
+     * @return a Firestore void task when clearing is successful
      */
     public void clearChosenRestaurant(String placeId) {
         User user = currentUserLiveData.getValue();
@@ -98,14 +123,16 @@ public final class SetClearChosenRestaurant extends UseCase {
                     .get()
                     .continueWith(task -> {
                         DocumentSnapshot document = task.getResult();
+                        List<Task<Void>> tasks = new ArrayList<>();
                         if (document.exists()) {
-                            document.getReference().delete();
-                            chosenRestaurantsCollection.document(placeId)
+                            Task<Void> task1 = document.getReference().delete();
+                            Task<Void> task2 = chosenRestaurantsCollection.document(placeId)
                                     .update(BYUSERS_FIELD, FieldValue.arrayRemove(uid));
+                            tasks.addAll(Arrays.asList(task1, task2));
                         }
-                        return document.getReference();
+                        return Tasks.whenAllSuccess(tasks);
                     })
-                    .addOnSuccessListener(documentReference -> {
+                    .addOnSuccessListener(task -> {
                         Log.d(TAG, "clearChosenRestaurant: " + placeId);
                     });
         }

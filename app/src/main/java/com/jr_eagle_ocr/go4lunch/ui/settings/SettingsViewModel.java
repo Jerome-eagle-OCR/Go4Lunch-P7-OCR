@@ -36,7 +36,7 @@ public class SettingsViewModel extends ViewModel {
     private final String currentUserChosenRestaurantId;
     private String userName;
     private String userUrlPicture;
-    private boolean isReminindingNotificationEnabled;
+    private boolean isNoonReminderEnabled;
     private final MutableLiveData<Integer> validateResultMutableLiveData = new MutableLiveData<>();
     private final MutableLiveData<Integer> deleteUserResultMutableLiveData = new MutableLiveData<>();
 
@@ -53,14 +53,14 @@ public class SettingsViewModel extends ViewModel {
         if (currentUser != null) {
             userName = currentUser.getUserName();
             userUrlPicture = currentUser.getUserUrlPicture();
-            isReminindingNotificationEnabled = currentUser.isReminindingNotificationEnabled();
+            isNoonReminderEnabled = currentUser.isNoonReminderEnabled();
         }
         currentUserChosenRestaurantId = getCurrentUserChosenRestaurantId.getCurrentUserChosenRestaurantId().getValue();
     }
 
     public SettingsDialogViewState getSettingsDialogViewState() {
         return new SettingsDialogViewState(
-                isReminindingNotificationEnabled,
+                isNoonReminderEnabled,
                 userName,
                 userUrlPicture);
     }
@@ -114,7 +114,8 @@ public class SettingsViewModel extends ViewModel {
                 userName,
                 currentUser.getUserEmail(),
                 userUrlPicture,
-                isReminindingNotificationEnabled);
+                isNoonReminderEnabled);
+
         userRepository.setUser(userToSet).addOnCompleteListener(task -> {
             int validateResult;
             if (task.isSuccessful()) {
@@ -131,8 +132,8 @@ public class SettingsViewModel extends ViewModel {
         return validateResultMutableLiveData;
     }
 
-    public void setReminindingNotificationEnabled(boolean isReminindingNotificationEnabled) {
-        this.isReminindingNotificationEnabled = isReminindingNotificationEnabled;
+    public void setNoonReminderEnabled(boolean isNoonReminderEnabled) {
+        this.isNoonReminderEnabled = isNoonReminderEnabled;
     }
 
     public void setUserName(String userName) {

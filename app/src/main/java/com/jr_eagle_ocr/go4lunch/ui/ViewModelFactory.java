@@ -11,7 +11,7 @@ import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.ui.authentication.AuthenticationViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.listview.ListViewViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.logout.LogOutViewModel;
-import com.jr_eagle_ocr.go4lunch.ui.mapview.MapsViewViewModel;
+import com.jr_eagle_ocr.go4lunch.ui.mapview.MapViewViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.settings.SettingsViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.workmates.WorkmatesViewModel;
 import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
@@ -102,8 +102,8 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
             return (T) new ListViewViewModel(
                     restaurantRepository, getRestaurantViewStates);
         }
-        if (modelClass.isAssignableFrom(MapsViewViewModel.class)) {
-            return (T) new MapsViewViewModel(
+        if (modelClass.isAssignableFrom(MapViewViewModel.class)) {
+            return (T) new MapViewViewModel(
                     locationRepository, restaurantRepository);
         }
         if (modelClass.isAssignableFrom(SettingsViewModel.class)) {

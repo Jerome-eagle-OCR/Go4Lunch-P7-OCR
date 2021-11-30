@@ -1,5 +1,9 @@
 package com.jr_eagle_ocr.go4lunch.ui.mapview;
 
+import static com.jr_eagle_ocr.go4lunch.ui.mapview.MapViewViewModel.DRAWABLE_RESOURCE;
+import static com.jr_eagle_ocr.go4lunch.ui.mapview.MapViewViewModel.LATLNG;
+import static com.jr_eagle_ocr.go4lunch.ui.mapview.MapViewViewModel.NAME;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -60,15 +64,15 @@ import pub.devrel.easypermissions.AppSettingsDialog;
 /**
  * @author jrigault
  */
-public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
-    private static final String TAG = MapsViewFragment.class.getSimpleName();
+public class MapViewFragment extends Fragment implements OnMapReadyCallback {
+    private static final String TAG = MapViewFragment.class.getSimpleName();
     private GoogleMap map;
 //    private CameraPosition cameraPosition;
 
     // A default location (Sydney, Australia) and default zoom to use when location permission is
     // not granted.
     private final LatLng defaultLocation = new LatLng(48.8057, 2.1323);
-    private static final int DEFAULT_ZOOM = 18;
+    private static final float DEFAULT_ZOOM = 18.5f;
 
     private boolean locationPermissionGranted;
 
@@ -91,7 +95,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     private List<Place.Type> placeTypes;
     private FindCurrentPlaceResponse likelyPlaces;
 
-    private MapsViewViewModel viewModel;
+    private MapViewViewModel viewModel;
     private Map<String, RestaurantPojo> allRestaurants;
 
     @Nullable
@@ -99,13 +103,13 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_mapsview, container, false);
+        return inflater.inflate(R.layout.fragment_mapview, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        viewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(MapsViewViewModel.class);
+        viewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(MapViewViewModel.class);
 
         viewModel.getAllRestaurants().observe(getViewLifecycleOwner(), allRestaurants ->
                 this.allRestaurants = allRestaurants);
@@ -158,7 +162,7 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                     if (result) {
                         locationPermissionGranted = true;
 //                        LocationManager lm = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
-//                        lm.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 5000, 50, MapsViewFragment.this::onLocationChanged);
+//                        lm.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 5000, 50, MapViewFragment.this::onLocationChanged);
                         refreshMap();
                     } else {
                         locationPermissionGranted = false;
@@ -238,9 +242,6 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
     private void showCurrentPlaces() {
         if (map == null) return;
 
-        BitmapDescriptor orangeMarker = BitmapDescriptorFactory.fromResource(R.drawable.orange_marker);
-        BitmapDescriptor greenMarker = BitmapDescriptorFactory.fromResource(R.drawable.green_marker);
-
         if (locationPermissionGranted) {
             // Use fields to define the data types to return.
             List<Place.Field> placeFields = Arrays.asList(
@@ -259,33 +260,16 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                 if (task.isSuccessful() && task.getResult() != null) {
                     likelyPlaces = task.getResult();
 
-//                    for (PlaceLikelihood placeLikelihood : likelyPlaces.getPlaceLikelihoods()) {
-                    for (int i = 0; i < 1; i++) {
-                        PlaceLikelihood placeLikelihood = likelyPlaces.getPlaceLikelihoods().get(0);
+                    List<String> foundRestaurantIds = new ArrayList<>();
+                    for (PlaceLikelihood placeLikelihood : likelyPlaces.getPlaceLikelihoods()) {
+//                    for (int i = 0; i < 1; i++) {
+//                        PlaceLikelihood placeLikelihood = likelyPlaces.getPlaceLikelihoods().get(0);
                         Place place = placeLikelihood.getPlace();
                         placeTypes = place.getTypes();
                         String placeId = place.getId();
 
-                        List<String> foundRestaurantIds = new ArrayList<>();
                         if (placeId != null && placeTypes.contains(Place.Type.RESTAURANT)) {
                             foundRestaurantIds.add(placeId);
-                            // Add a marker on the map for each restaurant with green color for those chosen by other users
-                            viewModel.getChosenRestaurantIds().observe(getViewLifecycleOwner(), chosenPlaceIds -> {
-                                // clear the map so remove all markers
-                                map.clear();
-                                // set color according to place chosen or not
-                                BitmapDescriptor colorMarker = orangeMarker;
-                                if (chosenPlaceIds != null) {
-                                    colorMarker = (chosenPlaceIds.contains(placeId)) ? greenMarker : orangeMarker;
-                                }
-                                // create and add marker
-                                Marker marker =
-                                        map.addMarker(new MarkerOptions()
-                                                .position(Objects.requireNonNull(placeLikelihood.getPlace().getLatLng()))
-                                                .title(placeLikelihood.getPlace().getName())
-                                                .icon(colorMarker));
-                                if (marker != null) marker.setTag(place.getId());
-                            });
 
                             // Fetch only if not already available in Firestore "restaurants" collection
                             if (allRestaurants != null && !allRestaurants.containsKey(placeId)) {
@@ -363,8 +347,8 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
                                 });
                             }
                         }
-                        viewModel.setFoundRestaurantIds(foundRestaurantIds);
                     }
+                    viewModel.setFoundRestaurantIds(foundRestaurantIds);
                 } else {
                     Log.e(TAG, Objects.requireNonNull(task.getException()).getMessage());
                 }
@@ -373,5 +357,36 @@ public class MapsViewFragment extends Fragment implements OnMapReadyCallback {
             // The user has not granted permission.
             Log.i(TAG, "The user did not grant location permission.");
         }
+        setMarkerDetailsObserver();
+    }
+
+    private void setMarkerDetailsObserver() {
+        viewModel.getMarkerDetails().observe(getViewLifecycleOwner(), markerDetails -> {
+            // clear the map so remove all markers
+            map.clear();
+            // get details and add marker for each restaurant with green color for those chosen by other users
+            for (Map.Entry<String, Map<String, Object>> entrySet : markerDetails.entrySet()) {
+                String id = entrySet.getKey();
+                Map<String, Object> details = entrySet.getValue();
+                // place name for marker's title
+                String name = (String) details.get(NAME);
+                // place position
+                LatLng latLng = (LatLng) details.get(LATLNG);
+                // color according to place chosen or not
+                Integer drawableResource = (Integer) details.get(DRAWABLE_RESOURCE);
+                int resource = drawableResource != null ? (int) drawableResource : R.drawable.orange_marker;
+                BitmapDescriptor colorMarker = BitmapDescriptorFactory.fromResource(resource);
+
+                // add marker and set its tag to place id (used for intent extra)
+                if (latLng != null) {
+                    Marker marker =
+                            map.addMarker(new MarkerOptions()
+                                    .position(latLng)
+                                    .title(name)
+                                    .icon(colorMarker));
+                    if (marker != null) marker.setTag(id);
+                }
+            }
+        });
     }
 }

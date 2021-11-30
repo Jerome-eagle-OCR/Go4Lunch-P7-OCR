@@ -19,8 +19,8 @@ public class AuthenticationViewModel extends ViewModel {
     public static final String TOAST_AUTH_SUCCESS = "TOAST_MESSAGE";
     private final UserRepository userRepository;
     private final RestaurantRepository restaurantRepository;
-    private final LiveData<Boolean> isUserCreatedLiveData;
-    private final Observer<Boolean> isUserCreatedObserver;
+    private final LiveData<Event<Boolean>> isUserCreatedEventLiveData;
+    private final Observer<Event<Boolean>> isUserCreatedObserver;
     private final MutableLiveData<Event<String>> actionEventMutableLiveData = new MutableLiveData<>();
 
     public AuthenticationViewModel(
@@ -42,12 +42,15 @@ public class AuthenticationViewModel extends ViewModel {
         }
 
         // Listen user creation with observer that will be removed in onCleared()
-        isUserCreatedLiveData = userRepository.isUserCreated();
-        isUserCreatedObserver = isUserCreated -> {
-            actionEventMutableLiveData.setValue(new Event<>(TOAST_AUTH_SUCCESS));
-            actionEventMutableLiveData.setValue(new Event<>(NAVIGATE_TO_MAIN));
+        isUserCreatedEventLiveData = userRepository.isUserCreatedEvent();
+        isUserCreatedObserver = isUserCreatedEvent -> {
+            if (!isUserCreatedEvent.getHasBeenHandled()) {
+                isUserCreatedEvent.getContentIfNotHandled();
+                actionEventMutableLiveData.setValue(new Event<>(TOAST_AUTH_SUCCESS));
+                actionEventMutableLiveData.setValue(new Event<>(NAVIGATE_TO_MAIN));
+            }
         };
-        isUserCreatedLiveData.observeForever(isUserCreatedObserver);
+        isUserCreatedEventLiveData.observeForever(isUserCreatedObserver);
     }
 
     /**
@@ -79,6 +82,6 @@ public class AuthenticationViewModel extends ViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        isUserCreatedLiveData.removeObserver(isUserCreatedObserver);
+        isUserCreatedEventLiveData.removeObserver(isUserCreatedObserver);
     }
 }

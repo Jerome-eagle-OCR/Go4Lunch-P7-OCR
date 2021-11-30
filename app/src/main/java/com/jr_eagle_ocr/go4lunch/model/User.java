@@ -11,7 +11,7 @@ public class User {
     private String userEmail;
     @Nullable
     private String userUrlPicture;
-    private boolean isReminindingNotificationEnabled;
+    private boolean isNoonReminderEnabled;
 
     public User() {
     }
@@ -21,13 +21,13 @@ public class User {
             String userName,
             String userEmail,
             @Nullable String userUrlPicture,
-            boolean isReminindingNotificationEnabled
+            boolean isNoonReminderEnabled
     ) {
         this.uid = uid;
         this.userName = userName;
         this.userEmail = userEmail;
         this.userUrlPicture = userUrlPicture;
-        this.isReminindingNotificationEnabled = isReminindingNotificationEnabled;
+        this.isNoonReminderEnabled = isNoonReminderEnabled;
     }
 
 
@@ -48,8 +48,8 @@ public class User {
         return userUrlPicture;
     }
 
-    public boolean isReminindingNotificationEnabled() {
-        return isReminindingNotificationEnabled;
+    public boolean isNoonReminderEnabled() {
+        return isNoonReminderEnabled;
     }
 
 
@@ -69,8 +69,8 @@ public class User {
         this.userUrlPicture = userUrlPicture;
     }
 
-    public void setReminindingNotificationEnabled(boolean reminindingNotificationEnabled) {
-        isReminindingNotificationEnabled = reminindingNotificationEnabled;
+    public void setNoonReminderEnabled(boolean noonReminderEnabled) {
+        isNoonReminderEnabled = noonReminderEnabled;
     }
 
     @Override
@@ -80,7 +80,7 @@ public class User {
 
         User user = (User) o;
 
-        if (isReminindingNotificationEnabled != user.isReminindingNotificationEnabled) return false;
+        if (isNoonReminderEnabled != user.isNoonReminderEnabled) return false;
         if (uid != null ? !uid.equals(user.uid) : user.uid != null) return false;
         if (userName != null ? !userName.equals(user.userName) : user.userName != null)
             return false;
@@ -95,7 +95,7 @@ public class User {
         result = 31 * result + (userName != null ? userName.hashCode() : 0);
         result = 31 * result + (userEmail != null ? userEmail.hashCode() : 0);
         result = 31 * result + (userUrlPicture != null ? userUrlPicture.hashCode() : 0);
-        result = 31 * result + (isReminindingNotificationEnabled ? 1 : 0);
+        result = 31 * result + (isNoonReminderEnabled ? 1 : 0);
         return result;
     }
 }

@@ -49,7 +49,7 @@ public final class GetCurrentUserChosenRestaurantId extends UseCase {
     /**
      * Set authenticated user chosen restaurant id from Firestore query
      */
-    public void setCurrentUserChosenRestaurantId() {
+    private void setCurrentUserChosenRestaurantId() {
         User user = currentUserLiveData.getValue();
         String uid = user != null ? user.getUid() : "";
         chosenRestaurantsCollection

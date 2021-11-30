@@ -48,12 +48,12 @@ public class LogOutDialogFragment extends DialogFragment {
     private void init() {
         // Set OK button click listener
         binding.buttonOk.setOnClickListener(v -> {
-            viewModel.signOut(requireActivity());
+            viewModel.signOut(requireContext());
         });
         // Set sign out result observer
         viewModel.signOutResult().observe(getViewLifecycleOwner(), signOutResult -> {
             String message = getString(signOutResult);
-            Toast.makeText(requireActivity(), message, Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
             dismiss();
         });
     }

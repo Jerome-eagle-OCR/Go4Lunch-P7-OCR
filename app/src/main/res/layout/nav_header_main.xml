@@ -49,6 +49,7 @@
         android:singleLine="true"
         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
         android:textSize="18sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@id/drwr_user_email"
         app:layout_constraintStart_toEndOf="@id/drwr_user_photo"
         tools:text="Manu Tentionnaire" />
@@ -62,6 +63,7 @@
         android:fontFamily="sans-serif-condensed-light"
         android:singleLine="true"
         android:textSize="14sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@id/drwr_user_name"
         tools:text="manu.tentionnaire@usine.fr" />

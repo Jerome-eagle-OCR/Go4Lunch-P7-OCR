@@ -89,7 +89,7 @@ public class SettingsDialogFragment extends DialogFragment {
     private void setListeners() {
         // Set notification activation switch check change listener
         switchNotification.setOnCheckedChangeListener((buttonView, isChecked) ->
-                viewModel.setReminindingNotificationEnabled(isChecked));
+                viewModel.setNoonReminderEnabled(isChecked));
         // Set user name textview text change listener
         userNameInputEditText.addTextChangedListener(new TextWatcher() {
             @Override

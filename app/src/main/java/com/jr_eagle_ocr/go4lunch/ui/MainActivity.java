@@ -1,18 +1,24 @@
 package com.jr_eagle_ocr.go4lunch.ui;
 
 import static androidx.navigation.ui.NavigationUI.setupActionBarWithNavController;
+import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.CANCEL_ALARM;
+import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.CANCEL_WORKER;
+import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.SET_ALARM;
+import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.SET_WORKER;
 
+import android.annotation.SuppressLint;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -22,8 +28,10 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.PeriodicWorkRequest;
+import androidx.work.Constraints;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
 import com.bumptech.glide.Glide;
@@ -33,20 +41,28 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityMainBinding;
+import com.jr_eagle_ocr.go4lunch.notification.AlertReceiver;
+import com.jr_eagle_ocr.go4lunch.notification.NotificationsWorker;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jrigault
  */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final String JUMP_TO_RESTAURANT_DETAIL = "JUMP_TO_RESTAURANT_DETAIL";
+    public static final String JUMP_TO_RESTAURANT_DETAIL = "JUMP_TO_RESTAURANT_DETAIL";
+    private static final String NOON_REMINDER = "NOON_REMINDER";
+
+    private ActivityMainBinding binding;
+    private MainViewModel viewModel;
+    private WorkManager workManager;
+
     private AppBarConfiguration appBarConfiguration;
     private NavController navController;
-    private ActivityMainBinding binding;
     private View header;
 
-    private MainViewModel viewModel;
     private MainViewState viewState;
 
     @Override
@@ -58,13 +74,12 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        workManager = WorkManager.getInstance(this);
+
         setToolbar();
         setNavigationViews();
-        setCurrentUserObserver();
         setNavigateToObserver();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            setWorker();
-        }
+        setViewStateObserver();
     }
 
     private void setToolbar() {
@@ -72,6 +87,9 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
     }
 
+    /**
+     * Set navigation views (drawer and bottom bar), controller and drawer specific listener
+     */
     private void setNavigationViews() {
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
@@ -90,7 +108,8 @@ public class MainActivity extends AppCompatActivity {
 
         navigationView.setNavigationItemSelectedListener(item -> {
             drawer.closeDrawers();
-            return onNavigationItemSelected(item);
+            viewModel.navigationItemSelected(item.getItemId());
+            return false;
         });
 
         BottomNavigationView bottomBar = binding.appBarMain.navBar;
@@ -99,57 +118,10 @@ public class MainActivity extends AppCompatActivity {
         header = navigationView.getHeaderView(0);
     }
 
-    private void setCurrentUserObserver() {
-        viewModel.getMainViewState().observe(this, viewState -> {
-            this.viewState = viewState;
-            if (viewState != null) {
-                setDrawerHeader();
-            }
-        });
-    }
-
-    private void setDrawerHeader() {
-        TextView userName = header.findViewById(R.id.drwr_user_name);
-        ImageView userPhoto = header.findViewById(R.id.drwr_user_photo);
-        userName.setText(viewState.getUserName());
-
-        Glide.with(MainActivity.this)
-                .load(viewState.getUserUrlPicture())
-                .apply(RequestOptions.circleCropTransform())
-                .into(userPhoto);
-
-        TextView userEmailTextView = header.findViewById(R.id.drwr_user_email);
-        String userEmail = viewState.getUserEmail();
-        userEmailTextView.setText(userEmail);
-
-        Log.d(TAG, "onCreate: " + "User details set for " + userName);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void setWorker() {
-        WorkManager workManager = WorkManager.getInstance(this);
-        PeriodicWorkRequest periodicWorkRequest = viewModel.getPeriodicWorkRequest();
-        workManager.enqueueUniquePeriodicWork("periodicWorkRequest", ExistingPeriodicWorkPolicy.REPLACE, periodicWorkRequest);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
-    }
-
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        viewModel.navigationItemSelected(item.getItemId());
-        return false;
-    }
-
+    /**
+     * Set navigateTo event livedata observer and perform proper action
+     * (navigation to specified item or toast a message)
+     */
     private void setNavigateToObserver() {
         viewModel.navigateTo().observe(this, event -> {
             if (!event.getHasBeenHandled()) {
@@ -167,10 +139,131 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public static Intent navigate(AppCompatActivity caller, boolean jumpToRestaurantDetail) {
-        Bundle bundle = new Bundle();
-        bundle.putBoolean(JUMP_TO_RESTAURANT_DETAIL, jumpToRestaurantDetail);
-        return new Intent(caller, MainActivity.class);
+    /**
+     * Set mainviewstate livedata observer to be used to set current user details in drawer header
+     * and perform proper action about noon reminder feature
+     */
+    @SuppressLint("NewApi") // Managed by MainViewModel
+    private void setViewStateObserver() {
+        viewModel.getMainViewState().observe(this, viewState -> {
+            this.viewState = viewState;
+            if (viewState != null) {
+                setDrawerHeader();
+                String action = viewState.getAction();
+                if (action != null) {
+                    switch (action) {
+                        case SET_WORKER:
+                            setWorker();
+                            break;
+                        case SET_ALARM:
+                            setAlarm();
+                            break;
+                        case CANCEL_WORKER:
+                            cancelWorker();
+                            break;
+                        case CANCEL_ALARM:
+                            cancelAlarm();
+                            break;
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Set current user details in drawer header
+     */
+    private void setDrawerHeader() {
+        TextView userName = header.findViewById(R.id.drwr_user_name);
+        ImageView userPhoto = header.findViewById(R.id.drwr_user_photo);
+        userName.setText(viewState.getUserName());
+
+        Glide.with(MainActivity.this)
+                .load(viewState.getUserUrlPicture())
+                .apply(RequestOptions.circleCropTransform())
+                .into(userPhoto);
+
+        TextView userEmailTextView = header.findViewById(R.id.drwr_user_email);
+        String userEmail = viewState.getUserEmail();
+        userEmailTextView.setText(userEmail);
+
+        Log.d(TAG, "onCreate: " + "User details set for " + userName);
+    }
+
+    /**
+     * Set noon reminder if API version >= 26
+     */
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void setWorker() {
+        Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
+
+        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(NotificationsWorker.class)
+                .setConstraints(constraints)
+                .setInitialDelay(viewModel.getInitialDelay(), TimeUnit.MILLISECONDS)
+                .build();
+
+        workManager.enqueueUniqueWork(NOON_REMINDER, ExistingWorkPolicy.REPLACE, workRequest);
+    }
+
+    /**
+     * Cancel noon reminder on API version >= 26
+     */
+    private void cancelWorker() {
+        workManager.cancelUniqueWork(NOON_REMINDER);
+    }
+
+    /**
+     * Set noon reminder if API version < 26
+     */
+    private void setAlarm() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, viewModel.getAlarmTrigger(), this.getPendingIntent());
+    }
+
+    /**
+     * Cancel noon reminder on API version < 26
+     */
+    private void cancelAlarm() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(this.getPendingIntent());
+    }
+
+    /**
+     * Get pending intent to bew used for noon reminder on API version < 26
+     *
+     * @return a pending intent
+     */
+    @SuppressLint("UnspecifiedImmutableFlag")
+    private PendingIntent getPendingIntent() {
+        Intent intent = new Intent(this, AlertReceiver.class);
+        return PendingIntent.getBroadcast(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    /**
+     * Navigate pattern
+     *
+     * @param caller                 the context from where to launch this activity
+     * @param jumpToRestaurantDetail a boolean indicating if once this activity is started
+     *                               it must navigate to restaurant detail activity
+     * @return an intent containing extra to use with {@link #startActivity(Intent)}
+     */
+    public static Intent navigate(Context caller, boolean jumpToRestaurantDetail) {
+        Intent intent = new Intent(caller, MainActivity.class);
+        intent.putExtra(JUMP_TO_RESTAURANT_DETAIL, jumpToRestaurantDetail);
+        return intent;
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        return NavigationUI.navigateUp(navController, appBarConfiguration)
+                || super.onSupportNavigateUp();
     }
 
     @Override

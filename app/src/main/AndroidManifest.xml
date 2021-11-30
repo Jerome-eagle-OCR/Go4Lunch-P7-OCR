@@ -55,6 +55,8 @@
             android:label="@string/title_activity_restaurant_detail"
             android:theme="@style/Theme.Go4Lunch.NoActionBar" />
 
+        <receiver android:name=".notification.AlertReceiver" />
+
     </application>
 
 </manifest>

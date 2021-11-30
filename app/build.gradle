@@ -16,7 +16,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        it.resValue 'string', 'google_maps_key', Google_Android_key
+        it.resValue 'string', 'google_places_key', OCR_P7_Google_Places_key
     }
 
     buildTypes {

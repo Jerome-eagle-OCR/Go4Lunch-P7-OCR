@@ -7,9 +7,9 @@
 
     <fragment
         android:id="@+id/nav_map_view"
-        android:name="com.jr_eagle_ocr.go4lunch.ui.mapview.MapsViewFragment"
+        android:name="com.jr_eagle_ocr.go4lunch.ui.mapview.MapViewFragment"
         android:label="@string/fragment_map_view"
-        tools:layout="@layout/fragment_mapsview" />
+        tools:layout="@layout/fragment_mapview" />
 
     <fragment
         android:id="@+id/nav_list_view"
