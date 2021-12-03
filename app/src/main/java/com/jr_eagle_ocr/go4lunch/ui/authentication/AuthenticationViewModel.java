@@ -6,8 +6,8 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.auth.FirebaseUser;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.util.Event;
 
 /**

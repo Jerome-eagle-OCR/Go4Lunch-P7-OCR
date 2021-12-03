@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.model;
+package com.jr_eagle_ocr.go4lunch.data.models;
 
 import android.graphics.Bitmap;
 
@@ -10,7 +10,7 @@ import com.google.android.libraries.places.api.model.OpeningHours;
 /**
  * @author jrigault
  */
-public class Restaurant {
+public class FoundRestaurant {
     private final String mId;
     private String mName;
     private String mAddress;
@@ -23,7 +23,7 @@ public class Restaurant {
     private Bitmap mPhoto;
     private String mWebSiteUrl;
 
-    public Restaurant(
+    public FoundRestaurant(
             String id
     ) {
         mId = id;

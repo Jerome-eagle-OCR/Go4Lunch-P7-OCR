@@ -10,10 +10,10 @@ import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.model.User;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
+import com.jr_eagle_ocr.go4lunch.data.models.User;
+import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetCurrentUserChosenRestaurantId;
 import com.jr_eagle_ocr.go4lunch.util.Event;
 
 import java.util.Calendar;
@@ -27,7 +27,6 @@ public class MainViewModel extends ViewModel {
     public static final String CANCEL_WORKER = "UNSET_WORKER";
     public static final String SET_ALARM = "SET_ALARM";
     public static final String CANCEL_ALARM = "CANCEL_ALARM";
-    public static final String BLANK_ACTION = "NO_ACTION";
     private final boolean jumpToRestaurantDetail;
     private final RestaurantRepository restaurantRepository;
     private final LiveData<FirebaseUser> currentFirebaseUserLiveData;
@@ -37,7 +36,6 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<Event<Integer>> navigateToEventMutableLiveData = new MutableLiveData<>();
     private long aboutNoonMillis;
     private long initialDelay;
-    private boolean didNavigateToAuthenticationSend = false;
 
     public MainViewModel(
             boolean jumpToRestaurantDetail,
@@ -75,13 +73,12 @@ public class MainViewModel extends ViewModel {
             String userChosenRestaurantId = currentUserChosenRestaurantIdLiveData.getValue();
             boolean isNoonReminderEnabled = user.isNoonReminderEnabled();
             setReminderVariables();
-            if (initialDelay > 0 && isNoonReminderEnabled && userChosenRestaurantId != null) {
+            if (initialDelay > 0 && isNoonReminderEnabled
+                    && userChosenRestaurantId != null && !userChosenRestaurantId.isEmpty()) {
                 action = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? SET_WORKER : SET_ALARM;
-                action = SET_ALARM;
                 Log.d(TAG, "getMainViewState: initialDelay = " + initialDelay);
             } else {
                 action = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? CANCEL_WORKER : CANCEL_ALARM;
-                action = CANCEL_ALARM;
             }
             mainViewState = new MainViewState(
                     userName,
@@ -91,7 +88,6 @@ public class MainViewModel extends ViewModel {
                     action);
         } else {
             action = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? CANCEL_WORKER : CANCEL_ALARM;
-            action = CANCEL_ALARM;
             mainViewState = new MainViewState(
                     "",
                     null,
@@ -107,8 +103,7 @@ public class MainViewModel extends ViewModel {
         if (currentFirebaseUserLiveData.getValue() == null) {
             this.navigationItemSelected(R.id.authentication);
             restaurantRepository.unsetChosenRestaurantIdsAndCleanCollection();
-            restaurantRepository.unsetFoundRestaurants();
-            didNavigateToAuthenticationSend = true;
+            restaurantRepository.unsetAllRestaurants();
         } else if (jumpToRestaurantDetail) {
             this.navigationItemSelected(R.id.nav_your_lunch);
         }
@@ -123,23 +118,22 @@ public class MainViewModel extends ViewModel {
     }
 
     private void setReminderVariables() {
-        int hour = 16;
-        int minute = 10;
+        int hour = 11;
+        int minute = 59;
 
         Calendar c = Calendar.getInstance();
         long nowMillis = c.getTimeInMillis();
         c.set(Calendar.HOUR_OF_DAY, hour);
         c.set(Calendar.MINUTE, minute);
         c.set(Calendar.SECOND, 30);
-//        if (c.before(Calendar.getInstance())) {
-//            c.add(Calendar.DATE, 1);
-//        }
         aboutNoonMillis = c.getTimeInMillis();
         initialDelay = aboutNoonMillis - nowMillis;
     }
 
     public void navigationItemSelected(int navigationItemId) {
-        boolean doNavigate = !(navigationItemId == R.id.nav_your_lunch && currentUserChosenRestaurantIdLiveData.getValue() == null);
+        String currentUserChosenRestaurantId = currentUserChosenRestaurantIdLiveData.getValue();
+        boolean doNavigate = !(navigationItemId == R.id.nav_your_lunch
+                && (currentUserChosenRestaurantId == null || currentUserChosenRestaurantId.isEmpty()));
         Integer navigateTo = doNavigate ? navigationItemId : null;
         Event<Integer> navigateToEvent = new Event<>(navigateTo);
         navigateToEventMutableLiveData.setValue(navigateToEvent);

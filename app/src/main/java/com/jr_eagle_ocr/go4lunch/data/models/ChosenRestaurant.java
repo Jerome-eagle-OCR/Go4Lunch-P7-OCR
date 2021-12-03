@@ -1,18 +1,18 @@
-package com.jr_eagle_ocr.go4lunch.model.pojo;
+package com.jr_eagle_ocr.go4lunch.data.models;
 
 /**
  * @author jrigault
  */
-public class ChosenRestaurantPojo {
+public class ChosenRestaurant {
     private String placeId;
     private String placeName;
     private String placeAddress;
     private String timestamp;
 
-    public ChosenRestaurantPojo() {
+    public ChosenRestaurant() {
     }
 
-    public ChosenRestaurantPojo(
+    public ChosenRestaurant(
             String placeId,
             String placeName,
             String placeAddress,

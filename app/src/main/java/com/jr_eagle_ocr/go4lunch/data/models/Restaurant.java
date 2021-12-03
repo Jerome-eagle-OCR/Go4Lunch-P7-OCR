@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.model.pojo;
+package com.jr_eagle_ocr.go4lunch.data.models;
 
 import androidx.annotation.Nullable;
 
@@ -9,7 +9,7 @@ import java.util.HashMap;
 /**
  * @author jrigault
  */
-public class RestaurantPojo {
+public class Restaurant {
     private String id;
     @Nullable
     private String photoString;
@@ -24,10 +24,10 @@ public class RestaurantPojo {
     private float rating;
     private String timestamp;
 
-    public RestaurantPojo() {
+    public Restaurant() {
     }
 
-    public RestaurantPojo(
+    public Restaurant(
             String id,
             @Nullable String photoString,
             String name,

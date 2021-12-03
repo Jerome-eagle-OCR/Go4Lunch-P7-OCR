@@ -1,11 +1,10 @@
 package com.jr_eagle_ocr.go4lunch.ui.restaurant_detail;
 
 
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.PLACENAME_FIELD;
-
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 
 import androidx.core.util.Pair;
@@ -13,22 +12,22 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FieldPath;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.model.User;
-import com.jr_eagle_ocr.go4lunch.model.pojo.RestaurantPojo;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.models.User;
+import com.jr_eagle_ocr.go4lunch.data.models.ChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetCurrentUserChosenRestaurantId;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.IsLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
-import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.usecases.GetUserViewStates;
-import com.jr_eagle_ocr.go4lunch.usecases.IsLikedRestaurant;
-import com.jr_eagle_ocr.go4lunch.usecases.SetClearChosenRestaurant;
-import com.jr_eagle_ocr.go4lunch.usecases.SetClearLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetUserViewStates;
 import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 import com.jr_eagle_ocr.go4lunch.util.Event;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +36,13 @@ import java.util.Map;
  * @author jrigault
  */
 public class RestaurantDetailViewModel extends ViewModel {
+    private final String TAG = getClass().getSimpleName();
     private final String LIKE = "LIKE";
     private final String CHOOSE = "CHOOSE";
-    private final LiveData<Map<String, User>> allUsersLiveData;
-    private final RestaurantRepository restaurantRepository;
+    private final LiveData<User> currentUserLiveData;
+    private final LiveData<Map<String, User>> allLoggedUsersLiveData;
+    private final LiveData<Map<String, Restaurant>> allRestaurantsLiveData;
+    private final LiveData<Map<ChosenRestaurant, List<String>>> restaurantChosenByUserIdsMapLiveData;
     private final LiveData<String> currentUserChosenRestaurantIdLiveData;
     private final IsLikedRestaurant isLikedRestaurant;
     private final LiveData<Boolean> isLikedRestaurantLiveData;
@@ -49,9 +51,9 @@ public class RestaurantDetailViewModel extends ViewModel {
     private final SetClearLikedRestaurant setClearLikedRestaurant;
     private final MediatorLiveData<RestaurantDetailViewSate> restaurantDetailViewStateMediatorLiveData = new MediatorLiveData<>();
     private final MediatorLiveData<List<UserViewState>> joiningUserViewStatesMediatorLiveData = new MediatorLiveData<>();
-    private final MediatorLiveData<Event<Integer>> snackbarMessageMediatorLiveData = new MediatorLiveData<>();
+    private final MediatorLiveData<Event<Integer>> snackbarMessageEventMediatorLiveData = new MediatorLiveData<>();
     private final String displayedRestaurantId;
-    private RestaurantPojo restaurant;
+    private Restaurant restaurant;
     private int count = 0;
 
     public RestaurantDetailViewModel(
@@ -60,17 +62,18 @@ public class RestaurantDetailViewModel extends ViewModel {
             RestaurantRepository restaurantRepository,
             GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId,
             IsLikedRestaurant isLikedRestaurant,
-            GetUserViewStates getUserViewStates,
             SetClearChosenRestaurant setClearChosenRestaurant,
             SetClearLikedRestaurant setClearLikedRestaurant
     ) {
         this.displayedRestaurantId = displayedRestaurantId;
-        allUsersLiveData = userRepository.getAllUsers();
-        this.restaurantRepository = restaurantRepository;
+        currentUserLiveData = userRepository.getCurrentUser();
+        allLoggedUsersLiveData = userRepository.getAllLoggedUsers();
+        allRestaurantsLiveData = restaurantRepository.getAllRestaurants();
+        restaurantChosenByUserIdsMapLiveData = restaurantRepository.getChosenRestaurantByUserIdsMap();
         currentUserChosenRestaurantIdLiveData = getCurrentUserChosenRestaurantId.getCurrentUserChosenRestaurantId();
         this.isLikedRestaurant = isLikedRestaurant;
         isLikedRestaurantLiveData = isLikedRestaurant.isLikedRestaurant();
-        this.getUserViewStates = getUserViewStates;
+        this.getUserViewStates = new GetUserViewStates(currentUserLiveData.getValue());
         this.setClearChosenRestaurant = setClearChosenRestaurant;
         this.setClearLikedRestaurant = setClearLikedRestaurant;
 
@@ -82,17 +85,18 @@ public class RestaurantDetailViewModel extends ViewModel {
      */
     private void init() {
         // Retrieve displayed restaurant
-        if (restaurantRepository.getAllRestaurants().getValue() != null) {
-            restaurant = restaurantRepository.getAllRestaurants().getValue().get(displayedRestaurantId);
+        if (allRestaurantsLiveData.getValue() != null) {
+            restaurant = allRestaurantsLiveData.getValue().get(displayedRestaurantId);
         }
         // Listen to current user document in "liked_by" subcollection in displayed restaurant document in Firestore
         isLikedRestaurant.addListenerRegistration(displayedRestaurantId);
 
         // Add all mediators sources to properly trigger updating
-        joiningUserViewStatesMediatorLiveData.addSource(allUsersLiveData, uidUserMap ->
+        joiningUserViewStatesMediatorLiveData.addSource(currentUserLiveData, currentUser ->
                 buildAndSetJoiningUserViewStates());
-        LiveData<List<String>> chosenRestaurantIdsLiveData = restaurantRepository.getChosenRestaurantIds();
-        joiningUserViewStatesMediatorLiveData.addSource(chosenRestaurantIdsLiveData, chosenRestaurantIds ->
+        joiningUserViewStatesMediatorLiveData.addSource(allLoggedUsersLiveData, allLoggedUsers ->
+                buildAndSetJoiningUserViewStates());
+        joiningUserViewStatesMediatorLiveData.addSource(restaurantChosenByUserIdsMapLiveData, restaurantChosenByUserIdsMap ->
                 buildAndSetJoiningUserViewStates());
 
         restaurantDetailViewStateMediatorLiveData.addSource(currentUserChosenRestaurantIdLiveData, chosenRestaurantId ->
@@ -102,11 +106,15 @@ public class RestaurantDetailViewModel extends ViewModel {
         restaurantDetailViewStateMediatorLiveData.addSource(joiningUserViewStatesMediatorLiveData, joiningUserViewStates ->
                 buildAndSetRestaurantViewState());
 
-        snackbarMessageMediatorLiveData.addSource(isLikedRestaurantLiveData, isLikedRestaurant -> {
-            if (isLikedRestaurant != null) buildAndSetSnackbarMessage(LIKE, isLiked());
+        snackbarMessageEventMediatorLiveData.addSource(isLikedRestaurantLiveData, isLikedRestaurant -> {
+            if (isLikedRestaurant != null) {
+                buildAndSetSnackbarMessageEvent(LIKE, isLiked());
+                ++count;
+            }
         });
-        snackbarMessageMediatorLiveData.addSource(currentUserChosenRestaurantIdLiveData, chosenRestaurantId -> {
-            if (displayedRestaurantId != null) buildAndSetSnackbarMessage(CHOOSE, isChosen());
+        snackbarMessageEventMediatorLiveData.addSource(currentUserChosenRestaurantIdLiveData, chosenRestaurantId -> {
+            if (displayedRestaurantId != null && chosenRestaurantId != null)
+                buildAndSetSnackbarMessageEvent(CHOOSE, isChosen());
         });
     }
 
@@ -125,7 +133,9 @@ public class RestaurantDetailViewModel extends ViewModel {
      * including the joining user view states
      */
     private void buildAndSetRestaurantViewState() {
-        if (restaurant != null) {
+        if (restaurant != null
+                && isLikedRestaurant != null
+                && currentUserChosenRestaurantIdLiveData != null) {
             Bitmap photo = BitmapUtil.decodeBase64(restaurant.getPhotoString());
             String name = restaurant.getName();
             String address = restaurant.getAddress();
@@ -151,29 +161,33 @@ public class RestaurantDetailViewModel extends ViewModel {
      * based on users lunching at the displayed restaurant
      */
     public void buildAndSetJoiningUserViewStates() {
-        Map<String, User> allUsers = allUsersLiveData.getValue();
-        restaurantRepository.getChosenRestaurantsCollection()
-                .whereEqualTo(FieldPath.documentId(), displayedRestaurantId)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<UserViewState> userViewStates; //To be produced to valorize livedata
-                    Map<String, Pair<String, String>> userChosenRestaurantMap = new HashMap<>();
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
-                        String placeId = document.getId();
-                        String placeName = document.getString(PLACENAME_FIELD);
-                        if (placeId.equals(displayedRestaurantId)) {
-                            List<String> byUserIds = restaurantRepository.getByUserIds(document);
-                            for (String uid : byUserIds) {
+        List<UserViewState> userViewStates = new ArrayList<>(); //To be produced to valorize livedata
+        User currentUser = currentUserLiveData.getValue();
+        if (currentUser != null) {
+            Map<ChosenRestaurant, List<String>> restaurantChosenByUserIdsMap = restaurantChosenByUserIdsMapLiveData.getValue();
+            if (restaurantChosenByUserIdsMap != null) {
+                Map<String, Pair<String, String>> userChosenRestaurantMap = new HashMap<>(); //To be valorized to get userviewstates
+                for (Map.Entry<ChosenRestaurant, List<String>> entry : restaurantChosenByUserIdsMap.entrySet()) {
+                    String placeId = entry.getKey().getPlaceId();
+                    if (placeId.equals(displayedRestaurantId)) {
+                        String placeName = entry.getKey().getPlaceName();
+                        List<String> chosenByUserIds = entry.getValue();
+                        for (int i = 0; i < chosenByUserIds.size(); i++) {
+                            String uid = chosenByUserIds.get(i);
+                            if (!uid.equals(currentUser.getUid())) {
                                 userChosenRestaurantMap.put(uid, new Pair<>(placeId, placeName));
                             }
                         }
+                        break;
                     }
-                    userViewStates =
-                            getUserViewStates.getUserViewStates(
-                                    displayedRestaurantId, allUsers, userChosenRestaurantMap);
-                    joiningUserViewStatesMediatorLiveData.setValue(userViewStates);
-                });
+                }
+                Map<String, User> allLoggedUsers = allLoggedUsersLiveData.getValue();
+                userViewStates = getUserViewStates.getUserViewStates(displayedRestaurantId,
+                        allLoggedUsers, userChosenRestaurantMap);
+            }
+        }
+        joiningUserViewStatesMediatorLiveData.setValue(userViewStates);
+        Log.d(TAG, "buildAndSetAllUserViewStates: " + userViewStates.size() + " workmates");
     }
 
     /**
@@ -184,7 +198,7 @@ public class RestaurantDetailViewModel extends ViewModel {
         if (isChosen) {
             setClearChosenRestaurant.setChosenRestaurant(displayedRestaurantId);
         } else {
-            setClearChosenRestaurant.clearChosenRestaurant(displayedRestaurantId);
+            setClearChosenRestaurant.clearChosenRestaurant();
         }
     }
 
@@ -194,7 +208,7 @@ public class RestaurantDetailViewModel extends ViewModel {
      * @param itemOrder navigation selected item order
      * @return an intent to start an activity or null if action in VM only is needed
      */
-    public Intent getIntentFromItemOrder(int itemOrder) {
+    public Intent getIntent(int itemOrder) {
         Intent intent = null;
         switch (itemOrder) {
             case 100:
@@ -224,8 +238,8 @@ public class RestaurantDetailViewModel extends ViewModel {
      *
      * @return an event to manage handling of contained string resource integer value
      */
-    public LiveData<Event<Integer>> getSnackbarMessage() {
-        return snackbarMessageMediatorLiveData;
+    public LiveData<Event<Integer>> getSnackbarMessageEvent() {
+        return snackbarMessageEventMediatorLiveData;
     }
 
     /**
@@ -253,8 +267,8 @@ public class RestaurantDetailViewModel extends ViewModel {
      * @param likeOrChoose  string constant precising the event
      * @param isLikedChosen boolean precising the new state
      */
-    private void buildAndSetSnackbarMessage(String likeOrChoose, boolean isLikedChosen) {
-        if (count++ > 2) {
+    private void buildAndSetSnackbarMessageEvent(String likeOrChoose, boolean isLikedChosen) {
+        if (count >= 2) {
             int messageResource;
             switch (likeOrChoose) {
                 case LIKE:
@@ -268,7 +282,7 @@ public class RestaurantDetailViewModel extends ViewModel {
                 default:
                     throw new IllegalStateException("Unexpected value: " + likeOrChoose);
             }
-            snackbarMessageMediatorLiveData.setValue(new Event<>(messageResource));
+            snackbarMessageEventMediatorLiveData.setValue(new Event<>(messageResource));
         }
     }
 

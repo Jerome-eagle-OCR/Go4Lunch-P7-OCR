@@ -1,7 +1,7 @@
 package com.jr_eagle_ocr.go4lunch.ui.settings;
 
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.BYUSERS_FIELD;
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.LIKEDBY_COLLECTION_NAME;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.BYUSERS_FIELD;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.LIKEDBY_COLLECTION_NAME;
 
 import android.content.Context;
 
@@ -15,11 +15,10 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.model.User;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.usecases.SetClearChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.models.User;
+import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +32,6 @@ public class SettingsViewModel extends ViewModel {
     private final RestaurantRepository restaurantRepository;
     private final SetClearChosenRestaurant setClearChosenRestaurant;
     private final User currentUser;
-    private final String currentUserChosenRestaurantId;
     private String userName;
     private String userUrlPicture;
     private boolean isNoonReminderEnabled;
@@ -43,7 +41,6 @@ public class SettingsViewModel extends ViewModel {
     public SettingsViewModel(
             UserRepository userRepository,
             RestaurantRepository restaurantRepository,
-            GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId,
             SetClearChosenRestaurant setClearChosenRestaurant
     ) {
         this.userRepository = userRepository;
@@ -55,7 +52,6 @@ public class SettingsViewModel extends ViewModel {
             userUrlPicture = currentUser.getUserUrlPicture();
             isNoonReminderEnabled = currentUser.isNoonReminderEnabled();
         }
-        currentUserChosenRestaurantId = getCurrentUserChosenRestaurantId.getCurrentUserChosenRestaurantId().getValue();
     }
 
     public SettingsDialogViewState getSettingsDialogViewState() {
@@ -67,9 +63,7 @@ public class SettingsViewModel extends ViewModel {
 
     public void deleteUser(Context context) {
         String uid = currentUser.getUid();
-        if (currentUserChosenRestaurantId != null) {
-            setClearChosenRestaurant.clearChosenRestaurant(currentUserChosenRestaurantId);
-        }
+        setClearChosenRestaurant.clearChosenRestaurant();
         userRepository.getUsersCollection().document(uid).delete();
         getLikedRestaurants(uid).continueWith(task -> {
             List<DocumentSnapshot> documents = task.getResult().getDocuments();
@@ -114,7 +108,8 @@ public class SettingsViewModel extends ViewModel {
                 userName,
                 currentUser.getUserEmail(),
                 userUrlPicture,
-                isNoonReminderEnabled);
+                isNoonReminderEnabled,
+                currentUser.isLogged());
 
         userRepository.setUser(userToSet).addOnCompleteListener(task -> {
             int validateResult;

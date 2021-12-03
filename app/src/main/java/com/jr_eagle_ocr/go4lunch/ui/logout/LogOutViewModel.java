@@ -9,7 +9,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
 
 public class LogOutViewModel extends ViewModel {
     private final String TAG = getClass().getSimpleName();

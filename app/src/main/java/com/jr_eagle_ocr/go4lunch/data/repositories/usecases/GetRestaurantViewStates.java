@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.usecases;
+package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
 
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -9,11 +9,11 @@ import androidx.lifecycle.LiveData;
 
 import com.google.android.libraries.places.api.model.DayOfWeek;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.model.pojo.RestaurantPojo;
-import com.jr_eagle_ocr.go4lunch.repositories.LocationRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.RestaurantViewSate;
-import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
 import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import java.util.Map;
 public final class GetRestaurantViewStates extends UseCase {
     private final LocationRepository locationRepository;
     private final RestaurantRepository restaurantRepository;
-    private final LiveData<Map<String, RestaurantPojo>> allRestaurantsLiveData;
+    private final LiveData<Map<String, Restaurant>> allRestaurantsLiveData;
 
     public GetRestaurantViewStates(
             LocationRepository locationRepository,
@@ -41,17 +41,17 @@ public final class GetRestaurantViewStates extends UseCase {
     /**
      * Generate a list of RestaurantViewState
      *
-     * @param restaurantByUsersCountMap a map<restaurant id, by users count> to get
-     *                                  the count of users having chosen a specific restaurant
+     * @param restaurantChosenByUsersCountMap a map<restaurant id, by users count> to get
+     *                                        the count of users having chosen a specific restaurant
      * @return a list of RestaurantViewState
      */
-    public List<RestaurantViewSate> getRestaurantViewStates(Map<String, Integer> restaurantByUsersCountMap) {
+    public List<RestaurantViewSate> getRestaurantViewStates(Map<String, Integer> restaurantChosenByUsersCountMap) {
         List<RestaurantViewSate> restaurantViewSates = new ArrayList<>();
         List<String> foundRestaurantIds = restaurantRepository.getFoundRestaurantIds();
-        Map<String, RestaurantPojo> allRestaurants = allRestaurantsLiveData.getValue();
+        Map<String, Restaurant> allRestaurants = allRestaurantsLiveData.getValue();
         if (foundRestaurantIds != null && allRestaurants != null) {
             for (String id : foundRestaurantIds) {
-                RestaurantPojo restaurant = allRestaurants.get(id);
+                Restaurant restaurant = allRestaurants.get(id);
                 if (restaurant != null) {
 
                     // Restaurant photo
@@ -65,7 +65,7 @@ public final class GetRestaurantViewStates extends UseCase {
                     if (address.endsWith(", France"))
                         address = address.substring(0, address.length() - 8);
                     // Restaurant number of joining users and text visibility
-                    Object[] joinersArray = this.getJoinersArray(restaurantByUsersCountMap, id);
+                    Object[] joinersArray = this.getJoinersArray(restaurantChosenByUsersCountMap, id);
                     String joiners = (String) joinersArray[0];
                     boolean isJoinersVisible = (boolean) joinersArray[1];
                     // Restaurant opening
@@ -99,7 +99,7 @@ public final class GetRestaurantViewStates extends UseCase {
      * @return a formatted text for the view
      */
     @NonNull
-    private String getDistanceText(RestaurantPojo restaurant) {
+    private String getDistanceText(Restaurant restaurant) {
         String distance;
         double startLat = restaurant.getGeoPoint().getLatitude();
         double startLng = restaurant.getGeoPoint().getLongitude();
@@ -119,7 +119,7 @@ public final class GetRestaurantViewStates extends UseCase {
      * @return an object array containing infos for the view
      */
     @NonNull
-    private Object[] getOpeningArray(RestaurantPojo restaurant) {
+    private Object[] getOpeningArray(Restaurant restaurant) {
         Object[] openingArray = new Object[3];
         int openingPrefix;
         String closingTime = "";

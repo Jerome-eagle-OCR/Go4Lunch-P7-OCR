@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.notification;
+package com.jr_eagle_ocr.go4lunch.ui.notification;
 
 import android.annotation.TargetApi;
 import android.app.NotificationChannel;

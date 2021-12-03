@@ -1,10 +1,10 @@
-package com.jr_eagle_ocr.go4lunch.usecases;
+package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
 
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.BYUSERS_FIELD;
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.CHOSENBY_COLLECTION_NAME;
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.PLACEADDRESS_FIELD;
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.PLACENAME_FIELD;
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.USERNAME_FIELD;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.BYUSERS_FIELD;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.CHOSENBY_COLLECTION_NAME;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.PLACEADDRESS_FIELD;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.PLACENAME_FIELD;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.USERNAME_FIELD;
 
 import android.app.PendingIntent;
 import android.content.Context;
@@ -19,10 +19,10 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.ui.MainActivity;
-import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
 
 import java.util.ArrayList;
 import java.util.List;

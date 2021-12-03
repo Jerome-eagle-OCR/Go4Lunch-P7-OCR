@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.notification;
+package com.jr_eagle_ocr.go4lunch.ui.notification;
 
 
 import android.app.PendingIntent;
@@ -10,7 +10,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.util.Pair;
 
 import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
-import com.jr_eagle_ocr.go4lunch.usecases.GetNotificationKit;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetNotificationKit;
 
 import java.util.concurrent.ExecutionException;
 

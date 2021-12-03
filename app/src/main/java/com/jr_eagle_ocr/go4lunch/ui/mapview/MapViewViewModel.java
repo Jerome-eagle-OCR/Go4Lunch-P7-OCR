@@ -8,10 +8,10 @@ import androidx.lifecycle.ViewModel;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.model.Restaurant;
-import com.jr_eagle_ocr.go4lunch.model.pojo.RestaurantPojo;
-import com.jr_eagle_ocr.go4lunch.repositories.LocationRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.models.FoundRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +26,7 @@ public class MapViewViewModel extends ViewModel {
     public static final String DRAWABLE_RESOURCE = "DRAWABLE_RESOURCE";
     private final LocationRepository locationRepository;
     private final RestaurantRepository restaurantRepository;
-    private final LiveData<Map<String, RestaurantPojo>> allRestaurantsLiveData;
+    private final LiveData<Map<String, Restaurant>> allRestaurantsLiveData;
     private final LiveData<List<String>> chosenRestaurantIdsLiveData;
     private final MediatorLiveData<Map<String, Map<String, Object>>> markersDetailsMediatorLiveData = new MediatorLiveData<>();
 
@@ -62,17 +62,17 @@ public class MapViewViewModel extends ViewModel {
      *
      * @return a restaurant HashMap (placeId, restaurant (POJO)) in a livedata
      */
-    public LiveData<Map<String, RestaurantPojo>> getAllRestaurants() {
+    public LiveData<Map<String, Restaurant>> getAllRestaurants() {
         return allRestaurantsLiveData;
     }
 
     /**
-     * Add a restaurant to the "restaurants" Firestore collection
+     * Add a foundRestaurant to the "restaurants" Firestore collection
      *
-     * @param restaurant the restaurant to add
+     * @param foundRestaurant the foundRestaurant to add
      */
-    public void addFoundRestaurant(Restaurant restaurant) {
-        restaurantRepository.addFoundRestaurant(restaurant);
+    public void addFoundRestaurant(FoundRestaurant foundRestaurant) {
+        restaurantRepository.addFoundRestaurant(foundRestaurant);
     }
 
     /**
@@ -93,16 +93,16 @@ public class MapViewViewModel extends ViewModel {
 
     /**
      *
-      */
+     */
     private void setMarkerDetails() {
         Map<String, Map<String, Object>> markerDetails = new HashMap<>();
-        Map<String, RestaurantPojo> allRestaurants = allRestaurantsLiveData.getValue();
+        Map<String, Restaurant> allRestaurants = allRestaurantsLiveData.getValue();
         List<String> chosenRestaurantIds = chosenRestaurantIdsLiveData.getValue();
         List<String> foundRestaurantIds = restaurantRepository.getFoundRestaurantIds();
         if (foundRestaurantIds != null && chosenRestaurantIds != null
                 && allRestaurants != null && !allRestaurants.isEmpty()) {
             for (String id : foundRestaurantIds) {
-                RestaurantPojo restaurant = allRestaurants.get(id);
+                Restaurant restaurant = allRestaurants.get(id);
                 if (restaurant != null) {
                     Map<String, Object> details = new HashMap<>();
                     String name = restaurant.getName();

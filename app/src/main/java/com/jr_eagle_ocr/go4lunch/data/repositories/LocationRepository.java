@@ -1,8 +1,8 @@
-package com.jr_eagle_ocr.go4lunch.repositories;
+package com.jr_eagle_ocr.go4lunch.data.repositories;
 
 import android.location.Location;
 
-import com.jr_eagle_ocr.go4lunch.repositories.parent.Repository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.parent.Repository;
 
 /**
  * @author jrigault

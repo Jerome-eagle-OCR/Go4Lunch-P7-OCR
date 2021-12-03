@@ -1,16 +1,13 @@
-package com.jr_eagle_ocr.go4lunch.usecases;
+package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
 
 import android.util.Log;
 
 import androidx.core.util.Pair;
-import androidx.lifecycle.LiveData;
 
-import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.model.User;
-import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.models.User;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
-import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,26 +17,27 @@ import java.util.Map;
  * @author jrigault
  */
 public final class GetUserViewStates extends UseCase {
-    private final LiveData<FirebaseUser> currentFirebaseUserLiveData;
+    private final User currentUser;
 
     public GetUserViewStates(
-            UserRepository userRepository
+            User currentUser
     ) {
-        currentFirebaseUserLiveData = userRepository.getCurrentFirebaseUser();
+        this.currentUser = currentUser;
     }
 
     /**
      * Generate a list of UserViewState
      *
      * @param displayedRestaurantId   extra from intent for RestaurantDetailActivity, or null for WorkmatesFragment
-     * @param allUsers                all users map<user id, user> from UserRepository
+     * @param allLoggedUsers          all users map<user id, user> from UserRepository
      * @param userChosenRestaurantMap a map<user id, chosen restaurant id> to get the restaurant id for each user having chosen a restaurant
      * @return a list of UserViewState
      */
-    public List<UserViewState> getUserViewStates(String displayedRestaurantId, Map<String, User> allUsers, Map<String, Pair<String, String>> userChosenRestaurantMap) {
+    public List<UserViewState> getUserViewStates(String displayedRestaurantId, Map<String, User> allLoggedUsers,
+                                                 Map<String, Pair<String, String>> userChosenRestaurantMap) {
         List<UserViewState> userViewStates = new ArrayList<>(); //To be produced to valorize livedata
-        if (allUsers != null) {
-            for (Map.Entry<String, User> userEntry : allUsers.entrySet()) {
+        if (allLoggedUsers != null) {
+            for (Map.Entry<String, User> userEntry : allLoggedUsers.entrySet()) {
                 String uid = userEntry.getKey();
                 User user = userEntry.getValue();
                 // UserViewState parameters to set:
@@ -50,11 +48,11 @@ public final class GetUserViewStates extends UseCase {
                 String chosenRestaurantName = null;
                 float textAlpha;
                 float imageAlpha;
-
-                boolean hasChosen; // has currently iterated user chosen a restaurant ?
+                // has currently iterated user chosen a restaurant ?
+                boolean hasChosen;
                 hasChosen = userChosenRestaurantMap.containsKey(uid);
-                boolean isCurrentUser; // is currently iterated user the authenticated user ?
-                FirebaseUser currentUser = currentFirebaseUserLiveData.getValue();
+                // is currently iterated user the authenticated user ?
+                boolean isCurrentUser;
                 String currentUserUid = currentUser != null ? currentUser.getUid() : null;
                 isCurrentUser = uid.equals(currentUserUid);
                 // valorize parameters:
@@ -71,9 +69,10 @@ public final class GetUserViewStates extends UseCase {
                 }
                 textAlpha = hasChosen ? 1 : 0.3f;
                 imageAlpha = hasChosen ? 1 : 0.6f;
-
                 // create UserViewState and add it in list
-                if ((displayedRestaurantId != null && hasChosen && !isCurrentUser) || (displayedRestaurantId == null && !isCurrentUser)) {
+                if ((displayedRestaurantId != null && hasChosen && !isCurrentUser)
+                        || (displayedRestaurantId == null && !isCurrentUser)) {
+
                     UserViewState userViewState = new UserViewState(
                             userName, appendingString, userUrlPicture,
                             null, chosenRestaurantId, chosenRestaurantName, textAlpha, imageAlpha);

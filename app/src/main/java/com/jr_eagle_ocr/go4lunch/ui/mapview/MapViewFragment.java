@@ -48,8 +48,8 @@ import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
 import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.model.Restaurant;
-import com.jr_eagle_ocr.go4lunch.model.pojo.RestaurantPojo;
+import com.jr_eagle_ocr.go4lunch.data.models.FoundRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
 import com.jr_eagle_ocr.go4lunch.ui.ViewModelFactory;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
 
@@ -96,7 +96,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
     private FindCurrentPlaceResponse likelyPlaces;
 
     private MapViewViewModel viewModel;
-    private Map<String, RestaurantPojo> allRestaurants;
+    private Map<String, Restaurant> allRestaurants;
 
     @Nullable
     @Override
@@ -273,8 +273,8 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
 
                             // Fetch only if not already available in Firestore "restaurants" collection
                             if (allRestaurants != null && !allRestaurants.containsKey(placeId)) {
-                                // Create new restaurant with place id
-                                Restaurant restaurant = new Restaurant(placeId);
+                                // Create new foundRestaurant with place id
+                                FoundRestaurant foundRestaurant = new FoundRestaurant(placeId);
 
                                 List<Place.Field> detailFields = Arrays.asList(
                                         Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG,
@@ -289,23 +289,22 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
                                     Place detailPlace = response.getPlace();
                                     Log.i(TAG, "Place found: " + detailPlace.getName());
 
-                                    // Set restaurant details
-                                    restaurant.setName(detailPlace.getName());
-                                    restaurant.setAddress(detailPlace.getAddress());
-                                    restaurant.setLatLng(detailPlace.getLatLng());
-                                    restaurant.setRating(detailPlace.getRating());
-                                    restaurant.setOpeningHours(detailPlace.getOpeningHours());
-                                    restaurant.setPhoneNumber(detailPlace.getPhoneNumber());
+                                    // Set foundRestaurant details
+                                    foundRestaurant.setName(detailPlace.getName());
+                                    foundRestaurant.setAddress(detailPlace.getAddress());
+                                    foundRestaurant.setLatLng(detailPlace.getLatLng());
+                                    foundRestaurant.setRating(detailPlace.getRating());
+                                    foundRestaurant.setOpeningHours(detailPlace.getOpeningHours());
+                                    foundRestaurant.setPhoneNumber(detailPlace.getPhoneNumber());
                                     Uri uri = detailPlace.getWebsiteUri();
-                                    if (uri != null) restaurant.setWebSiteUrl(uri.toString());
+                                    if (uri != null) foundRestaurant.setWebSiteUrl(uri.toString());
 
                                     // Get the photo metadata.
                                     final List<PhotoMetadata> metadata = detailPlace.getPhotoMetadatas();
                                     if (metadata == null || metadata.isEmpty()) {
                                         Log.w(TAG, "No photo metadata.");
-                                        // Add restaurant in found restaurants without photo
-                                        restaurant.setPhoto(null);
-                                        viewModel.addFoundRestaurant(restaurant);
+                                        // Add foundRestaurant in found restaurants without photo
+                                        setPhotoAndAddFoundRestaurant(null, foundRestaurant);
                                         return;
                                     }
                                     final PhotoMetadata photoMetadata = metadata.get(0);
@@ -321,22 +320,18 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
                                     placesClient.fetchPhoto(photoRequest).addOnSuccessListener((fetchPhotoResponse) -> {
                                         Bitmap bitmap = fetchPhotoResponse.getBitmap();
 
-                                        // Retrieve restaurant from found restaurants and set restaurant photo
-                                        restaurant.setPhoto(bitmap);
-                                        // Add restaurant in found restaurants
-                                        viewModel.addFoundRestaurant(restaurant);
+                                        // Add foundRestaurant in found restaurants with fetched photo
+                                        setPhotoAndAddFoundRestaurant(bitmap, foundRestaurant);
                                     }).addOnFailureListener((exception) -> {
                                         if (exception instanceof ApiException) {
                                             final ApiException apiException = (ApiException) exception;
                                             Log.e(TAG, "Place not found: " + exception.getMessage());
                                             final int statusCode = apiException.getStatusCode();
                                             // TODO: Handle error with given status code.
-                                            // Add restaurant in found restaurants without photo
-                                            restaurant.setPhoto(null);
-                                            viewModel.addFoundRestaurant(restaurant);
+                                            // Add foundRestaurant in found restaurants without photo
+                                            setPhotoAndAddFoundRestaurant(null, foundRestaurant);
                                         }
                                     });
-
                                 }).addOnFailureListener((exception) -> {
                                     if (exception instanceof ApiException) {
                                         final ApiException apiException = (ApiException) exception;
@@ -360,6 +355,18 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
         setMarkerDetailsObserver();
     }
 
+    /**
+     * @param bitmap
+     * @param foundRestaurant
+     */
+    private void setPhotoAndAddFoundRestaurant(@Nullable Bitmap bitmap, @NonNull FoundRestaurant foundRestaurant) {
+        foundRestaurant.setPhoto(bitmap);
+        viewModel.addFoundRestaurant(foundRestaurant);
+    }
+
+    /**
+     *
+     */
     private void setMarkerDetailsObserver() {
         viewModel.getMarkerDetails().observe(getViewLifecycleOwner(), markerDetails -> {
             // clear the map so remove all markers

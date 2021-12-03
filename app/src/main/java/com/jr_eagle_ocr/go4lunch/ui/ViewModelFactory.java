@@ -4,21 +4,19 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetCurrentUserChosenRestaurantId;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
-import com.jr_eagle_ocr.go4lunch.repositories.LocationRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.ui.authentication.AuthenticationViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.listview.ListViewViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.logout.LogOutViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.mapview.MapViewViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.settings.SettingsViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.workmates.WorkmatesViewModel;
-import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.usecases.GetRestaurantViewStates;
-import com.jr_eagle_ocr.go4lunch.usecases.GetUserViewStates;
-import com.jr_eagle_ocr.go4lunch.usecases.SetClearChosenRestaurant;
-import com.jr_eagle_ocr.go4lunch.usecases.SetClearLikedRestaurant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -37,8 +35,6 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                             Go4LunchApplication.getDependencyContainer().getLocationRepository(),
                             Go4LunchApplication.getDependencyContainer().getRestaurantRepository(),
                             Go4LunchApplication.getDependencyContainer().getCurrentUserChosenRestaurantId(),
-                            Go4LunchApplication.getDependencyContainer().getUserViewStates(),
-                            Go4LunchApplication.getDependencyContainer().getRestaurantViewStates(),
                             Go4LunchApplication.getDependencyContainer().setClearChosenRestaurant(),
                             Go4LunchApplication.getDependencyContainer().setClearLikedRestaurant());
                 }
@@ -56,10 +52,6 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
     @NonNull
     private final GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId;
     @NonNull
-    private final GetUserViewStates getUserViewStates;
-    @NonNull
-    private final GetRestaurantViewStates getRestaurantViewStates;
-    @NonNull
     private final SetClearChosenRestaurant setClearChosenRestaurant;
     @NonNull
     private final SetClearLikedRestaurant setClearLikedRestaurant;
@@ -70,8 +62,6 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
             @NonNull LocationRepository locationRepository,
             @NonNull RestaurantRepository restaurantRepository,
             @NonNull GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId,
-            @NonNull GetUserViewStates getUserViewStates,
-            @NonNull GetRestaurantViewStates getRestaurantViewStates,
             @NonNull SetClearChosenRestaurant setClearChosenRestaurant,
             @NonNull SetClearLikedRestaurant setClearLikedRestaurant
     ) {
@@ -79,8 +69,6 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         this.locationRepository = locationRepository;
         this.restaurantRepository = restaurantRepository;
         this.getCurrentUserChosenRestaurantId = getCurrentUserChosenRestaurantId;
-        this.getUserViewStates = getUserViewStates;
-        this.getRestaurantViewStates = getRestaurantViewStates;
         this.setClearChosenRestaurant = setClearChosenRestaurant;
         this.setClearLikedRestaurant = setClearLikedRestaurant;
     }
@@ -96,11 +84,11 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         }
         if (modelClass.isAssignableFrom(WorkmatesViewModel.class)) {
             return (T) new WorkmatesViewModel(
-                    userRepository, restaurantRepository, getUserViewStates);
+                    userRepository, restaurantRepository);
         }
         if (modelClass.isAssignableFrom(ListViewViewModel.class)) {
             return (T) new ListViewViewModel(
-                    restaurantRepository, getRestaurantViewStates);
+                    locationRepository, userRepository, restaurantRepository);
         }
         if (modelClass.isAssignableFrom(MapViewViewModel.class)) {
             return (T) new MapViewViewModel(
@@ -109,7 +97,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(SettingsViewModel.class)) {
             return (T) new SettingsViewModel(
                     userRepository, restaurantRepository,
-                    getCurrentUserChosenRestaurantId, setClearChosenRestaurant);
+                    setClearChosenRestaurant);
         }
         if (modelClass.isAssignableFrom(AuthenticationViewModel.class)) {
             return (T) new AuthenticationViewModel(

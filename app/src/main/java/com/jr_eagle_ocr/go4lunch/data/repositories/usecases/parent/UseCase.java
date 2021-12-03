@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.usecases.parent;
+package com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent;
 
 /**
  * @author jrigault

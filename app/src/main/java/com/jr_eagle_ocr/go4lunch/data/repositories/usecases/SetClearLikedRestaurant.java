@@ -1,19 +1,21 @@
-package com.jr_eagle_ocr.go4lunch.usecases;
+package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
 
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.BYUSERS_FIELD;
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.LIKEDBY_COLLECTION_NAME;
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.PLACEID_FIELD;
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.USERID_FIELD;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.BYUSERS_FIELD;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.LIKEDBY_COLLECTION_NAME;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.PLACEID_FIELD;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.USERID_FIELD;
+
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
-import com.jr_eagle_ocr.go4lunch.model.User;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
+import com.jr_eagle_ocr.go4lunch.data.models.User;
+import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +66,8 @@ public final class SetClearLikedRestaurant extends UseCase {
                                 .set(userData);
                         task.getResult().update(BYUSERS_FIELD, FieldValue.arrayUnion(uid));
                         return null;
-                    });
+                    })
+                    .addOnSuccessListener(o -> Log.d(TAG, "setLikedRestaurant: " + placeId));
         }
     }
 
@@ -89,7 +92,8 @@ public final class SetClearLikedRestaurant extends UseCase {
                                     .update(BYUSERS_FIELD, FieldValue.arrayRemove(uid));
                         }
                         return null;
-                    });
+                    })
+                    .addOnSuccessListener(o -> Log.d(TAG, "clearLikedRestaurant: " + placeId));
         }
     }
 }

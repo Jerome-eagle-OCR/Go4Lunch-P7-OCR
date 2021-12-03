@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.repositories;
+package com.jr_eagle_ocr.go4lunch.data.repositories;
 
 import android.annotation.SuppressLint;
 import android.util.Log;
@@ -6,15 +6,17 @@ import android.util.Log;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.libraries.places.api.model.LocalTime;
 import com.google.android.libraries.places.api.model.Period;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.ListenerRegistration;
-import com.jr_eagle_ocr.go4lunch.model.Restaurant;
-import com.jr_eagle_ocr.go4lunch.model.pojo.RestaurantPojo;
-import com.jr_eagle_ocr.go4lunch.repositories.parent.Repository;
+import com.jr_eagle_ocr.go4lunch.data.models.ChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.models.FoundRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.parent.Repository;
 import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 
 import java.util.ArrayList;
@@ -30,32 +32,14 @@ import java.util.Map;
  */
 public final class RestaurantRepository extends Repository {
     private List<String> foundRestaurantIds;
-    private final MutableLiveData<Map<String, RestaurantPojo>> allRestaurantsMutableLiveData;
-    private final MutableLiveData<List<String>> chosenRestaurantIdsMutableLiveData;
+    private final MutableLiveData<Map<String, Restaurant>> allRestaurantsMutableLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<String>> chosenRestaurantIdsLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Map<ChosenRestaurant, List<String>>> chosenRestaurantByUserIdsMapMutableLiveData = new MutableLiveData<>();
     private ListenerRegistration restaurantsListenerRegistration;
     private ListenerRegistration chosenRestaurantsListenerRegistration;
 
     public RestaurantRepository() {
-        allRestaurantsMutableLiveData = new MutableLiveData<>(new HashMap<>());
-//        mapsFoundRestaurantsMutableLiveData = new MutableLiveData<>(new HashMap<>());
-        chosenRestaurantIdsMutableLiveData = new MutableLiveData<>();
     }
-
-    // --- FIRESTORE ---
-
-    public static final String RESTAURANTS_COLLECTION_NAME = "restaurants";
-    public static final String CHOSEN_COLLECTION_NAME = "chosen_restaurants";
-    public static final String LIKED_COLLECTION_NAME = "liked_restaurants";
-    public static final String PLACEID_FIELD = "placeId";
-    public static final String PLACENAME_FIELD = "placeName";
-    public static final String PLACEADDRESS_FIELD = "placeAddress";
-    private static final String TIMESTAMP_FIELD = "timestamp";
-    public static final String BYUSERS_FIELD = "byUsers";
-    public static final String CHOSENBY_COLLECTION_NAME = "chosen_by";
-    public static final String LIKEDBY_COLLECTION_NAME = "liked_by";
-    public static final String USERID_FIELD = "uid";
-    public static final String USERNAME_FIELD = "userName";
-
 
     /**
      * @param foundRestaurantIds
@@ -71,43 +55,54 @@ public final class RestaurantRepository extends Repository {
         return foundRestaurantIds;
     }
 
-    /**
-     * Get restaurants from the listened "restaurants" Firestore collection
-     *
-     * @return a restaurant HashMap (placeId, restaurant (POJO)) in a livedata
-     */
-    public LiveData<Map<String, RestaurantPojo>> getAllRestaurants() {
-        return allRestaurantsMutableLiveData;
-    }
+    // -----------------
+    // --- FIRESTORE ---
+    // -----------------
+
+    public static final String RESTAURANTS_COLLECTION_NAME = "restaurants";
+    public static final String CHOSEN_COLLECTION_NAME = "chosen_restaurants";
+    public static final String LIKED_COLLECTION_NAME = "liked_restaurants";
+    public static final String PLACEID_FIELD = "placeId";
+    public static final String PLACENAME_FIELD = "placeName";
+    public static final String PLACEADDRESS_FIELD = "placeAddress";
+    private static final String TIMESTAMP_FIELD = "timestamp";
+    public static final String BYUSERS_FIELD = "byUsers";
+    public static final String CHOSENBY_COLLECTION_NAME = "chosen_by";
+    public static final String LIKEDBY_COLLECTION_NAME = "liked_by";
+    public static final String USERID_FIELD = "uid";
+    public static final String USERNAME_FIELD = "userName";
+
+    // --- RESTAURANTS COLLECTION ---
 
     /**
-     * Add a restaurant to the "restaurants" Firestore collection
+     * Add a Google places found restaurant to the "restaurants" Firestore collection
      *
-     * @param restaurant the restaurant to add
+     * @param foundRestaurant the foundRestaurant to add
      */
     @SuppressLint("DefaultLocale") // format close time to 24h
-    public void addFoundRestaurant(Restaurant restaurant) {
+    public void addFoundRestaurant(FoundRestaurant foundRestaurant) {
         // Set all variables:
         // Id
-        String id = restaurant.getId();
+        String id = foundRestaurant.getId();
         // Bitmap base64 string
         String photoString = null;
-        if (restaurant.getPhoto() != null) {
-            photoString = BitmapUtil.encodeToBase64(restaurant.getPhoto());
+        if (foundRestaurant.getPhoto() != null) {
+            photoString = BitmapUtil.encodeToBase64(foundRestaurant.getPhoto());
         }
         // Name
-        String name = restaurant.getName();
+        String name = foundRestaurant.getName();
         // GeoPoint
-        GeoPoint geoPoint = new GeoPoint(restaurant.getLatLng().latitude, restaurant.getLatLng().longitude);
+        LatLng latLng = foundRestaurant.getLatLng();
+        GeoPoint geoPoint = new GeoPoint(latLng.latitude, latLng.longitude);
         // Address
-        String address = restaurant.getAddress();
+        String address = foundRestaurant.getAddress();
         // Phone number
-        String phoneNumber = restaurant.getPhoneNumber();
+        String phoneNumber = foundRestaurant.getPhoneNumber();
         // Web site URL
-        String webSiteUrl = restaurant.getWebSiteUrl();
+        String webSiteUrl = foundRestaurant.getWebSiteUrl();
         // Close times
         HashMap<String, String> closeTimes = new LinkedHashMap<>();
-        List<Period> periods = restaurant.getOpeningHours().getPeriods();
+        List<Period> periods = foundRestaurant.getOpeningHours().getPeriods();
         for (Period period : periods) {
             String dayOfWeek = period.getOpen().getDay().name();
             String closeTime;
@@ -122,17 +117,26 @@ public final class RestaurantRepository extends Repository {
         }
         // Rating
         float rating = 0;
-        if (restaurant.getRating() != null) {
-            rating = (int) (restaurant.getRating() * 3 / 5);
+        if (foundRestaurant.getRating() != null) {
+            rating = (int) (foundRestaurant.getRating() * 3 / 5);
         }
         // Timestamp
         String timestamp = String.valueOf(System.currentTimeMillis());
 
-        RestaurantPojo foundRestaurant =
-                new RestaurantPojo(id, photoString, name, geoPoint,
+        Restaurant restaurant =
+                new Restaurant(id, photoString, name, geoPoint,
                         address, phoneNumber, webSiteUrl, closeTimes, rating, timestamp);
 
-        this.getRestaurantsCollection().document(id).set(foundRestaurant);
+        this.getRestaurantsCollection().document(id).set(restaurant);
+    }
+
+    /**
+     * Get restaurants from the listened "restaurants" Firestore collection
+     *
+     * @return a livedata of HashMap(restaurantId, restaurant (POJO))
+     */
+    public LiveData<Map<String, Restaurant>> getAllRestaurants() {
+        return allRestaurantsMutableLiveData;
     }
 
     /**
@@ -144,13 +148,13 @@ public final class RestaurantRepository extends Repository {
     public void setAllRestaurants() {
         restaurantsListenerRegistration = this.getRestaurantsCollection()
                 .addSnapshotListener((value, error) -> {
-                    Map<String, RestaurantPojo> foundRestaurants = new HashMap<>();
+                    Map<String, Restaurant> foundRestaurants = new HashMap<>();
                     if (value != null && !value.isEmpty()) {
                         List<DocumentSnapshot> documents = value.getDocuments();
                         for (DocumentSnapshot document : documents) {
                             boolean isNotTooOld = getIsNotTooOld(document);
                             if (isNotTooOld) {
-                                RestaurantPojo foundRestaurant = document.toObject(RestaurantPojo.class);
+                                Restaurant foundRestaurant = document.toObject(Restaurant.class);
                                 foundRestaurants.put(document.getId(), foundRestaurant);
                             } else {
                                 document.getReference().delete();
@@ -159,6 +163,14 @@ public final class RestaurantRepository extends Repository {
                         allRestaurantsMutableLiveData.setValue(foundRestaurants);
                     }
                 });
+    }
+
+    /**
+     * Unset the Firestore "restaurants" collection listener
+     */
+    public void unsetAllRestaurants() {
+        if (restaurantsListenerRegistration != null)
+            restaurantsListenerRegistration.remove();
     }
 
     /**
@@ -181,21 +193,12 @@ public final class RestaurantRepository extends Repository {
         return diffDayOfYear < 30;
     }
 
-
-    /**
-     * Unset the Firestore "restaurants" collection listener
-     */
-    public void unsetFoundRestaurants() {
-        if (restaurantsListenerRegistration != null)
-            restaurantsListenerRegistration.remove();
-    }
-
     /**
      * Get the Collection Reference for the chosen restaurants
      *
      * @return the Collection Reference
      */
-    public CollectionReference getRestaurantsCollection() {
+    private CollectionReference getRestaurantsCollection() {
         return db.collection(RESTAURANTS_COLLECTION_NAME);
     }
 
@@ -208,7 +211,16 @@ public final class RestaurantRepository extends Repository {
      * @return a livedata of up-to-date list of chosen restaurant id
      */
     public LiveData<List<String>> getChosenRestaurantIds() {
-        return chosenRestaurantIdsMutableLiveData;
+        return chosenRestaurantIdsLiveData;
+    }
+
+    /**
+     * Get the map of chosen restaurants from the listened "chosen_restaurants" Firestore collection
+     *
+     * @return a livedata of HashMap(restaurantId, Pair(restaurantName, chosenByUserIds)
+     */
+    public LiveData<Map<ChosenRestaurant, List<String>>> getChosenRestaurantByUserIdsMap() {
+        return chosenRestaurantByUserIdsMapMutableLiveData;
     }
 
     /**
@@ -220,7 +232,8 @@ public final class RestaurantRepository extends Repository {
     public void setChosenRestaurantIdsAndCleanCollection() {
         chosenRestaurantsListenerRegistration = this.getChosenRestaurantsCollection()
                 .addSnapshotListener((value, error) -> {
-                    List<String> chosenRestaurantIds = new ArrayList<>(); // Déclenche toujours un changement ?
+                    List<String> chosenRestaurantIds = new ArrayList<>();
+                    Map<ChosenRestaurant, List<String>> chosenRestaurantByUserIdsMap = new HashMap<>();
                     if (value != null && !value.isEmpty()) {
                         List<DocumentSnapshot> documents = value.getDocuments();
                         for (DocumentSnapshot document : documents) {
@@ -230,7 +243,13 @@ public final class RestaurantRepository extends Repository {
                                         boolean isToday = getIsToday(document);
                                         boolean isByUsersEmpty = getIsByUsersEmpty(document);
                                         if (isToday && !isByUsersEmpty) {
-                                            chosenRestaurantIds.add(document.getId());
+                                            // For chosen restaurant id list
+                                            String restaurantId = document.getId();
+                                            chosenRestaurantIds.add(restaurantId);
+                                            // For chosen restaurant byUsersIds map
+                                            ChosenRestaurant chosenRestaurant = document.toObject(ChosenRestaurant.class);
+                                            List<String> chosenByUserIds = getByUserIds(document);
+                                            chosenRestaurantByUserIdsMap.put(chosenRestaurant, chosenByUserIds);
                                             Log.d(TAG, "getChosenRestaurantIds: restaurantId " + document.getId() + " added");
                                         } else if (!isToday) {
                                             document.getReference().collection(CHOSENBY_COLLECTION_NAME)
@@ -246,14 +265,17 @@ public final class RestaurantRepository extends Repository {
                                                         Log.d(TAG, "getChosenRestaurantIds: document " + document.getId() + " deleted");
                                                     });
                                         }
+                                        chosenRestaurantIdsLiveData.setValue(chosenRestaurantIds);
+                                        chosenRestaurantByUserIdsMapMutableLiveData.setValue(chosenRestaurantByUserIdsMap);
                                     });
                         }
                     }
-                    chosenRestaurantIdsMutableLiveData.setValue(chosenRestaurantIds);
                     if (error != null) {
-                        chosenRestaurantIdsMutableLiveData.setValue(null);
+                        chosenRestaurantIdsLiveData.setValue(null);
+                        chosenRestaurantByUserIdsMapMutableLiveData.setValue(null);
                         Log.e(TAG, "onEvent: ", error);
                     }
+                    Log.d(TAG, "setChosenRestaurantIdsAndCleanCollection: chosen_restaurants collection listener set");
                 });
     }
 
@@ -261,8 +283,10 @@ public final class RestaurantRepository extends Repository {
      * Unset the Firestore "chosen_restaurants" collection listener
      */
     public void unsetChosenRestaurantIdsAndCleanCollection() {
-        if (chosenRestaurantsListenerRegistration != null)
+        if (chosenRestaurantsListenerRegistration != null) {
             chosenRestaurantsListenerRegistration.remove();
+            Log.d(TAG, "setChosenRestaurantIdsAndCleanCollection: chosen_restaurants collection listener removed");
+        }
     }
 
     /**
@@ -309,6 +333,27 @@ public final class RestaurantRepository extends Repository {
     }
 
     /**
+     * Convert the byUsers field from a restaurant document to a list of user id
+     *
+     * @param document the restaurant document
+     * @return a list of user id
+     */
+    private List<String> getByUserIds(DocumentSnapshot document) {
+        List<String> byUserIds = new ArrayList<>();
+        if (document.getData() != null) {
+            Object byUsersData = document.getData().get(BYUSERS_FIELD);
+            if (byUsersData != null) {
+                String inLine = byUsersData.toString();
+                if (!inLine.equals("[]")) {
+                    inLine = inLine.replaceAll("[\\[\\]]", "").trim();
+                    byUserIds = Arrays.asList(inLine.split(", ", 0));
+                }
+            }
+        }
+        return byUserIds;
+    }
+
+    /**
      * Get the Collection Reference for the chosen restaurants
      *
      * @return the Collection Reference
@@ -327,29 +372,5 @@ public final class RestaurantRepository extends Repository {
      */
     public CollectionReference getLikedRestaurantsCollection() {
         return db.collection(LIKED_COLLECTION_NAME);
-    }
-
-
-    // --- UTIL ---
-
-    /**
-     * Convert the byUsers field from a restaurant document to a list of user id
-     *
-     * @param document the restaurant document
-     * @return a list of user id
-     */
-    public List<String> getByUserIds(DocumentSnapshot document) {
-        List<String> byUserIds = new ArrayList<>();
-        if (document.getData() != null) {
-            Object byUsersData = document.getData().get(BYUSERS_FIELD);
-            if (byUsersData != null) {
-                String inLine = byUsersData.toString();
-                if (!inLine.equals("[]")) {
-                    inLine = inLine.replaceAll("[\\[\\]]", "").trim();
-                    byUserIds = Arrays.asList(inLine.split(", ", 0));
-                }
-            }
-        }
-        return byUserIds;
     }
 }

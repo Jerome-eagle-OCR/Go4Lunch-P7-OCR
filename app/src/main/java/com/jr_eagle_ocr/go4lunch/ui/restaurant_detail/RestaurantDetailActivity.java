@@ -118,7 +118,7 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
      * Set snackbar event observer
      */
     private void setSnackbarOnEvent() {
-        viewModel.getSnackbarMessage().observe(this, messageResourceEvent -> {
+        viewModel.getSnackbarMessageEvent().observe(this, messageResourceEvent -> {
             Integer resource = messageResourceEvent.getContentIfNotHandled();
             if (resource != null) {
                 String message = getString(resource) + restaurant.getName();
@@ -129,7 +129,7 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        Intent intent = viewModel.getIntentFromItemOrder(item.getOrder());
+        Intent intent = viewModel.getIntent(item.getOrder());
         if (intent != null) {
             startActivity(intent);
         }

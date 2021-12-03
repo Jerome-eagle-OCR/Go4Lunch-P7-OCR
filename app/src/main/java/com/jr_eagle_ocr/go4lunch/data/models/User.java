@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.model;
+package com.jr_eagle_ocr.go4lunch.data.models;
 
 import androidx.annotation.Nullable;
 
@@ -12,6 +12,7 @@ public class User {
     @Nullable
     private String userUrlPicture;
     private boolean isNoonReminderEnabled;
+    private boolean isLogged;
 
     public User() {
     }
@@ -21,13 +22,14 @@ public class User {
             String userName,
             String userEmail,
             @Nullable String userUrlPicture,
-            boolean isNoonReminderEnabled
-    ) {
+            boolean isNoonReminderEnabled,
+            boolean isLogged) {
         this.uid = uid;
         this.userName = userName;
         this.userEmail = userEmail;
         this.userUrlPicture = userUrlPicture;
         this.isNoonReminderEnabled = isNoonReminderEnabled;
+        this.isLogged = isLogged;
     }
 
 
@@ -52,6 +54,9 @@ public class User {
         return isNoonReminderEnabled;
     }
 
+    public boolean isLogged() {
+        return isLogged;
+    }
 
     public void setUid(String uid) {
         this.uid = uid;
@@ -73,6 +78,10 @@ public class User {
         isNoonReminderEnabled = noonReminderEnabled;
     }
 
+    public void setLogged(boolean logged) {
+        isLogged = logged;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -80,22 +89,24 @@ public class User {
 
         User user = (User) o;
 
-        if (isNoonReminderEnabled != user.isNoonReminderEnabled) return false;
-        if (uid != null ? !uid.equals(user.uid) : user.uid != null) return false;
-        if (userName != null ? !userName.equals(user.userName) : user.userName != null)
+        if (isNoonReminderEnabled() != user.isNoonReminderEnabled()) return false;
+        if (isLogged() != user.isLogged()) return false;
+        if (!getUid().equals(user.getUid())) return false;
+        if (getUserName() != null ? !getUserName().equals(user.getUserName()) : user.getUserName() != null)
             return false;
-        if (userEmail != null ? !userEmail.equals(user.userEmail) : user.userEmail != null)
+        if (getUserEmail() != null ? !getUserEmail().equals(user.getUserEmail()) : user.getUserEmail() != null)
             return false;
-        return userUrlPicture != null ? userUrlPicture.equals(user.userUrlPicture) : user.userUrlPicture == null;
+        return getUserUrlPicture() != null ? getUserUrlPicture().equals(user.getUserUrlPicture()) : user.getUserUrlPicture() == null;
     }
 
     @Override
     public int hashCode() {
-        int result = uid != null ? uid.hashCode() : 0;
-        result = 31 * result + (userName != null ? userName.hashCode() : 0);
-        result = 31 * result + (userEmail != null ? userEmail.hashCode() : 0);
-        result = 31 * result + (userUrlPicture != null ? userUrlPicture.hashCode() : 0);
-        result = 31 * result + (isNoonReminderEnabled ? 1 : 0);
+        int result = getUid().hashCode();
+        result = 31 * result + (getUserName() != null ? getUserName().hashCode() : 0);
+        result = 31 * result + (getUserEmail() != null ? getUserEmail().hashCode() : 0);
+        result = 31 * result + (getUserUrlPicture() != null ? getUserUrlPicture().hashCode() : 0);
+        result = 31 * result + (isNoonReminderEnabled() ? 1 : 0);
+        result = 31 * result + (isLogged() ? 1 : 0);
         return result;
     }
 }

@@ -2,16 +2,14 @@ package com.jr_eagle_ocr.go4lunch.di;
 
 import android.app.Application;
 
-import com.jr_eagle_ocr.go4lunch.repositories.LocationRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.usecases.GetNotificationKit;
-import com.jr_eagle_ocr.go4lunch.usecases.GetRestaurantViewStates;
-import com.jr_eagle_ocr.go4lunch.usecases.GetUserViewStates;
-import com.jr_eagle_ocr.go4lunch.usecases.IsLikedRestaurant;
-import com.jr_eagle_ocr.go4lunch.usecases.SetClearChosenRestaurant;
-import com.jr_eagle_ocr.go4lunch.usecases.SetClearLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetCurrentUserChosenRestaurantId;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetNotificationKit;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.IsLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearLikedRestaurant;
 
 /**
  * @author jrigault
@@ -21,8 +19,6 @@ public final class Go4LunchDependencyContainer {
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
     private final RestaurantRepository restaurantRepository;
-    private final GetUserViewStates getUserViewStates;
-    private final GetRestaurantViewStates getRestaurantViewStates;
     private final SetClearChosenRestaurant setClearChosenRestaurant;
     private final GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId;
     private final SetClearLikedRestaurant setClearLikedRestaurant;
@@ -36,14 +32,6 @@ public final class Go4LunchDependencyContainer {
         userRepository = new UserRepository();
         locationRepository = new LocationRepository();
         restaurantRepository = new RestaurantRepository();
-
-        getUserViewStates =
-                new GetUserViewStates(
-                        userRepository);
-
-        getRestaurantViewStates =
-                new GetRestaurantViewStates(
-                        locationRepository, restaurantRepository);
 
         getCurrentUserChosenRestaurantId =
                 new GetCurrentUserChosenRestaurantId(
@@ -82,14 +70,6 @@ public final class Go4LunchDependencyContainer {
 
     public RestaurantRepository getRestaurantRepository() {
         return restaurantRepository;
-    }
-
-    public GetUserViewStates getUserViewStates() {
-        return getUserViewStates;
-    }
-
-    public GetRestaurantViewStates getRestaurantViewStates() {
-        return getRestaurantViewStates;
     }
 
     public SetClearChosenRestaurant setClearChosenRestaurant() {

@@ -41,8 +41,8 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityMainBinding;
-import com.jr_eagle_ocr.go4lunch.notification.AlertReceiver;
-import com.jr_eagle_ocr.go4lunch.notification.NotificationsWorker;
+import com.jr_eagle_ocr.go4lunch.ui.notification.AlertReceiver;
+import com.jr_eagle_ocr.go4lunch.ui.notification.NotificationsWorker;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
 
 import java.util.concurrent.TimeUnit;
@@ -180,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
 
         Glide.with(MainActivity.this)
                 .load(viewState.getUserUrlPicture())
+                .error(R.drawable.no_photo)
                 .apply(RequestOptions.circleCropTransform())
                 .into(userPhoto);
 
@@ -187,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
         String userEmail = viewState.getUserEmail();
         userEmailTextView.setText(userEmail);
 
-        Log.d(TAG, "onCreate: " + "User details set for " + userName);
+        Log.d(TAG, "onCreate: " + "User details set for " + userName.getText());
     }
 
     /**
@@ -270,5 +271,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         binding = null;
+        Glide.get(this).clearDiskCache();
     }
 }

@@ -1,6 +1,6 @@
-package com.jr_eagle_ocr.go4lunch.usecases;
+package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
 
-import static com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository.LIKEDBY_COLLECTION_NAME;
+import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.LIKEDBY_COLLECTION_NAME;
 
 import android.util.Log;
 
@@ -9,10 +9,10 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.ListenerRegistration;
-import com.jr_eagle_ocr.go4lunch.model.User;
-import com.jr_eagle_ocr.go4lunch.repositories.RestaurantRepository;
-import com.jr_eagle_ocr.go4lunch.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.usecases.parent.UseCase;
+import com.jr_eagle_ocr.go4lunch.data.models.User;
+import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
 
 public class IsLikedRestaurant extends UseCase {
     private final LiveData<User> currentUserLiveData;
