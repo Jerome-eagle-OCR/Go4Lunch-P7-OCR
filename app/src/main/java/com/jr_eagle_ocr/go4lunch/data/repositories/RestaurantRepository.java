@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author jrigault
@@ -65,7 +66,7 @@ public final class RestaurantRepository extends Repository {
     public static final String PLACEID_FIELD = "placeId";
     public static final String PLACENAME_FIELD = "placeName";
     public static final String PLACEADDRESS_FIELD = "placeAddress";
-    private static final String TIMESTAMP_FIELD = "timestamp";
+    public static final String TIMESTAMP_FIELD = "timestamp";
     public static final String BYUSERS_FIELD = "byUsers";
     public static final String CHOSENBY_COLLECTION_NAME = "chosen_by";
     public static final String LIKEDBY_COLLECTION_NAME = "liked_by";
@@ -232,51 +233,57 @@ public final class RestaurantRepository extends Repository {
     public void setChosenRestaurantIdsAndCleanCollection() {
         chosenRestaurantsListenerRegistration = this.getChosenRestaurantsCollection()
                 .addSnapshotListener((value, error) -> {
-                    List<String> chosenRestaurantIds = new ArrayList<>();
-                    Map<ChosenRestaurant, List<String>> chosenRestaurantByUserIdsMap = new HashMap<>();
+                    // Record current values
+                    List<String> currentChosenRestaurantIds = chosenRestaurantIdsLiveData.getValue();
+                    Map<ChosenRestaurant, List<String>> currentChosenRestaurantByUserIdsMap =
+                            chosenRestaurantByUserIdsMapMutableLiveData.getValue();
+                    // Initialize new values
+                    List<String> newChosenRestaurantIds = new ArrayList<>();
+                    Map<ChosenRestaurant, List<String>> newChosenRestaurantByUserIdsMap = new HashMap<>();
                     if (value != null && !value.isEmpty()) {
                         List<DocumentSnapshot> documents = value.getDocuments();
                         for (DocumentSnapshot document : documents) {
-                            document.getReference().collection(CHOSENBY_COLLECTION_NAME)
-                                    .get()
-                                    .addOnSuccessListener(queryDocumentSnapshots -> {
-                                        boolean isToday = getIsToday(document);
-                                        boolean isByUsersEmpty = getIsByUsersEmpty(document);
-                                        if (isToday && !isByUsersEmpty) {
-                                            // For chosen restaurant id list
-                                            String restaurantId = document.getId();
-                                            chosenRestaurantIds.add(restaurantId);
-                                            // For chosen restaurant byUsersIds map
-                                            ChosenRestaurant chosenRestaurant = document.toObject(ChosenRestaurant.class);
-                                            List<String> chosenByUserIds = getByUserIds(document);
-                                            chosenRestaurantByUserIdsMap.put(chosenRestaurant, chosenByUserIds);
-                                            Log.d(TAG, "getChosenRestaurantIds: restaurantId " + document.getId() + " added");
-                                        } else if (!isToday) {
-                                            document.getReference().collection(CHOSENBY_COLLECTION_NAME)
-                                                    .get()
-                                                    .addOnSuccessListener(queryDocumentSnapshots1 -> {
-                                                        if (!queryDocumentSnapshots1.isEmpty()) {
-                                                            List<DocumentSnapshot> documents1 = queryDocumentSnapshots1.getDocuments();
-                                                            for (DocumentSnapshot d : documents1) {
-                                                                d.getReference().delete();
-                                                            }
-                                                        }
-                                                        document.getReference().delete();
-                                                        Log.d(TAG, "getChosenRestaurantIds: document " + document.getId() + " deleted");
-                                                    });
-                                        }
-                                        chosenRestaurantIdsLiveData.setValue(chosenRestaurantIds);
-                                        chosenRestaurantByUserIdsMapMutableLiveData.setValue(chosenRestaurantByUserIdsMap);
-                                    });
+                            boolean isToday = getIsToday(document);
+                            boolean isByUsersEmpty = getIsByUsersEmpty(document);
+                            if (isToday && !isByUsersEmpty) {
+                                // For chosen restaurant id list
+                                String restaurantId = document.getId();
+                                newChosenRestaurantIds.add(restaurantId);
+                                // For chosen restaurant byUsersIds map
+                                ChosenRestaurant chosenRestaurant = document.toObject(ChosenRestaurant.class);
+                                List<String> chosenByUserIds = getByUserIds(document);
+                                newChosenRestaurantByUserIdsMap.put(chosenRestaurant, chosenByUserIds);
+                                Log.d(TAG, "getChosenRestaurantIds: restaurantId " + document.getId() + " added");
+                            } else if (!isToday) {
+                                document.getReference().collection(CHOSENBY_COLLECTION_NAME)
+                                        .get()
+                                        .addOnSuccessListener(queryDocumentSnapshots1 -> {
+                                            if (!queryDocumentSnapshots1.isEmpty()) {
+                                                List<DocumentSnapshot> documents1 = queryDocumentSnapshots1.getDocuments();
+                                                for (DocumentSnapshot d : documents1) {
+                                                    d.getReference().delete();
+                                                }
+                                            }
+                                            document.getReference().delete();
+                                            Log.d(TAG, "getChosenRestaurantIds: document " + document.getId() + " deleted");
+                                        });
+                            }
+
                         }
+                    }
+                    if (!Objects.equals(currentChosenRestaurantIds, newChosenRestaurantIds)) {
+                        chosenRestaurantIdsLiveData.setValue(newChosenRestaurantIds);
+                    }
+                    if (!Objects.equals(currentChosenRestaurantByUserIdsMap, newChosenRestaurantByUserIdsMap)) {
+                        chosenRestaurantByUserIdsMapMutableLiveData.setValue(newChosenRestaurantByUserIdsMap);
                     }
                     if (error != null) {
                         chosenRestaurantIdsLiveData.setValue(null);
                         chosenRestaurantByUserIdsMapMutableLiveData.setValue(null);
-                        Log.e(TAG, "onEvent: ", error);
+                        Log.e(TAG, "setChosenRestaurantIdsAndCleanCollection: onEvent: ", error);
                     }
-                    Log.d(TAG, "setChosenRestaurantIdsAndCleanCollection: chosen_restaurants collection listener set");
                 });
+        Log.d(TAG, "setChosenRestaurantIdsAndCleanCollection: chosen_restaurants collection listener set");
     }
 
     /**

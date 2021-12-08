@@ -13,17 +13,17 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.jr_eagle_ocr.go4lunch.R;
-import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.models.ChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
+import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetCurrentUserChosenRestaurantId;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetUserViewStates;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.IsLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetUserViewStates;
 import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 import com.jr_eagle_ocr.go4lunch.util.Event;
 
@@ -54,7 +54,10 @@ public class RestaurantDetailViewModel extends ViewModel {
     private final MediatorLiveData<Event<Integer>> snackbarMessageEventMediatorLiveData = new MediatorLiveData<>();
     private final String displayedRestaurantId;
     private Restaurant restaurant;
-    private int count = 0;
+    // Both booleans not to have snackbars at activity starting
+    private boolean isLikeClickedOnce = false;
+    private boolean isChooseClickedOnce = false;
+    private boolean blockNextChosenSnackbar = false;
 
     public RestaurantDetailViewModel(
             String displayedRestaurantId,
@@ -100,21 +103,22 @@ public class RestaurantDetailViewModel extends ViewModel {
                 buildAndSetJoiningUserViewStates());
 
         restaurantDetailViewStateMediatorLiveData.addSource(currentUserChosenRestaurantIdLiveData, chosenRestaurantId ->
-                buildAndSetRestaurantViewState());
+                buildAndSetRestaurantDetailViewState());
         restaurantDetailViewStateMediatorLiveData.addSource(isLikedRestaurantLiveData, isLiked ->
-                buildAndSetRestaurantViewState());
+                buildAndSetRestaurantDetailViewState());
         restaurantDetailViewStateMediatorLiveData.addSource(joiningUserViewStatesMediatorLiveData, joiningUserViewStates ->
-                buildAndSetRestaurantViewState());
+                buildAndSetRestaurantDetailViewState());
 
         snackbarMessageEventMediatorLiveData.addSource(isLikedRestaurantLiveData, isLikedRestaurant -> {
-            if (isLikedRestaurant != null) {
+            if (isLikedRestaurant != null && isLikeClickedOnce) {
                 buildAndSetSnackbarMessageEvent(LIKE, isLiked());
-                ++count;
             }
         });
         snackbarMessageEventMediatorLiveData.addSource(currentUserChosenRestaurantIdLiveData, chosenRestaurantId -> {
-            if (displayedRestaurantId != null && chosenRestaurantId != null)
+            if (displayedRestaurantId != null && chosenRestaurantId != null && isChooseClickedOnce && !blockNextChosenSnackbar) {
                 buildAndSetSnackbarMessageEvent(CHOOSE, isChosen());
+            }
+            blockNextChosenSnackbar = false;
         });
     }
 
@@ -132,7 +136,7 @@ public class RestaurantDetailViewModel extends ViewModel {
      * based on the displayed restaurant,
      * including the joining user view states
      */
-    private void buildAndSetRestaurantViewState() {
+    private void buildAndSetRestaurantDetailViewState() {
         if (restaurant != null
                 && isLikedRestaurant != null
                 && currentUserChosenRestaurantIdLiveData != null) {
@@ -194,8 +198,13 @@ public class RestaurantDetailViewModel extends ViewModel {
      * Called by activity on choose fab click
      */
     public void clickOnChooseFab() {
+        isChooseClickedOnce = true;
         boolean isChosen = !isChosen();
         if (isChosen) {
+            if (currentUserChosenRestaurantIdLiveData.getValue() != null
+                    && !currentUserChosenRestaurantIdLiveData.getValue().isEmpty()) {
+                blockNextChosenSnackbar = true;
+            }
             setClearChosenRestaurant.setChosenRestaurant(displayedRestaurantId);
         } else {
             setClearChosenRestaurant.clearChosenRestaurant();
@@ -217,6 +226,7 @@ public class RestaurantDetailViewModel extends ViewModel {
                 intent = new Intent(Intent.ACTION_DIAL, tel);
                 break;
             case 200:
+                isLikeClickedOnce = true;
                 boolean isLiked = !isLiked();
                 if (isLiked) {
                     setClearLikedRestaurant.setLikedRestaurant(displayedRestaurantId);
@@ -268,22 +278,20 @@ public class RestaurantDetailViewModel extends ViewModel {
      * @param isLikedChosen boolean precising the new state
      */
     private void buildAndSetSnackbarMessageEvent(String likeOrChoose, boolean isLikedChosen) {
-        if (count >= 2) {
-            int messageResource;
-            switch (likeOrChoose) {
-                case LIKE:
-                    messageResource =
-                            isLikedChosen ? R.string.like_restaurant : R.string.unlike_restaurant;
-                    break;
-                case CHOOSE:
-                    messageResource =
-                            isLikedChosen ? R.string.choose_restaurant : R.string.unchoose_restaurant;
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected value: " + likeOrChoose);
-            }
-            snackbarMessageEventMediatorLiveData.setValue(new Event<>(messageResource));
+        int messageResource;
+        switch (likeOrChoose) {
+            case LIKE:
+                messageResource =
+                        isLikedChosen ? R.string.like_restaurant : R.string.unlike_restaurant;
+                break;
+            case CHOOSE:
+                messageResource =
+                        isLikedChosen ? R.string.choose_restaurant : R.string.unchoose_restaurant;
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + likeOrChoose);
         }
+        snackbarMessageEventMediatorLiveData.setValue(new Event<>(messageResource));
     }
 
     @Override

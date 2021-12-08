@@ -11,6 +11,7 @@ import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author jrigault
@@ -28,9 +29,9 @@ public final class GetCurrentUserChosenRestaurantId extends UseCase {
         chosenRestaurantByUserIdsMapLiveData = restaurantRepository.getChosenRestaurantByUserIdsMap();
 
         currentUserChosenRestaurantIdMediatorLiveData.addSource(currentUserLiveData, currentUser ->
-                getCurrentUserChosenRestaurantId());
+                setCurrentUserChosenRestaurantId());
         currentUserChosenRestaurantIdMediatorLiveData.addSource(chosenRestaurantByUserIdsMapLiveData, chosenRestaurantByUserIdsMap ->
-                getCurrentUserChosenRestaurantId());
+                setCurrentUserChosenRestaurantId());
     }
 
     /**
@@ -39,7 +40,13 @@ public final class GetCurrentUserChosenRestaurantId extends UseCase {
      * @return the place id of the chosen restaurant
      */
     public LiveData<String> getCurrentUserChosenRestaurantId() {
-        String currentUserChosenRestaurantId = "";
+        return currentUserChosenRestaurantIdMediatorLiveData;
+    }
+
+
+    private void setCurrentUserChosenRestaurantId() {
+        String currentUserChosenRestaurantId = currentUserChosenRestaurantIdMediatorLiveData.getValue();
+        String newChosenRestaurantId = "";
         User currentUser = currentUserLiveData.getValue();
         if (currentUser != null) {
             String currentUserId = currentUser.getUid();
@@ -49,16 +56,14 @@ public final class GetCurrentUserChosenRestaurantId extends UseCase {
                     List<String> chosenByUserIds = entry.getValue();
                     if (chosenByUserIds.contains(currentUserId)) {
                         ChosenRestaurant chosenRestaurant = entry.getKey();
-                        currentUserChosenRestaurantId = chosenRestaurant.getPlaceId();
+                        newChosenRestaurantId = chosenRestaurant.getPlaceId();
                         break;
                     }
                 }
             }
-        } else {
-            currentUserChosenRestaurantId = null;
         }
-        currentUserChosenRestaurantIdMediatorLiveData.setValue(currentUserChosenRestaurantId);
-
-        return currentUserChosenRestaurantIdMediatorLiveData;
+        if (!Objects.equals(currentUserChosenRestaurantId, newChosenRestaurantId)) {
+            currentUserChosenRestaurantIdMediatorLiveData.setValue(newChosenRestaurantId);
+        }
     }
 }

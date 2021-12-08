@@ -13,6 +13,7 @@
     <string name="fragment_workmates">Collègues disponibles</string>
     <string name="action_search">Recherche</string>
     <string name="you_have_not_decided_yet">Vous n\'avez pas encore choisi</string>
+    <string name="type_more_than_three_chars">Tapez au moins trois caractères pour rechercher</string>
 
     <!--  DRAWER NAVIGATION  -->
     <string name="menu_your_lunch">VOTRE CHOIX</string>

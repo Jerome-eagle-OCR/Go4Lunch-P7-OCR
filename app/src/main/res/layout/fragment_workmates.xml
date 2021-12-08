@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/workmates_user_recyclerview"
+    android:name="com.jr_eagle_ocr.go4lunch.ui.WorkmatesFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".ui.workmates.WorkmatesFragment">
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/workmates_user_recyclerview"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        android:paddingBottom="@dimen/design_bottom_navigation_height"
-        tools:listitem="@layout/item_user" />
-
-</FrameLayout>
+    android:layout_marginBottom="@dimen/design_bottom_navigation_height"
+    app:layoutManager="LinearLayoutManager"
+    tools:context=".ui.workmates.WorkmatesFragment"
+    tools:listitem="@layout/item_user" />

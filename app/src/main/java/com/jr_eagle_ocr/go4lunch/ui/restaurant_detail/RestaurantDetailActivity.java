@@ -78,9 +78,7 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
      */
     private void initFab() {
         chooseFab = binding.fab;
-        binding.fab.setOnClickListener(view -> {
-            viewModel.clickOnChooseFab();
-        });
+        binding.fab.setOnClickListener(view -> viewModel.clickOnChooseFab());
     }
 
     /**

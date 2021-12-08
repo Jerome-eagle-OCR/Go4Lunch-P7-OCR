@@ -4,10 +4,12 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetCurrentUserChosenRestaurantId;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.IsLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.PlaceAutocompleteSearch;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
@@ -22,9 +24,13 @@ public class PassingParameterViewModelFactory extends ViewModelProvider.NewInsta
     @NonNull
     private final Object parameter;
     @NonNull
+    private final LocationRepository locationRepository;
+    @NonNull
     private final UserRepository userRepository;
     @NonNull
     private final RestaurantRepository restaurantRepository;
+    @NonNull
+    private final PlaceAutocompleteSearch placeAutocompleteSearch;
     @NonNull
     private final GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId;
     @NonNull
@@ -34,13 +40,14 @@ public class PassingParameterViewModelFactory extends ViewModelProvider.NewInsta
     @NonNull
     private final SetClearLikedRestaurant setClearLikedRestaurant;
 
-
     public PassingParameterViewModelFactory(
             @NonNull Object parameter
     ) {
         this.parameter = parameter;
+        this.locationRepository = Go4LunchApplication.getDependencyContainer().getLocationRepository();
         this.userRepository = Go4LunchApplication.getDependencyContainer().getUserRepository();
         this.restaurantRepository = Go4LunchApplication.getDependencyContainer().getRestaurantRepository();
+        this.placeAutocompleteSearch = Go4LunchApplication.getDependencyContainer().getPlaceAutocompleteSearch();
         this.getCurrentUserChosenRestaurantId = Go4LunchApplication.getDependencyContainer().getCurrentUserChosenRestaurantId();
         this.isLikedRestaurant = Go4LunchApplication.getDependencyContainer().getIsLikedRestaurant();
         this.setClearChosenRestaurant = Go4LunchApplication.getDependencyContainer().setClearChosenRestaurant();
@@ -54,8 +61,8 @@ public class PassingParameterViewModelFactory extends ViewModelProvider.NewInsta
     public <T extends ViewModel> T create(@NonNull @NotNull Class<T> modelClass) {
         if (modelClass.isAssignableFrom(MainViewModel.class)) {
             return (T) new MainViewModel(
-                    (boolean) parameter, userRepository, restaurantRepository,
-                    getCurrentUserChosenRestaurantId);
+                    (boolean) parameter, locationRepository, userRepository, restaurantRepository,
+                    placeAutocompleteSearch, getCurrentUserChosenRestaurantId);
         }
         if (modelClass.isAssignableFrom(RestaurantDetailViewModel.class)) {
             return (T) new RestaurantDetailViewModel(

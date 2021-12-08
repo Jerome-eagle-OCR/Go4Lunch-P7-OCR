@@ -20,6 +20,7 @@ import com.jr_eagle_ocr.go4lunch.util.Event;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author jrigault
@@ -223,18 +224,21 @@ public final class UserRepository extends Repository {
         if (firebaseUser != null) {
             listenerRegistration = this.getUsersCollection()
                     .addSnapshotListener((value, error) -> {
-                        Map<String, User> allLoggedUsers = new LinkedHashMap<>();
+                        Map<String, User> currentAllLoggedUsers = allLoggedUsersMutableLiveData.getValue();
+                        Map<String, User> newAllLoggedUsers = new LinkedHashMap<>();
                         if (value != null && !value.isEmpty()) {
                             List<DocumentSnapshot> documents = value.getDocuments();
                             for (DocumentSnapshot d : documents) {
                                 User user = d.toObject(User.class);
                                 if (user != null && user.isLogged()) {
-                                    allLoggedUsers.put(user.getUid(), user);
+                                    newAllLoggedUsers.put(user.getUid(), user);
                                 }
                             }
                         }
-                        allLoggedUsersMutableLiveData.setValue(allLoggedUsers);
-                        setCurrentUser(firebaseUser, allLoggedUsers);
+                        if (!Objects.equals(currentAllLoggedUsers, newAllLoggedUsers)) {
+                            allLoggedUsersMutableLiveData.setValue(newAllLoggedUsers);
+                            setCurrentUser(firebaseUser, newAllLoggedUsers);
+                        }
                         if (error != null) {
                             allLoggedUsersMutableLiveData.setValue(null);
                             setCurrentUser(firebaseUser, null);

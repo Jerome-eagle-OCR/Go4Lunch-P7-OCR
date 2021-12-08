@@ -7,7 +7,8 @@
     android:background="@color/black"
     android:gravity="bottom"
     android:orientation="vertical"
-    android:theme="@style/ThemeOverlay.AppCompat.Dark">
+    android:theme="@style/ThemeOverlay.AppCompat.Dark"
+    tools:showIn="@layout/activity_main">
 
     <ImageView
         android:layout_width="match_parent"
@@ -47,16 +48,14 @@
         android:fontFamily="sans-serif-medium"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
         android:singleLine="true"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:textSize="18sp"
-        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@id/drwr_user_email"
         app:layout_constraintStart_toEndOf="@id/drwr_user_photo"
         tools:text="Manu Tentionnaire" />
 
     <TextView
         android:id="@+id/drwr_user_email"
-        style="@style/TextAppearance.AppCompat.Title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="28dp"

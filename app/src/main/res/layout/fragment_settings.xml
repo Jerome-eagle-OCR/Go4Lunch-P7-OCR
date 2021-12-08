@@ -59,6 +59,7 @@
             android:drawableStart="@android:drawable/ic_menu_edit"
             android:drawablePadding="8dp"
             android:fontFamily="serif"
+            android:hint="@string/your_name"
             android:inputType="textPersonName"
             android:singleLine="true"
             android:textColor="@color/black"
@@ -87,6 +88,7 @@
             android:drawableStart="@android:drawable/ic_menu_gallery"
             android:drawablePadding="8dp"
             android:fontFamily="sans-serif-light"
+            android:hint="@string/your_photo_url"
             android:inputType="textUri"
             android:scrollHorizontally="true"
             android:singleLine="true"
@@ -112,6 +114,7 @@
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/user_delete"
+            style="@style/TextAppearance.AppCompat.Button"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/holo_red_light"

@@ -14,6 +14,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.jr_eagle_ocr.go4lunch.databinding.FragmentWorkmatesBinding;
+import com.jr_eagle_ocr.go4lunch.ui.MainActivity;
+import com.jr_eagle_ocr.go4lunch.ui.MainViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.ViewModelFactory;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserAdapter;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
@@ -25,9 +27,13 @@ import java.util.ArrayList;
  * A fragment representing a list of Items.
  */
 public class WorkmatesFragment extends Fragment implements UserAdapter.DisplayChosenRestaurantListener {
-
     private FragmentWorkmatesBinding binding;
     private WorkmatesViewModel viewModel;
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -41,6 +47,9 @@ public class WorkmatesFragment extends Fragment implements UserAdapter.DisplayCh
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(WorkmatesViewModel.class);
+
+        // Set current displayed fragment in mainviewmodel
+        ((MainActivity) requireActivity()).getViewModel().setCurrentFragment(MainViewModel.WORKMATES);
 
         setRecyclerView();
     }

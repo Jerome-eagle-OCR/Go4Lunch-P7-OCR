@@ -2,12 +2,14 @@ package com.jr_eagle_ocr.go4lunch.di;
 
 import android.app.Application;
 
+import com.jr_eagle_ocr.go4lunch.data.place_autocomplete.PlaceAutocompleteRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetCurrentUserChosenRestaurantId;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetNotificationKit;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.IsLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.PlaceAutocompleteSearch;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearLikedRestaurant;
 
@@ -19,6 +21,8 @@ public final class Go4LunchDependencyContainer {
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
     private final RestaurantRepository restaurantRepository;
+    private final PlaceAutocompleteRepository placeAutocompleteRepository;
+    private final PlaceAutocompleteSearch placeAutocompleteSearch;
     private final SetClearChosenRestaurant setClearChosenRestaurant;
     private final GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId;
     private final SetClearLikedRestaurant setClearLikedRestaurant;
@@ -32,6 +36,10 @@ public final class Go4LunchDependencyContainer {
         userRepository = new UserRepository();
         locationRepository = new LocationRepository();
         restaurantRepository = new RestaurantRepository();
+        placeAutocompleteRepository = new PlaceAutocompleteRepository();
+
+        placeAutocompleteSearch = new PlaceAutocompleteSearch(
+                locationRepository, placeAutocompleteRepository);
 
         getCurrentUserChosenRestaurantId =
                 new GetCurrentUserChosenRestaurantId(
@@ -70,6 +78,14 @@ public final class Go4LunchDependencyContainer {
 
     public RestaurantRepository getRestaurantRepository() {
         return restaurantRepository;
+    }
+
+    public PlaceAutocompleteRepository getPlaceAutocompleteRepository() {
+        return placeAutocompleteRepository;
+    }
+
+    public PlaceAutocompleteSearch getPlaceAutocompleteSearch() {
+        return placeAutocompleteSearch;
     }
 
     public SetClearChosenRestaurant setClearChosenRestaurant() {

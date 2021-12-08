@@ -50,11 +50,14 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.data.models.FoundRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
+import com.jr_eagle_ocr.go4lunch.ui.MainActivity;
+import com.jr_eagle_ocr.go4lunch.ui.MainViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.ViewModelFactory;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -97,6 +100,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
 
     private MapViewViewModel viewModel;
     private Map<String, Restaurant> allRestaurants;
+    private final Map<String, Marker> markers = new HashMap<>();
 
     @Nullable
     @Override
@@ -113,6 +117,19 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
 
         viewModel.getAllRestaurants().observe(getViewLifecycleOwner(), allRestaurants ->
                 this.allRestaurants = allRestaurants);
+
+        // Retrieve and set mainviewmodel in mapviewmodel to observe filtered place from search feature
+        MainViewModel mainViewModel = ((MainActivity) requireActivity()).getViewModel();
+        viewModel.setMainViewModel(mainViewModel);
+        // Observe the search result selected item to activate marker
+        viewModel.getSelectedItem().observe(getViewLifecycleOwner(), selectedItem -> {
+            if (selectedItem != null) {
+                Marker marker = markers.get(selectedItem.getPlaceId());
+                if (marker != null) {
+                    marker.showInfoWindow();
+                }
+            }
+        });
 
         // Construct a FusedLocationProviderClient.
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity());
@@ -159,13 +176,13 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
                 @SuppressLint("MissingPermission")
                 @Override
                 public void onActivityResult(Boolean result) {
+                    locationPermissionGranted = result;
+                    viewModel.setLocationPermissionGranted(result);
                     if (result) {
-                        locationPermissionGranted = true;
 //                        LocationManager lm = (LocationManager) requireActivity().getSystemService(Context.LOCATION_SERVICE);
 //                        lm.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 5000, 50, MapViewFragment.this::onLocationChanged);
                         refreshMap();
                     } else {
-                        locationPermissionGranted = false;
                         new AppSettingsDialog.Builder(requireActivity()).build().show();
                     }
                 }
@@ -245,8 +262,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
         if (locationPermissionGranted) {
             // Use fields to define the data types to return.
             List<Place.Field> placeFields = Arrays.asList(
-                    Place.Field.ID, Place.Field.NAME,
-                    Place.Field.LAT_LNG, Place.Field.TYPES);
+                    Place.Field.ID, Place.Field.TYPES);
 
             // Use the builder to create a FindCurrentPlaceRequest.
             FindCurrentPlaceRequest request =
@@ -381,7 +397,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
                 LatLng latLng = (LatLng) details.get(LATLNG);
                 // color according to place chosen or not
                 Integer drawableResource = (Integer) details.get(DRAWABLE_RESOURCE);
-                int resource = drawableResource != null ? (int) drawableResource : R.drawable.orange_marker;
+                int resource = drawableResource != null ? drawableResource : R.drawable.orange_marker;
                 BitmapDescriptor colorMarker = BitmapDescriptorFactory.fromResource(resource);
 
                 // add marker and set its tag to place id (used for intent extra)
@@ -392,6 +408,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
                                     .title(name)
                                     .icon(colorMarker));
                     if (marker != null) marker.setTag(id);
+                    markers.put(id, marker);
                 }
             }
         });

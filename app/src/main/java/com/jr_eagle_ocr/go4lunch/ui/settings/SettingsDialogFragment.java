@@ -69,11 +69,9 @@ public class SettingsDialogFragment extends DialogFragment {
         switchNotification.setChecked(viewState.isSwitchNotificationChecked());
         // Set user name textview
         userNameInputEditText = binding.userName;
-        userNameInputEditText.setHint(R.string.your_name);
         userNameInputEditText.setText(viewState.getUserName());
         // Set user photo URL textview
         userUrlPictureInputEditText = binding.userUrlPicture;
-        userUrlPictureInputEditText.setHint(R.string.your_photo_url);
         userUrlPictureInputEditText.setText(viewState.getUserURLpicture());
         // Set delete user "fake button"
         userDelete = binding.userDelete;

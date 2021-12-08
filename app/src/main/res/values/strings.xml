@@ -12,6 +12,7 @@
     <string name="fragment_workmates">Available workmates</string>
     <string name="action_search">Search</string>
     <string name="you_have_not_decided_yet">You haven\'t decided yet</string>
+    <string name="type_more_than_three_chars">Type at least 3 characters to search</string>
 
     <!--  DRAWER NAVIGATION  -->
     <string name="menu_your_lunch">YOUR LUNCH</string>

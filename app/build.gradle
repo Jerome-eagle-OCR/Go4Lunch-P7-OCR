@@ -16,7 +16,8 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        it.resValue 'string', 'google_places_key', OCR_P7_Google_Places_key
+        buildConfigField 'String', 'GOOGLE_PLACES_KEY', OCR_P7_Google_Places_web_key
+        it.resValue 'string', 'google_places_key', OCR_P7_Google_Places_sdk_key
     }
 
     buildTypes {
@@ -65,6 +66,9 @@ dependencies {
     // Facebook login support
     implementation 'com.facebook.android:facebook-android-sdk:12.0.0'
 
+    // FIRESTORE
+    implementation 'com.google.firebase:firebase-firestore'
+
     // GOOGLE MAPS
     implementation 'com.google.android.gms:play-services-maps:18.0.0'
     implementation 'com.google.android.gms:play-services-location:18.0.0'
@@ -74,8 +78,17 @@ dependencies {
     implementation 'com.google.android.libraries.places:places:2.4.0'
     implementation 'com.android.volley:volley:1.2.1'
 
-    // FIRESTORE
-    implementation 'com.google.firebase:firebase-firestore'
+    // GOOGLE GSON
+    implementation 'com.google.code.gson:gson:2.8.9'
+
+    // RETROFIT
+//    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+
+    // RXJAVA
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.21'
 
     // For tests
     testImplementation 'junit:junit:4.13.2'

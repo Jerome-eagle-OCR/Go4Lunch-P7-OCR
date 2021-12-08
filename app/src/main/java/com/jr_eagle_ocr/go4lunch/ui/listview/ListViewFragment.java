@@ -14,6 +14,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.jr_eagle_ocr.go4lunch.databinding.FragmentListviewBinding;
+import com.jr_eagle_ocr.go4lunch.ui.MainActivity;
+import com.jr_eagle_ocr.go4lunch.ui.MainViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.ViewModelFactory;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.RestaurantAdapter;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
@@ -25,7 +27,6 @@ import java.util.ArrayList;
  * A fragment representing a list of Items.
  */
 public class ListViewFragment extends Fragment implements RestaurantAdapter.DisplayRestaurantListener {
-
     private ListViewViewModel viewModel;
     private FragmentListviewBinding binding;
 
@@ -40,6 +41,10 @@ public class ListViewFragment extends Fragment implements RestaurantAdapter.Disp
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(ListViewViewModel.class);
+
+        // Retrieve and set mainviewmodel in mapviewmodel to observe filtered place from search feature
+        MainViewModel mainViewModel = ((MainActivity) requireActivity()).getViewModel();
+        viewModel.setMainViewModel(mainViewModel);
 
         setRecyclerView();
     }

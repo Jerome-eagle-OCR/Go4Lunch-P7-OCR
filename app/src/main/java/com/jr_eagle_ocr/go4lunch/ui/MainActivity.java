@@ -5,23 +5,32 @@ import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.CANCEL_ALARM;
 import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.CANCEL_WORKER;
 import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.SET_ALARM;
 import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.SET_WORKER;
+import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.WORKMATES;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -45,6 +54,7 @@ import com.jr_eagle_ocr.go4lunch.ui.notification.AlertReceiver;
 import com.jr_eagle_ocr.go4lunch.ui.notification.NotificationsWorker;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -64,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
     private View header;
 
     private MainViewState viewState;
+    private boolean locationPermissionGranted;
+    private boolean onQueryTextChangeEnabled = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,10 +88,21 @@ public class MainActivity extends AppCompatActivity {
 
         workManager = WorkManager.getInstance(this);
 
+        checkLocationPermission();
         setToolbar();
         setNavigationViews();
+        setToastOnEvent();
         setNavigateToObserver();
         setViewStateObserver();
+    }
+
+    /**
+     * Check if access fine location is granted and valorize boolean here and in VM
+     */
+    private void checkLocationPermission() {
+        boolean locationPermissionGranted = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+        viewModel.setLocationPermissionGranted(locationPermissionGranted);
     }
 
     private void setToolbar() {
@@ -114,8 +137,26 @@ public class MainActivity extends AppCompatActivity {
 
         BottomNavigationView bottomBar = binding.appBarMain.navBar;
         NavigationUI.setupWithNavController(bottomBar, navController);
+        // Enable or disabled bottom bar navigation on location permission granted or not
+        viewModel.getLocationPermissionGranted().observe(this, aBoolean -> {
+            bottomBar.getMenu().getItem(1).setEnabled(aBoolean != null && aBoolean);
+            this.locationPermissionGranted = aBoolean != null && aBoolean;
+        });
 
         header = navigationView.getHeaderView(0);
+    }
+
+    /**
+     * Set toast event observer
+     */
+    private void setToastOnEvent() {
+        viewModel.getToastMessageEvent().observe(this, messageResourceEvent -> {
+            Integer resource = messageResourceEvent.getContentIfNotHandled();
+            if (resource != null) {
+                String message = getString(resource);
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     /**
@@ -128,8 +169,7 @@ public class MainActivity extends AppCompatActivity {
                 Integer navigateTo = event.getContentIfNotHandled();
                 if (navigateTo != null) {
                     Bundle args = new Bundle();
-                    String currentUserChosenRestaurantId = viewState.getCurrentUserChosenRestaurantId();
-                    String placeId = viewState != null ? currentUserChosenRestaurantId : null;
+                    String placeId = viewState != null ? viewState.getCurrentUserChosenRestaurantId() : null;
                     args.putString(RestaurantDetailActivity.PLACE_ID, placeId);
                     navController.navigate(navigateTo, args);
                 } else {
@@ -143,7 +183,6 @@ public class MainActivity extends AppCompatActivity {
      * Set mainviewstate livedata observer to be used to set current user details in drawer header
      * and perform proper action about noon reminder feature
      */
-    @SuppressLint("NewApi") // Managed by MainViewModel
     private void setViewStateObserver() {
         viewModel.getMainViewState().observe(this, viewState -> {
             this.viewState = viewState;
@@ -194,7 +233,6 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Set noon reminder if API version >= 26
      */
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private void setWorker() {
         Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
 
@@ -240,11 +278,111 @@ public class MainActivity extends AppCompatActivity {
         return PendingIntent.getBroadcast(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
+    /**
+     * Initialize the contents of the Activity's standard options menu.
+     * We additionaly create autocomplete search
+     *
+     * @param menu The options menu in which are placed the items.
+     * @return true for the menu to be displayed; false for not to be shown.
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+        // Get the search menu.
+        MenuItem searchMenu = menu.findItem(R.id.action_search);
+        // Get SearchView object.
+        SearchView searchView = (SearchView) searchMenu.getActionView();
+        // Toast error message in case location permission is not granted
+        searchView.setOnSearchClickListener(v -> {
+            if (!locationPermissionGranted) {
+                Toast.makeText(MainActivity.this, getString(R.string.places_search_error), Toast.LENGTH_LONG).show();
+            }
+        });
+        // Get SearchView autocomplete object.
+        final SearchView.SearchAutoComplete searchAutoComplete = searchView.findViewById(R.id.search_src_text);
+        searchAutoComplete.setBackgroundColor(Color.LTGRAY);
+        searchAutoComplete.setTextColor(Color.DKGRAY);
+        searchAutoComplete.setDropDownBackgroundResource(R.color.ic_launcher_background);
+        //searchAutoComplete.setThreshold(3); // ???
+        // Create a new ArrayAdapter and add data to search auto complete object.
+        viewModel.getAutocompleteRestaurantArray().observe(this, restaurantArray -> {
+            if (restaurantArray == null) {
+                restaurantArray = new AutocompleteRestaurantViewState[0];
+            } else {
+                int initialLength = restaurantArray.length;
+                restaurantArray = Arrays.copyOf(restaurantArray, initialLength + 1);
+                restaurantArray[initialLength] = new AutocompleteRestaurantViewState(getString(R.string.places_powered_by_google), "");
+            }
+            ArrayAdapter<AutocompleteRestaurantViewState> arrayAdapter =
+                    new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, restaurantArray);
+            searchAutoComplete.setAdapter(arrayAdapter);
+            if (restaurantArray.length > 0) {
+                searchAutoComplete.showDropDown();
+            } else {
+                searchAutoComplete.dismissDropDown();
+            }
+        });
+        // Listen to search view item on click event.
+        searchAutoComplete.setOnItemClickListener((adapterView, view, itemIndex, id) -> {
+            AutocompleteRestaurantViewState selectedItem = (AutocompleteRestaurantViewState) adapterView.getItemAtPosition(itemIndex);
+            onQueryTextChangeEnabled = false;
+            searchAutoComplete.setText(selectedItem.toString());
+            viewModel.setSelectedItem(selectedItem);
+            onQueryTextChangeEnabled = true;
+            hideKeyboard();
+        });
+        // Below event is triggered when submit search query.
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (onQueryTextChangeEnabled) {
+                    if (viewModel.getSelectedItem().getValue() != null) {
+                        viewModel.setSelectedItem(null);
+                    }
+                    viewModel.setPlaceAutocompleteSearchText(newText);
+                }
+                return false;
+            }
+        });
+        // Reset when closing
+        searchView.setOnCloseListener(() -> {
+            viewModel.setPlaceAutocompleteSearchText(null);
+            return false;
+        });
+        // Manage search autocomplete enabling depending on location permission
+        viewModel.getLocationPermissionGranted().observe(this, aBoolean -> {
+            if (aBoolean != null) {
+                searchAutoComplete.setEnabled(aBoolean);
+                searchMenu.setEnabled(aBoolean);
+            }
+        });
+        // Manage search autocomplete enabling depending on current fragment
+        viewModel.getCurrentFragment().observe(this, currentFragment -> {
+            boolean isEnabled = true;
+            if (currentFragment.equals(WORKMATES)) {
+                isEnabled = false;
+                searchView.invalidate();
+            }
+            searchAutoComplete.setEnabled(isEnabled);
+            searchMenu.setEnabled(isEnabled);
+        });
+
         return true;
+    }
+
+    /**
+     * Hides the soft keyboard
+     */
+    private void hideKeyboard() {
+        View view = getCurrentFocus();
+        InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     /**
@@ -267,10 +405,18 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
+    /**
+     * Getter to allow each fragment to pass mainviewmodel to its own viewmodel
+     *
+     * @return MainViewModel current instance
+     */
+    public MainViewModel getViewModel() {
+        return viewModel;
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         binding = null;
-        Glide.get(this).clearDiskCache();
     }
 }
