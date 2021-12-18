@@ -18,7 +18,7 @@ import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearChosenRestaurant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,10 +55,9 @@ public class SettingsViewModel extends ViewModel {
     }
 
     public SettingsDialogViewState getSettingsDialogViewState() {
-        return new SettingsDialogViewState(
-                isNoonReminderEnabled,
-                userName,
-                userUrlPicture);
+        return new SettingsDialogViewState(isNoonReminderEnabled,
+                                           userName,
+                                           userUrlPicture);
     }
 
     public void deleteUser(Context context) {
@@ -103,13 +102,12 @@ public class SettingsViewModel extends ViewModel {
     }
 
     public void clickOnButtonValidate() {
-        User userToSet = new User(
-                currentUser.getUid(),
-                userName,
-                currentUser.getUserEmail(),
-                userUrlPicture,
-                isNoonReminderEnabled,
-                currentUser.isLogged());
+        User userToSet = new User(currentUser.getUid(),
+                                  userName,
+                                  currentUser.getUserEmail(),
+                                  userUrlPicture,
+                                  isNoonReminderEnabled,
+                                  currentUser.isLogged());
 
         userRepository.setUser(userToSet).addOnCompleteListener(task -> {
             int validateResult;

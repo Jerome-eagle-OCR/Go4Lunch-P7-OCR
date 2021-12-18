@@ -134,4 +134,43 @@ public class Restaurant {
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Restaurant that = (Restaurant) o;
+
+        if (Float.compare(that.rating, rating) != 0) return false;
+        if (!id.equals(that.id)) return false;
+        if (photoString != null ? !photoString.equals(that.photoString) : that.photoString != null)
+            return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (geoPoint != null ? !geoPoint.equals(that.geoPoint) : that.geoPoint != null)
+            return false;
+        if (address != null ? !address.equals(that.address) : that.address != null) return false;
+        if (phoneNumber != null ? !phoneNumber.equals(that.phoneNumber) : that.phoneNumber != null)
+            return false;
+        if (webSiteUrl != null ? !webSiteUrl.equals(that.webSiteUrl) : that.webSiteUrl != null)
+            return false;
+        if (closeTimes != null ? !closeTimes.equals(that.closeTimes) : that.closeTimes != null)
+            return false;
+        return timestamp != null ? timestamp.equals(that.timestamp) : that.timestamp == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id.hashCode();
+        result = 31 * result + (photoString != null ? photoString.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (geoPoint != null ? geoPoint.hashCode() : 0);
+        result = 31 * result + (address != null ? address.hashCode() : 0);
+        result = 31 * result + (phoneNumber != null ? phoneNumber.hashCode() : 0);
+        result = 31 * result + (webSiteUrl != null ? webSiteUrl.hashCode() : 0);
+        result = 31 * result + (closeTimes != null ? closeTimes.hashCode() : 0);
+        result = 31 * result + (rating != +0.0f ? Float.floatToIntBits(rating) : 0);
+        result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
+        return result;
+    }
 }

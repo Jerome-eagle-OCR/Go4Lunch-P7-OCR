@@ -15,13 +15,12 @@ public class LogOutViewModel extends ViewModel {
     private final String TAG = getClass().getSimpleName();
     private final UserRepository userRepository;
 
-    private final MutableLiveData<Integer> signOutResultMutableLiveData;
+    private final MutableLiveData<Integer> signOutResultMutableLiveData = new MutableLiveData<>();
 
     public LogOutViewModel(
             UserRepository userRepository
     ) {
         this.userRepository = userRepository;
-        signOutResultMutableLiveData = new MutableLiveData<>();
     }
 
     public void signOut(Context context) {

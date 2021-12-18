@@ -237,7 +237,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
                             map.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                     new LatLng(lastKnownLocation.getLatitude(),
                                             lastKnownLocation.getLongitude()), DEFAULT_ZOOM));
-                            viewModel.setLocation(lastKnownLocation); //TODO: use location repo
+                            viewModel.setLocation(lastKnownLocation);
                             showCurrentPlaces(); //Get places around, filter only restaurants and add them to the list
                         }
                     } else {

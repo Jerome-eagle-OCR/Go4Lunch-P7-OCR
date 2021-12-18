@@ -57,4 +57,36 @@ public class PredictionsItem {
     public String getPlaceId() {
         return placeId;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PredictionsItem item = (PredictionsItem) o;
+
+        if (reference != null ? !reference.equals(item.reference) : item.reference != null)
+            return false;
+        if (types != null ? !types.equals(item.types) : item.types != null) return false;
+        if (matchedSubstrings != null ? !matchedSubstrings.equals(item.matchedSubstrings) : item.matchedSubstrings != null)
+            return false;
+        if (terms != null ? !terms.equals(item.terms) : item.terms != null) return false;
+        if (structuredFormatting != null ? !structuredFormatting.equals(item.structuredFormatting) : item.structuredFormatting != null)
+            return false;
+        if (description != null ? !description.equals(item.description) : item.description != null)
+            return false;
+        return placeId != null ? placeId.equals(item.placeId) : item.placeId == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = reference != null ? reference.hashCode() : 0;
+        result = 31 * result + (types != null ? types.hashCode() : 0);
+        result = 31 * result + (matchedSubstrings != null ? matchedSubstrings.hashCode() : 0);
+        result = 31 * result + (terms != null ? terms.hashCode() : 0);
+        result = 31 * result + (structuredFormatting != null ? structuredFormatting.hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (placeId != null ? placeId.hashCode() : 0);
+        return result;
+    }
 }

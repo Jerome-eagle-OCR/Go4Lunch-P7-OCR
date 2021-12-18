@@ -13,7 +13,9 @@ import java.io.ByteArrayOutputStream;
  * Bitmap to String, and vice-versa, conversion utils to allow restaurant photo storage
  * in a Restaurant Document in Firestore db
  */
-public abstract class BitmapUtil {
+public class BitmapUtil {
+    public BitmapUtil() {
+    }
 
     /**
      * Convert Bitmap to String
@@ -22,7 +24,7 @@ public abstract class BitmapUtil {
      * @return the base64-encoded Bitmap String
      */
     @Nullable
-    public static String encodeToBase64(@Nullable Bitmap image) {
+    public String encodeToBase64(@Nullable Bitmap image) {
         String imageString = null;
         if (image != null) {
             ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
@@ -39,11 +41,12 @@ public abstract class BitmapUtil {
      * @return the base64-decoded String Bitmap
      */
     @Nullable
-    public static Bitmap decodeBase64(@Nullable String imageString) {
+    public Bitmap decodeBase64(@Nullable String imageString) {
         Bitmap stringImage = null;
         if (imageString != null) {
-            byte[] decodedBytes = Base64.decode(imageString, 0);
-            stringImage = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+            byte[] decodedBytes = Base64.decode(imageString, Base64.DEFAULT);
+            if (decodedBytes != null)
+                stringImage = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
         }
         return stringImage;
     }

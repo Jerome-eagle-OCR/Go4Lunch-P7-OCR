@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
+package com.jr_eagle_ocr.go4lunch.data.usecases;
 
 import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.BYUSERS_FIELD;
 import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.CHOSENBY_COLLECTION_NAME;
@@ -7,6 +7,7 @@ import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.U
 
 import android.util.Log;
 
+import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.LiveData;
 
 import com.google.android.gms.tasks.Task;
@@ -19,7 +20,7 @@ import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
+import com.jr_eagle_ocr.go4lunch.data.usecases.parent.UseCase;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -107,12 +108,13 @@ public final class SetClearChosenRestaurant extends UseCase {
                         Map<String, String> userData = new HashMap<>();
                         userData.put(USERID_FIELD, uid);
                         userData.put(USERNAME_FIELD, userName);
-                        task.getResult().collection(CHOSENBY_COLLECTION_NAME).document(uid)
-                                .set(userData);
+                        task.getResult().collection(CHOSENBY_COLLECTION_NAME).document(uid).set(userData);
                         task.getResult().update(BYUSERS_FIELD, FieldValue.arrayUnion(uid));
                         return null;
                     })
-                    .addOnSuccessListener(o -> Log.d(TAG, "setChosenRestaurant: " + placeId));
+                    .addOnSuccessListener(o -> {
+                        Log.d(TAG, "setChosenRestaurant: " + placeId);
+                    });
         }
     }
 
@@ -124,19 +126,19 @@ public final class SetClearChosenRestaurant extends UseCase {
      * @return a Firestore void task when clearing is successful
      */
     public Task<Boolean> clearChosenRestaurant() {
-        String placeId = currentUserChosenRestaurantIdLiveData.getValue();
+        String chosenRestaurantId = currentUserChosenRestaurantIdLiveData.getValue();
         User user = currentUserLiveData.getValue();
-        if (placeId != null && !placeId.isEmpty() && user != null) {
+        if (chosenRestaurantId != null && !chosenRestaurantId.isEmpty() && user != null) {
             String uid = user.getUid();
-            return chosenRestaurantsCollection.document(placeId)
+            return chosenRestaurantsCollection.document(chosenRestaurantId)
                     .collection(CHOSENBY_COLLECTION_NAME).document(uid)
                     .get()
                     .continueWith(task -> {
-                        DocumentSnapshot document = task.getResult();
+                        DocumentSnapshot userDocument = task.getResult();
                         List<Task<Void>> tasks = new ArrayList<>();
-                        if (document.exists()) {
-                            Task<Void> task1 = document.getReference().delete();
-                            Task<Void> task2 = chosenRestaurantsCollection.document(placeId)
+                        if (userDocument.exists()) {
+                            Task<Void> task1 = userDocument.getReference().delete();
+                            Task<Void> task2 = chosenRestaurantsCollection.document(chosenRestaurantId)
                                     .update(BYUSERS_FIELD, FieldValue.arrayRemove(uid));
                             tasks.addAll(Arrays.asList(task1, task2));
                         }
@@ -144,7 +146,7 @@ public final class SetClearChosenRestaurant extends UseCase {
                     })
                     .continueWith(task -> {
                         if (task.isSuccessful()) {
-                            Log.d(TAG, "clearChosenRestaurant: " + placeId);
+                            Log.d(TAG, "clearChosenRestaurant: " + chosenRestaurantId);
                             return true;
                         } else {
                             return false;

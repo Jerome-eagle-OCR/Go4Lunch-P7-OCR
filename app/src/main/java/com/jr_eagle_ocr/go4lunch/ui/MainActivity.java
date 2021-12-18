@@ -1,17 +1,12 @@
 package com.jr_eagle_ocr.go4lunch.ui;
 
 import static androidx.navigation.ui.NavigationUI.setupActionBarWithNavController;
-import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.CANCEL_ALARM;
-import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.CANCEL_WORKER;
-import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.SET_ALARM;
+import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.UNSET_WORKER;
 import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.SET_WORKER;
 import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.WORKMATES;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -50,7 +45,6 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.databinding.ActivityMainBinding;
-import com.jr_eagle_ocr.go4lunch.ui.notification.AlertReceiver;
 import com.jr_eagle_ocr.go4lunch.ui.notification.NotificationsWorker;
 import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailActivity;
 
@@ -172,8 +166,6 @@ public class MainActivity extends AppCompatActivity {
                     String placeId = viewState != null ? viewState.getCurrentUserChosenRestaurantId() : null;
                     args.putString(RestaurantDetailActivity.PLACE_ID, placeId);
                     navController.navigate(navigateTo, args);
-                } else {
-                    Snackbar.make(this.header, R.string.you_have_not_decided_yet, Snackbar.LENGTH_SHORT).show();
                 }
             }
         });
@@ -194,14 +186,8 @@ public class MainActivity extends AppCompatActivity {
                         case SET_WORKER:
                             setWorker();
                             break;
-                        case SET_ALARM:
-                            setAlarm();
-                            break;
-                        case CANCEL_WORKER:
+                        case UNSET_WORKER:
                             cancelWorker();
-                            break;
-                        case CANCEL_ALARM:
-                            cancelAlarm();
                             break;
                     }
                 }
@@ -231,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Set noon reminder if API version >= 26
+     * Set noon reminder
      */
     private void setWorker() {
         Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
@@ -245,37 +231,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Cancel noon reminder on API version >= 26
+     * Cancel noon reminder
      */
     private void cancelWorker() {
         workManager.cancelUniqueWork(NOON_REMINDER);
-    }
-
-    /**
-     * Set noon reminder if API version < 26
-     */
-    private void setAlarm() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, viewModel.getAlarmTrigger(), this.getPendingIntent());
-    }
-
-    /**
-     * Cancel noon reminder on API version < 26
-     */
-    private void cancelAlarm() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        alarmManager.cancel(this.getPendingIntent());
-    }
-
-    /**
-     * Get pending intent to bew used for noon reminder on API version < 26
-     *
-     * @return a pending intent
-     */
-    @SuppressLint("UnspecifiedImmutableFlag")
-    private PendingIntent getPendingIntent() {
-        Intent intent = new Intent(this, AlertReceiver.class);
-        return PendingIntent.getBroadcast(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     /**
@@ -293,34 +252,25 @@ public class MainActivity extends AppCompatActivity {
         MenuItem searchMenu = menu.findItem(R.id.action_search);
         // Get SearchView object.
         SearchView searchView = (SearchView) searchMenu.getActionView();
-        // Toast error message in case location permission is not granted
-        searchView.setOnSearchClickListener(v -> {
-            if (!locationPermissionGranted) {
-                Toast.makeText(MainActivity.this, getString(R.string.places_search_error), Toast.LENGTH_LONG).show();
-            }
-        });
         // Get SearchView autocomplete object.
         final SearchView.SearchAutoComplete searchAutoComplete = searchView.findViewById(R.id.search_src_text);
         searchAutoComplete.setBackgroundColor(Color.LTGRAY);
         searchAutoComplete.setTextColor(Color.DKGRAY);
         searchAutoComplete.setDropDownBackgroundResource(R.color.ic_launcher_background);
-        //searchAutoComplete.setThreshold(3); // ???
-        // Create a new ArrayAdapter and add data to search auto complete object.
-        viewModel.getAutocompleteRestaurantArray().observe(this, restaurantArray -> {
-            if (restaurantArray == null) {
-                restaurantArray = new AutocompleteRestaurantViewState[0];
-            } else {
-                int initialLength = restaurantArray.length;
-                restaurantArray = Arrays.copyOf(restaurantArray, initialLength + 1);
-                restaurantArray[initialLength] = new AutocompleteRestaurantViewState(getString(R.string.places_powered_by_google), "");
-            }
-            ArrayAdapter<AutocompleteRestaurantViewState> arrayAdapter =
-                    new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, restaurantArray);
-            searchAutoComplete.setAdapter(arrayAdapter);
-            if (restaurantArray.length > 0) {
-                searchAutoComplete.showDropDown();
-            } else {
-                searchAutoComplete.dismissDropDown();
+        //searchAutoComplete.setThreshold(3);
+
+        setSearchViewAndSearchAutocompleteListeners(searchView, searchAutoComplete);
+
+        setSearchViewAndSearchAutocompleteRelatedObservers(searchMenu, searchView, searchAutoComplete);
+
+        return true;
+    }
+
+    private void setSearchViewAndSearchAutocompleteListeners(SearchView searchView, SearchView.SearchAutoComplete searchAutoComplete){
+        // Toast error message in case location permission is not granted
+        searchView.setOnSearchClickListener(v -> {
+            if (!locationPermissionGranted) {
+                Toast.makeText(MainActivity.this, getString(R.string.places_search_error), Toast.LENGTH_LONG).show();
             }
         });
         // Listen to search view item on click event.
@@ -355,6 +305,30 @@ public class MainActivity extends AppCompatActivity {
             viewModel.setPlaceAutocompleteSearchText(null);
             return false;
         });
+    }
+
+    private void setSearchViewAndSearchAutocompleteRelatedObservers(MenuItem searchMenu,
+                                                                    SearchView searchView,
+                                                                    SearchView.SearchAutoComplete searchAutoComplete
+    ){
+        // Create a new ArrayAdapter and add data to search auto complete object.
+        viewModel.getAutocompleteRestaurantArray().observe(this, restaurantArray -> {
+            if (restaurantArray == null) {
+                restaurantArray = new AutocompleteRestaurantViewState[0];
+            } else {
+                int initialLength = restaurantArray.length;
+                restaurantArray = Arrays.copyOf(restaurantArray, initialLength + 1);
+                restaurantArray[initialLength] = new AutocompleteRestaurantViewState(getString(R.string.places_powered_by_google), "");
+            }
+            ArrayAdapter<AutocompleteRestaurantViewState> arrayAdapter =
+                    new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, restaurantArray);
+            searchAutoComplete.setAdapter(arrayAdapter);
+            if (restaurantArray.length > 0) {
+                searchAutoComplete.showDropDown();
+            } else {
+                searchAutoComplete.dismissDropDown();
+            }
+        });
         // Manage search autocomplete enabling depending on location permission
         viewModel.getLocationPermissionGranted().observe(this, aBoolean -> {
             if (aBoolean != null) {
@@ -372,8 +346,6 @@ public class MainActivity extends AppCompatActivity {
             searchAutoComplete.setEnabled(isEnabled);
             searchMenu.setEnabled(isEnabled);
         });
-
-        return true;
     }
 
     /**

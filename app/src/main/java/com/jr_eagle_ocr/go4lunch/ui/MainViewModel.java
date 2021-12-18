@@ -1,15 +1,15 @@
 package com.jr_eagle_ocr.go4lunch.ui;
 
-import static com.jr_eagle_ocr.go4lunch.data.repositories.usecases.PlaceAutocompleteSearch.NO_SEARCH_MADE;
-import static com.jr_eagle_ocr.go4lunch.data.repositories.usecases.PlaceAutocompleteSearch.OK;
-import static com.jr_eagle_ocr.go4lunch.data.repositories.usecases.PlaceAutocompleteSearch.REQUEST_DENIED;
-import static com.jr_eagle_ocr.go4lunch.data.repositories.usecases.PlaceAutocompleteSearch.ZERO_RESULTS;
+import static com.jr_eagle_ocr.go4lunch.data.usecases.PlaceAutocompleteSearch.NO_SEARCH_MADE;
+import static com.jr_eagle_ocr.go4lunch.data.usecases.PlaceAutocompleteSearch.OK;
+import static com.jr_eagle_ocr.go4lunch.data.usecases.PlaceAutocompleteSearch.REQUEST_DENIED;
+import static com.jr_eagle_ocr.go4lunch.data.usecases.PlaceAutocompleteSearch.ZERO_RESULTS;
 
-import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -17,13 +17,14 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.auth.FirebaseUser;
+import com.jr_eagle_ocr.go4lunch.BuildConfig;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.PlaceAutocompleteSearch;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetCurrentUserChosenRestaurantId;
+import com.jr_eagle_ocr.go4lunch.data.usecases.PlaceAutocompleteSearch;
 import com.jr_eagle_ocr.go4lunch.util.Event;
 
 import java.util.Calendar;
@@ -42,9 +43,7 @@ public class MainViewModel extends ViewModel {
     public static final String LISTVIEW = "LISTVIEW";
     public static final String WORKMATES = "WORKMATES";
     public static final String SET_WORKER = "SET_WORKER";
-    public static final String CANCEL_WORKER = "UNSET_WORKER";
-    public static final String SET_ALARM = "SET_ALARM";
-    public static final String CANCEL_ALARM = "CANCEL_ALARM";
+    public static final String UNSET_WORKER = "UNSET_WORKER";
     private final boolean jumpToRestaurantDetail;
     private final LocationRepository locationRepository;
     private final LiveData<Boolean> locationPermissionGrantedLiveData;
@@ -61,17 +60,19 @@ public class MainViewModel extends ViewModel {
     private final MediatorLiveData<MainViewState> currentUserViewStateMediatorLiveData;
     private final MutableLiveData<Event<Integer>> navigateToEventMutableLiveData = new MutableLiveData<>();
     private final MutableLiveData<Event<Integer>> toastMessageEventMutableLiveData = new MutableLiveData<>();
-    private long aboutNoonMillis;
     private long initialDelay;
+    private Calendar calendar;
 
     public MainViewModel(
             boolean jumpToRestaurantDetail,
-            LocationRepository locationRepository,
-            UserRepository userRepository,
-            RestaurantRepository restaurantRepository,
-            PlaceAutocompleteSearch placeAutocompleteSearch,
-            GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId
+            @NonNull LocationRepository locationRepository,
+            @NonNull UserRepository userRepository,
+            @NonNull RestaurantRepository restaurantRepository,
+            @NonNull PlaceAutocompleteSearch placeAutocompleteSearch,
+            @NonNull GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId,
+            @Nullable Calendar calendar
     ) {
+        this.calendar = calendar;
         this.jumpToRestaurantDetail = jumpToRestaurantDetail;
 
         this.locationRepository = locationRepository;
@@ -123,32 +124,38 @@ public class MainViewModel extends ViewModel {
     }
 
 
-    // --- REMINDER VARIABLES ---
-
-    public long getAlarmTrigger() {
-        return aboutNoonMillis;
-    }
+    // --- REMINDER INITIAL DELAY ---
 
     public long getInitialDelay() {
         return initialDelay;
     }
 
     /**
-     *
+     * Calculate and set initial delay for noon reminder
      */
-    private void setReminderVariables() {
+    private void setInitialDelay() {
         int hour = 11;
         int minute = 59;
 
-        Calendar c = Calendar.getInstance();
-        long nowMillis = c.getTimeInMillis();
-        c.set(Calendar.HOUR_OF_DAY, hour);
-        c.set(Calendar.MINUTE, minute);
-        c.set(Calendar.SECOND, 30);
-        aboutNoonMillis = c.getTimeInMillis();
+        calendar = getCalendar();
+        long nowMillis = calendar.getTimeInMillis();
+        Calendar aboutNoonCalendar = (Calendar) calendar.clone();
+        aboutNoonCalendar.set(Calendar.HOUR_OF_DAY, hour);
+        aboutNoonCalendar.set(Calendar.MINUTE, minute);
+        aboutNoonCalendar.set(Calendar.SECOND, 30);
+        long aboutNoonMillis = aboutNoonCalendar.getTimeInMillis();
         initialDelay = aboutNoonMillis - nowMillis;
     }
 
+    /**
+     * Get Calendar depending on test running or not
+     *
+     * @return constructor calendar if test is running or new instance
+     */
+    @VisibleForTesting
+    public Calendar getCalendar() {
+        return BuildConfig.IS_TESTING.get() ? calendar : Calendar.getInstance();
+    }
 
     // --- MAIN VIEW STATE ---
 
@@ -157,7 +164,7 @@ public class MainViewModel extends ViewModel {
     }
 
     /**
-     *
+     * Set MainViewState depending on current user infos and current time
      */
     private void setMainViewState() {
         MainViewState mainViewState;
@@ -169,13 +176,13 @@ public class MainViewModel extends ViewModel {
             String userEmail = user.getUserEmail();
             String userChosenRestaurantId = currentUserChosenRestaurantIdLiveData.getValue();
             boolean isNoonReminderEnabled = user.isNoonReminderEnabled();
-            setReminderVariables();
+            setInitialDelay();
             if (this.getInitialDelay() > 0 && isNoonReminderEnabled
                     && userChosenRestaurantId != null && !userChosenRestaurantId.isEmpty()) {
-                action = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? SET_WORKER : SET_ALARM;
+                action = SET_WORKER;
                 Log.d(TAG, "getMainViewState: initialDelay = " + this.getInitialDelay());
             } else {
-                action = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? CANCEL_WORKER : CANCEL_ALARM;
+                action = UNSET_WORKER;
             }
             mainViewState = new MainViewState(
                     userName,
@@ -184,7 +191,7 @@ public class MainViewModel extends ViewModel {
                     userChosenRestaurantId != null ? userChosenRestaurantId : "",
                     action);
         } else {
-            action = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? CANCEL_WORKER : CANCEL_ALARM;
+            action = UNSET_WORKER;
             mainViewState = new MainViewState(
                     "",
                     null,
@@ -200,7 +207,8 @@ public class MainViewModel extends ViewModel {
     // --- NAVIGATION ---
 
     /**
-     *
+     * After MainViewState setting, check if some navigation should occur using
+     * navigationItemSelected() method
      */
     private void checkAndNavigateIfNeeded() {
         if (currentFirebaseUserLiveData.getValue() == null) {
@@ -213,13 +221,16 @@ public class MainViewModel extends ViewModel {
     }
 
     /**
-     * @param navigationItemId
+     * Manage navigation item selected and valorize navigateToEvent livedata consequently
+     *
+     * @param navigationItemId the navigation item resource id
      */
     public void navigationItemSelected(int navigationItemId) {
         String currentUserChosenRestaurantId = currentUserChosenRestaurantIdLiveData.getValue();
         boolean doNavigate = !(navigationItemId == R.id.nav_your_lunch &&
                 (currentUserChosenRestaurantId == null || currentUserChosenRestaurantId.isEmpty()));
         Integer navigateTo = doNavigate ? navigationItemId : null;
+        if (!doNavigate) toastMessageEventMutableLiveData.setValue(new Event<>(R.string.you_have_not_decided_yet));
         Event<Integer> navigateToEvent = new Event<>(navigateTo);
         navigateToEventMutableLiveData.setValue(navigateToEvent);
     }
@@ -235,7 +246,9 @@ public class MainViewModel extends ViewModel {
     // --- PLACE AUTOCOMPLETE SEARCH ---
 
     /**
-     * @return
+     * Get autocomplete restaurant array based place autocomplete search result
+     *
+     * @return an array of AutocompleteRestaurantViewState
      */
     public LiveData<AutocompleteRestaurantViewState[]> getAutocompleteRestaurantArray() {
         return autocompleteRestaurantArrayMutableLiveData;
@@ -251,7 +264,9 @@ public class MainViewModel extends ViewModel {
     }
 
     /**
-     * @param text
+     * Set text from search view
+     *
+     * @param text the text to search with google place autocomplete
      */
     public void setPlaceAutocompleteSearchText(@Nullable String text) {
         if (locationPermissionGrantedLiveData.getValue() != null
@@ -270,7 +285,7 @@ public class MainViewModel extends ViewModel {
     }
 
     /**
-     *
+     * Observe Google place autocomplete search result and set array accordingly
      */
     private void setAutocompleteRestaurantArray() {
         disposable = placeAutocompleteSearch.getAutocompleteRestaurantsObservable()
@@ -279,8 +294,8 @@ public class MainViewModel extends ViewModel {
                     @Override
                     public void onNext(@NonNull List<AutocompleteRestaurantViewState> autocompleteRestaurants) {
                         if (!autocompleteRestaurants.isEmpty()) {
-                            AutocompleteRestaurantViewState header = autocompleteRestaurants.get(0);
-                            autocompleteRestaurants.remove(0);
+                            AutocompleteRestaurantViewState header = autocompleteRestaurants.remove(0);
+//                            autocompleteRestaurants.remove(0);
                             AutocompleteRestaurantViewState[] autocompleteRestaurantArray = autocompleteRestaurants.toArray(new AutocompleteRestaurantViewState[0]);
                             switch (header.getDescription()) {
                                 case OK:
@@ -334,7 +349,7 @@ public class MainViewModel extends ViewModel {
     }
 
     @Override
-    protected void onCleared() {
+    public void onCleared() {
         super.onCleared();
         locationPermissionGrantedLiveData.removeObserver(locationPermissionGrantedObserver);
         if (disposable != null && !disposable.isDisposed()) disposable.dispose();

@@ -4,17 +4,19 @@ import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.LISTVIEW;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModel;
 
 import com.jr_eagle_ocr.go4lunch.data.models.ChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
-import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetRestaurantViewStates;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetRestaurantViewStates;
 import com.jr_eagle_ocr.go4lunch.ui.AutocompleteRestaurantViewState;
 import com.jr_eagle_ocr.go4lunch.ui.MainViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.RestaurantViewSate;
@@ -24,46 +26,46 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ListViewViewModel extends ViewModel {
+public final class ListViewViewModel extends ViewModel {
     private final String TAG = getClass().getSimpleName();
     private final LiveData<User> currentUserLiveData;
-    private final LiveData<Map<ChosenRestaurant, List<String>>> restaurantChosenByUserIdsMapLiveData;
+    private final LiveData<Map<ChosenRestaurant, List<String>>> chosenRestaurantByUserIdsMapLiveData;
     private LiveData<List<String>> filteredRestaurantIdsLivedata;
     private LiveData<AutocompleteRestaurantViewState> selectedItemLiveData;
     private final MediatorLiveData<List<RestaurantViewSate>> allRestaurantViewStatesMediatorLiveData = new MediatorLiveData<>();
     private final GetRestaurantViewStates getRestaurantViewStates;
 
     public ListViewViewModel(
-            LocationRepository locationRepository,
-            UserRepository userRepository,
-            RestaurantRepository restaurantRepository
+            @NonNull UserRepository userRepository,
+            @NonNull RestaurantRepository restaurantRepository,
+            @NonNull GetRestaurantViewStates getRestaurantViewStates
     ) {
         currentUserLiveData = userRepository.getCurrentUser();
-        restaurantChosenByUserIdsMapLiveData = restaurantRepository.getChosenRestaurantByUserIdsMap();
-        getRestaurantViewStates = new GetRestaurantViewStates(locationRepository, restaurantRepository);
+        chosenRestaurantByUserIdsMapLiveData = restaurantRepository.getChosenRestaurantByUserIdsMap();
+        this.getRestaurantViewStates = getRestaurantViewStates;
 
         allRestaurantViewStatesMediatorLiveData.addSource(currentUserLiveData, currentUser ->
                 buildAndSetAllRestaurantViewStates());
-        allRestaurantViewStatesMediatorLiveData.addSource(restaurantChosenByUserIdsMapLiveData, restaurantChosenByUserIdsMap ->
+        allRestaurantViewStatesMediatorLiveData.addSource(chosenRestaurantByUserIdsMapLiveData, restaurantChosenByUserIdsMap ->
                 buildAndSetAllRestaurantViewStates());
     }
 
     /**
      * Observed by activity to get up-to-date all restaurant view states to display in recyclerview
      */
-    public LiveData<List<RestaurantViewSate>> getAllRestaurantViewStates() {
+    public LiveData<List<RestaurantViewSate>> getRestaurantViewStates() {
         return allRestaurantViewStatesMediatorLiveData;
     }
 
     /**
-     * Build and set all restaurants to display in recyclerview UserAdapter
+     * Build and set restaurants to display in recyclerview UserAdapter
      */
     private void buildAndSetAllRestaurantViewStates() {
         List<RestaurantViewSate> restaurantViewSates = new ArrayList<>(); //To be produced to valorize livedata
         User currentUser = currentUserLiveData.getValue();
         if (currentUser != null) {
             Map<String, Integer> restaurantChosenByUsersCountMap = new HashMap<>();
-            Map<ChosenRestaurant, List<String>> restaurantChosenByUserIdsMap = restaurantChosenByUserIdsMapLiveData.getValue();
+            Map<ChosenRestaurant, List<String>> restaurantChosenByUserIdsMap = chosenRestaurantByUserIdsMapLiveData.getValue();
             if (restaurantChosenByUserIdsMap != null) {
                 for (Map.Entry<ChosenRestaurant, List<String>> entry : restaurantChosenByUserIdsMap.entrySet()) {
                     String placeId = entry.getKey().getPlaceId();
@@ -78,13 +80,14 @@ public class ListViewViewModel extends ViewModel {
             }
             // Get the unfiltered list
             List<RestaurantViewSate> unfilteredRestaurantViewSates = getRestaurantViewStates.getRestaurantViewStates(restaurantChosenByUsersCountMap);
+
             // Filter list depending on search results and selection
+            List<String> filteredIds = filteredRestaurantIdsLivedata.getValue();
+            AutocompleteRestaurantViewState selectedItem = selectedItemLiveData.getValue();
             for (RestaurantViewSate restaurantViewSate : unfilteredRestaurantViewSates) {
                 String placeId = restaurantViewSate.getId();
                 // If filter list not null we keep only place ids in list
-                List<String> filteredIds = filteredRestaurantIdsLivedata.getValue();
                 // If selected item is not null we keep only this id
-                AutocompleteRestaurantViewState selectedItem = selectedItemLiveData.getValue();
                 if ((selectedItem == null || placeId.equals(selectedItem.getPlaceId()))
                         && (filteredIds == null || filteredIds.contains(placeId))) {
                     restaurantViewSates.add(restaurantViewSate);
@@ -125,5 +128,10 @@ public class ListViewViewModel extends ViewModel {
         // Add selected item livedata as source to trigger restaurants view states update
         allRestaurantViewStatesMediatorLiveData.addSource(selectedItemLiveData, selectedItem ->
                 buildAndSetAllRestaurantViewStates());
+    }
+
+    @VisibleForTesting
+    public LiveData<List<String>> getFilteredRestaurantIds() {
+        return filteredRestaurantIdsLivedata;
     }
 }

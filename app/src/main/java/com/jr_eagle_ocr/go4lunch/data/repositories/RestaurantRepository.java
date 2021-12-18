@@ -3,6 +3,7 @@ package com.jr_eagle_ocr.go4lunch.data.repositories;
 import android.annotation.SuppressLint;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
@@ -11,8 +12,10 @@ import com.google.android.libraries.places.api.model.LocalTime;
 import com.google.android.libraries.places.api.model.Period;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.jr_eagle_ocr.go4lunch.BuildConfig;
 import com.jr_eagle_ocr.go4lunch.data.models.ChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.FoundRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
@@ -32,6 +35,8 @@ import java.util.Objects;
  * @author jrigault
  */
 public final class RestaurantRepository extends Repository {
+    private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private final BitmapUtil bitmapUtil;
     private List<String> foundRestaurantIds;
     private final MutableLiveData<Map<String, Restaurant>> allRestaurantsMutableLiveData = new MutableLiveData<>();
     private final MutableLiveData<List<String>> chosenRestaurantIdsLiveData = new MutableLiveData<>();
@@ -39,18 +44,25 @@ public final class RestaurantRepository extends Repository {
     private ListenerRegistration restaurantsListenerRegistration;
     private ListenerRegistration chosenRestaurantsListenerRegistration;
 
-    public RestaurantRepository() {
+    public RestaurantRepository(
+            BitmapUtil bitmapUtil
+    ) {
+        this.bitmapUtil = bitmapUtil;
     }
 
     /**
-     * @param foundRestaurantIds
+     * Set a list of found in mapview restaurant id (with Google places SDK)
+     *
+     * @param foundRestaurantIds a list of found in mapview restaurant id
      */
     public void setFoundRestaurantIds(List<String> foundRestaurantIds) {
         this.foundRestaurantIds = foundRestaurantIds;
     }
 
     /**
-     * @return
+     * Get the list of found in mapview restaurant id (with Google places SDK)
+     *
+     * @return a list of found in mapview restaurant id
      */
     public List<String> getFoundRestaurantIds() {
         return foundRestaurantIds;
@@ -60,9 +72,9 @@ public final class RestaurantRepository extends Repository {
     // --- FIRESTORE ---
     // -----------------
 
-    public static final String RESTAURANTS_COLLECTION_NAME = "restaurants";
-    public static final String CHOSEN_COLLECTION_NAME = "chosen_restaurants";
-    public static final String LIKED_COLLECTION_NAME = "liked_restaurants";
+    public static final String RESTAURANTS_COLLECTION_NAME = BuildConfig.IS_TESTING.get() ? "restaurants_test" : "restaurants";
+    public static final String CHOSEN_COLLECTION_NAME = BuildConfig.IS_TESTING.get() ? "chosen_restaurants_test" : "chosen_restaurants";
+    public static final String LIKED_COLLECTION_NAME = BuildConfig.IS_TESTING.get() ? "liked_restaurants_test" : "liked_restaurants";
     public static final String PLACEID_FIELD = "placeId";
     public static final String PLACENAME_FIELD = "placeName";
     public static final String PLACEADDRESS_FIELD = "placeAddress";
@@ -80,7 +92,7 @@ public final class RestaurantRepository extends Repository {
      *
      * @param foundRestaurant the foundRestaurant to add
      */
-    @SuppressLint("DefaultLocale") // format close time to 24h
+    @SuppressLint("NewApi")
     public void addFoundRestaurant(FoundRestaurant foundRestaurant) {
         // Set all variables:
         // Id
@@ -88,7 +100,7 @@ public final class RestaurantRepository extends Repository {
         // Bitmap base64 string
         String photoString = null;
         if (foundRestaurant.getPhoto() != null) {
-            photoString = BitmapUtil.encodeToBase64(foundRestaurant.getPhoto());
+            photoString = bitmapUtil.encodeToBase64(foundRestaurant.getPhoto());
         }
         // Name
         String name = foundRestaurant.getName();
@@ -102,6 +114,32 @@ public final class RestaurantRepository extends Repository {
         // Web site URL
         String webSiteUrl = foundRestaurant.getWebSiteUrl();
         // Close times
+        HashMap<String, String> closeTimes = getCloseTimes(foundRestaurant);
+        // Rating
+        float rating = 0;
+        if (foundRestaurant.getRating() != null) {
+            rating = (float) (foundRestaurant.getRating() * 3 / 5);
+        }
+        // Timestamp
+        String timestamp = String.valueOf(System.currentTimeMillis());
+
+        Restaurant restaurant = new Restaurant(id,
+                                               photoString,
+                                               name,
+                                               geoPoint,
+                                               address,
+                                               phoneNumber,
+                                               webSiteUrl,
+                                               closeTimes,
+                                               rating,
+                                               timestamp);
+
+        this.getRestaurantsCollection().document(id).set(restaurant);
+    }
+
+    @NonNull
+    @SuppressLint("DefaultLocale") // format close time to 24h
+    private HashMap<String, String> getCloseTimes(FoundRestaurant foundRestaurant) {
         HashMap<String, String> closeTimes = new LinkedHashMap<>();
         List<Period> periods = foundRestaurant.getOpeningHours().getPeriods();
         for (Period period : periods) {
@@ -116,19 +154,7 @@ public final class RestaurantRepository extends Repository {
             }
             closeTimes.put(dayOfWeek, closeTime);
         }
-        // Rating
-        float rating = 0;
-        if (foundRestaurant.getRating() != null) {
-            rating = (int) (foundRestaurant.getRating() * 3 / 5);
-        }
-        // Timestamp
-        String timestamp = String.valueOf(System.currentTimeMillis());
-
-        Restaurant restaurant =
-                new Restaurant(id, photoString, name, geoPoint,
-                        address, phoneNumber, webSiteUrl, closeTimes, rating, timestamp);
-
-        this.getRestaurantsCollection().document(id).set(restaurant);
+        return closeTimes;
     }
 
     /**
@@ -161,8 +187,8 @@ public final class RestaurantRepository extends Repository {
                                 document.getReference().delete();
                             }
                         }
-                        allRestaurantsMutableLiveData.setValue(foundRestaurants);
                     }
+                    allRestaurantsMutableLiveData.setValue(foundRestaurants);
                 });
     }
 
@@ -170,8 +196,10 @@ public final class RestaurantRepository extends Repository {
      * Unset the Firestore "restaurants" collection listener
      */
     public void unsetAllRestaurants() {
-        if (restaurantsListenerRegistration != null)
+        if (restaurantsListenerRegistration != null) {
             restaurantsListenerRegistration.remove();
+            allRestaurantsMutableLiveData.setValue(null);
+        }
     }
 
     /**

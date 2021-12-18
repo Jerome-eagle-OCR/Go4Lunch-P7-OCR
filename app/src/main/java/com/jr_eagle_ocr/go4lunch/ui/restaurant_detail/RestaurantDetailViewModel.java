@@ -18,11 +18,11 @@ import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetUserViewStates;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.IsLikedRestaurant;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetCurrentUserChosenRestaurantId;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetIsLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetUserViewStates;
+import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
 import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 import com.jr_eagle_ocr.go4lunch.util.Event;
@@ -44,11 +44,12 @@ public class RestaurantDetailViewModel extends ViewModel {
     private final LiveData<Map<String, Restaurant>> allRestaurantsLiveData;
     private final LiveData<Map<ChosenRestaurant, List<String>>> restaurantChosenByUserIdsMapLiveData;
     private final LiveData<String> currentUserChosenRestaurantIdLiveData;
-    private final IsLikedRestaurant isLikedRestaurant;
+    private final GetIsLikedRestaurant getIsLikedRestaurant;
     private final LiveData<Boolean> isLikedRestaurantLiveData;
     private final GetUserViewStates getUserViewStates;
     private final SetClearChosenRestaurant setClearChosenRestaurant;
     private final SetClearLikedRestaurant setClearLikedRestaurant;
+    private final BitmapUtil bitmapUtil;
     private final MediatorLiveData<RestaurantDetailViewSate> restaurantDetailViewStateMediatorLiveData = new MediatorLiveData<>();
     private final MediatorLiveData<List<UserViewState>> joiningUserViewStatesMediatorLiveData = new MediatorLiveData<>();
     private final MediatorLiveData<Event<Integer>> snackbarMessageEventMediatorLiveData = new MediatorLiveData<>();
@@ -57,14 +58,16 @@ public class RestaurantDetailViewModel extends ViewModel {
     // Both booleans not to have snackbars at activity starting
     private boolean isLikeClickedOnce = false;
     private boolean isChooseClickedOnce = false;
+    // Not to have snackbar when clearing current chosen restaurant prior to setting the displayed one
     private boolean blockNextChosenSnackbar = false;
 
     public RestaurantDetailViewModel(
             String displayedRestaurantId,
+            BitmapUtil bitmapUtil,
             UserRepository userRepository,
             RestaurantRepository restaurantRepository,
             GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId,
-            IsLikedRestaurant isLikedRestaurant,
+            GetIsLikedRestaurant getIsLikedRestaurant,
             SetClearChosenRestaurant setClearChosenRestaurant,
             SetClearLikedRestaurant setClearLikedRestaurant
     ) {
@@ -74,11 +77,12 @@ public class RestaurantDetailViewModel extends ViewModel {
         allRestaurantsLiveData = restaurantRepository.getAllRestaurants();
         restaurantChosenByUserIdsMapLiveData = restaurantRepository.getChosenRestaurantByUserIdsMap();
         currentUserChosenRestaurantIdLiveData = getCurrentUserChosenRestaurantId.getCurrentUserChosenRestaurantId();
-        this.isLikedRestaurant = isLikedRestaurant;
-        isLikedRestaurantLiveData = isLikedRestaurant.isLikedRestaurant();
-        this.getUserViewStates = new GetUserViewStates(currentUserLiveData.getValue());
+        this.getIsLikedRestaurant = getIsLikedRestaurant;
+        isLikedRestaurantLiveData = getIsLikedRestaurant.isLikedRestaurant();
+        this.getUserViewStates = new GetUserViewStates();
         this.setClearChosenRestaurant = setClearChosenRestaurant;
         this.setClearLikedRestaurant = setClearLikedRestaurant;
+        this.bitmapUtil = bitmapUtil;
 
         init();
     }
@@ -92,7 +96,7 @@ public class RestaurantDetailViewModel extends ViewModel {
             restaurant = allRestaurantsLiveData.getValue().get(displayedRestaurantId);
         }
         // Listen to current user document in "liked_by" subcollection in displayed restaurant document in Firestore
-        isLikedRestaurant.addListenerRegistration(displayedRestaurantId);
+        getIsLikedRestaurant.addListenerRegistration(displayedRestaurantId);
 
         // Add all mediators sources to properly trigger updating
         joiningUserViewStatesMediatorLiveData.addSource(currentUserLiveData, currentUser ->
@@ -138,9 +142,9 @@ public class RestaurantDetailViewModel extends ViewModel {
      */
     private void buildAndSetRestaurantDetailViewState() {
         if (restaurant != null
-                && isLikedRestaurant != null
+                && getIsLikedRestaurant != null
                 && currentUserChosenRestaurantIdLiveData != null) {
-            Bitmap photo = BitmapUtil.decodeBase64(restaurant.getPhotoString());
+            Bitmap photo = bitmapUtil.decodeBase64(restaurant.getPhotoString());
             String name = restaurant.getName();
             String address = restaurant.getAddress();
             boolean isChosen = isChosen();
@@ -187,7 +191,7 @@ public class RestaurantDetailViewModel extends ViewModel {
                 }
                 Map<String, User> allLoggedUsers = allLoggedUsersLiveData.getValue();
                 userViewStates = getUserViewStates.getUserViewStates(displayedRestaurantId,
-                        allLoggedUsers, userChosenRestaurantMap);
+                        currentUser, allLoggedUsers, userChosenRestaurantMap);
             }
         }
         joiningUserViewStatesMediatorLiveData.setValue(userViewStates);
@@ -297,6 +301,6 @@ public class RestaurantDetailViewModel extends ViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        isLikedRestaurant.removeListenerRegistration();
+        getIsLikedRestaurant.removeListenerRegistration();
     }
 }

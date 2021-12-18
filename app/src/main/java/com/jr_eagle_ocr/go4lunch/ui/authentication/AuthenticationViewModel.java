@@ -13,7 +13,7 @@ import com.jr_eagle_ocr.go4lunch.util.Event;
 /**
  * @author jrigault
  */
-public class AuthenticationViewModel extends ViewModel {
+public final class AuthenticationViewModel extends ViewModel {
     public static final String AUTHENTICATE = "AUTHENTICATE";
     public static final String NAVIGATE_TO_MAIN = "NAVIGATE_TO_MAIN";
     public static final String TOAST_AUTH_SUCCESS = "TOAST_MESSAGE";
@@ -42,7 +42,7 @@ public class AuthenticationViewModel extends ViewModel {
         }
 
         // Listen user creation with observer that will be removed in onCleared()
-        isUserCreatedEventLiveData = userRepository.isUserCreatedEvent();
+        isUserCreatedEventLiveData = userRepository.getUserCreatedEvent();
         isUserCreatedObserver = isUserCreatedEvent -> {
             if (!isUserCreatedEvent.getHasBeenHandled()) {
                 isUserCreatedEvent.getContentIfNotHandled();
@@ -80,7 +80,7 @@ public class AuthenticationViewModel extends ViewModel {
     }
 
     @Override
-    protected void onCleared() {
+    public void onCleared() {
         super.onCleared();
         isUserCreatedEventLiveData.removeObserver(isUserCreatedObserver);
     }

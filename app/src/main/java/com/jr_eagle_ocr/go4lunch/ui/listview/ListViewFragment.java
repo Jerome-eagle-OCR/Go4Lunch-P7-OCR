@@ -55,7 +55,7 @@ public class ListViewFragment extends Fragment implements RestaurantAdapter.Disp
         final RestaurantAdapter adapter = new RestaurantAdapter(new ArrayList<>(), this);
         recyclerView.setAdapter(adapter);
 
-        viewModel.getAllRestaurantViewStates().observe(getViewLifecycleOwner(), restaurants -> {
+        viewModel.getRestaurantViewStates().observe(getViewLifecycleOwner(), restaurants -> {
             if (restaurants != null) {
                 adapter.updateItems(restaurants);
             }

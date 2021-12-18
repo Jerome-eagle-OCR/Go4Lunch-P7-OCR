@@ -2,6 +2,7 @@ package com.jr_eagle_ocr.go4lunch.ui.mapview;
 
 import android.location.Location;
 
+import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.Transformations;
@@ -50,7 +51,7 @@ public class MapViewViewModel extends ViewModel {
     }
 
     public void setLocation(Location lastKnownLocation) {
-        locationRepository.setLocation(lastKnownLocation);
+        locationRepository.setMapLocation(lastKnownLocation);
     }
 
     public void setLocationPermissionGranted(boolean locationPermissionGranted) {
@@ -160,8 +161,8 @@ public class MapViewViewModel extends ViewModel {
         selectedItemLiveData = mainViewModel.getSelectedItem();
     }
 
-    @Override
-    protected void onCleared() {
-        super.onCleared();
+    @VisibleForTesting
+    public LiveData<List<String>> getFilteredRestaurantIds() {
+        return filteredRestaurantIdsLivedata;
     }
 }

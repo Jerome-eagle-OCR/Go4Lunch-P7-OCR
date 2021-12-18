@@ -41,4 +41,32 @@ public class MainViewState {
     public String getAction() {
         return action;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        MainViewState that = (MainViewState) o;
+
+        if (currentUserName != null ? !currentUserName.equals(that.currentUserName) : that.currentUserName != null)
+            return false;
+        if (currentUserUrlPicture != null ? !currentUserUrlPicture.equals(that.currentUserUrlPicture) : that.currentUserUrlPicture != null)
+            return false;
+        if (currentUserEmail != null ? !currentUserEmail.equals(that.currentUserEmail) : that.currentUserEmail != null)
+            return false;
+        if (currentUserChosenRestaurantId != null ? !currentUserChosenRestaurantId.equals(that.currentUserChosenRestaurantId) : that.currentUserChosenRestaurantId != null)
+            return false;
+        return action != null ? action.equals(that.action) : that.action == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = currentUserName != null ? currentUserName.hashCode() : 0;
+        result = 31 * result + (currentUserUrlPicture != null ? currentUserUrlPicture.hashCode() : 0);
+        result = 31 * result + (currentUserEmail != null ? currentUserEmail.hashCode() : 0);
+        result = 31 * result + (currentUserChosenRestaurantId != null ? currentUserChosenRestaurantId.hashCode() : 0);
+        result = 31 * result + (action != null ? action.hashCode() : 0);
+        return result;
+    }
 }

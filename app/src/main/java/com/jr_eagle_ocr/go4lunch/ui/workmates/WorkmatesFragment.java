@@ -60,7 +60,7 @@ public class WorkmatesFragment extends Fragment implements UserAdapter.DisplayCh
         final UserAdapter userAdapter = new UserAdapter(new ArrayList<>(), this);
         recyclerView.setAdapter(userAdapter);
 
-        viewModel.getAllUserViewStates().observe(getViewLifecycleOwner(), allUsers -> {
+        viewModel.getUserViewStates().observe(getViewLifecycleOwner(), allUsers -> {
             if (allUsers != null) userAdapter.updateItems(allUsers);
         });
     }

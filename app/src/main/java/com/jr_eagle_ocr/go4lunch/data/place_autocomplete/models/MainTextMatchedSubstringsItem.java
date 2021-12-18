@@ -17,4 +17,22 @@ public class MainTextMatchedSubstringsItem{
 	public int getLength(){
 		return length;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		MainTextMatchedSubstringsItem that = (MainTextMatchedSubstringsItem) o;
+
+		if (offset != that.offset) return false;
+		return length == that.length;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = offset;
+		result = 31 * result + length;
+		return result;
+	}
 }

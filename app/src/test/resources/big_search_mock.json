@@ -1,0 +1,185 @@
+{
+    "predictions": [
+        {
+            "description": "Big Fernand, Rue au Pain, Versailles, France",
+            "matched_substrings": [
+                {
+                    "length": 3,
+                    "offset": 0
+                }
+            ],
+            "place_id": "ChIJI57TRbF95kcR4sWnC5UBTQQ",
+            "reference": "ChIJI57TRbF95kcR4sWnC5UBTQQ",
+            "structured_formatting": {
+                "main_text": "Big Fernand",
+                "main_text_matched_substrings": [
+                    {
+                        "length": 3,
+                        "offset": 0
+                    }
+                ],
+                "secondary_text": "Rue au Pain, Versailles, France"
+            },
+            "terms": [
+                {
+                    "offset": 0,
+                    "value": "Big Fernand"
+                },
+                {
+                    "offset": 13,
+                    "value": "Rue au Pain"
+                },
+                {
+                    "offset": 26,
+                    "value": "Versailles"
+                },
+                {
+                    "offset": 38,
+                    "value": "France"
+                }
+            ],
+            "types": [
+                "meal_delivery",
+                "meal_takeaway",
+                "restaurant",
+                "food",
+                "point_of_interest",
+                "establishment"
+            ]
+        },
+        {
+            "description": "SOCIETE BIGOT, Rue du Maréchal Foch, Versailles, France",
+            "matched_substrings": [
+                {
+                    "length": 3,
+                    "offset": 8
+                }
+            ],
+            "place_id": "ChIJV6Gi2Dl95kcRjViqe9DKUUs",
+            "reference": "ChIJV6Gi2Dl95kcRjViqe9DKUUs",
+            "structured_formatting": {
+                "main_text": "SOCIETE BIGOT",
+                "main_text_matched_substrings": [
+                    {
+                        "length": 3,
+                        "offset": 8
+                    }
+                ],
+                "secondary_text": "Rue du Maréchal Foch, Versailles, France"
+            },
+            "terms": [
+                {
+                    "offset": 0,
+                    "value": "SOCIETE BIGOT"
+                },
+                {
+                    "offset": 15,
+                    "value": "Rue du Maréchal Foch"
+                },
+                {
+                    "offset": 37,
+                    "value": "Versailles"
+                },
+                {
+                    "offset": 49,
+                    "value": "France"
+                }
+            ],
+            "types": [
+                "bakery",
+                "food",
+                "point_of_interest",
+                "store",
+                "establishment"
+            ]
+        },
+        {
+            "description": "BOUYGUES TELECOM, Rue de la Paroisse, Versailles, France",
+            "matched_substrings": [
+                {
+                    "length": 16,
+                    "offset": 0
+                }
+            ],
+            "place_id": "ChIJx3zkGrF95kcRppCN8CHVROI",
+            "reference": "ChIJx3zkGrF95kcRppCN8CHVROI",
+            "structured_formatting": {
+                "main_text": "BOUYGUES TELECOM",
+                "main_text_matched_substrings": [
+                    {
+                        "length": 16,
+                        "offset": 0
+                    }
+                ],
+                "secondary_text": "Rue de la Paroisse, Versailles, France"
+            },
+            "terms": [
+                {
+                    "offset": 0,
+                    "value": "BOUYGUES TELECOM"
+                },
+                {
+                    "offset": 18,
+                    "value": "Rue de la Paroisse"
+                },
+                {
+                    "offset": 38,
+                    "value": "Versailles"
+                },
+                {
+                    "offset": 50,
+                    "value": "France"
+                }
+            ],
+            "types": [
+                "point_of_interest",
+                "store",
+                "establishment"
+            ]
+        },
+        {
+            "description": "Big Dev, Place Hoche, Versailles, France",
+            "matched_substrings": [
+                {
+                    "length": 3,
+                    "offset": 0
+                }
+            ],
+            "place_id": "ChIJ8VIRr7B95kcRzlmism6bRGg",
+            "reference": "ChIJ8VIRr7B95kcRzlmism6bRGg",
+            "structured_formatting": {
+                "main_text": "Big Dev",
+                "main_text_matched_substrings": [
+                    {
+                        "length": 3,
+                        "offset": 0
+                    }
+                ],
+                "secondary_text": "Place Hoche, Versailles, France"
+            },
+            "terms": [
+                {
+                    "offset": 0,
+                    "value": "Big Dev"
+                },
+                {
+                    "offset": 9,
+                    "value": "Place Hoche"
+                },
+                {
+                    "offset": 22,
+                    "value": "Versailles"
+                },
+                {
+                    "offset": 34,
+                    "value": "France"
+                }
+            ],
+            "types": [
+                "point_of_interest",
+                "establishment"
+            ]
+        }
+    ],
+    "status": "OK"
+}

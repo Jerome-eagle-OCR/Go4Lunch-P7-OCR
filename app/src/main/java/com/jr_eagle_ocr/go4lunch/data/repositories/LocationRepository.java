@@ -10,7 +10,7 @@ import com.jr_eagle_ocr.go4lunch.data.repositories.parent.Repository;
 /**
  * @author jrigault
  */
-public class LocationRepository extends Repository {
+public final class LocationRepository extends Repository {
     private final MutableLiveData<Boolean> locationPermissionGrantedMutableLiveData = new MutableLiveData<>(Boolean.FALSE);
     private Location location;
 
@@ -21,16 +21,15 @@ public class LocationRepository extends Repository {
         return locationPermissionGrantedMutableLiveData;
     }
 
-    public Location getLocation() {
+    public Location getMapLocation() {
         return location;
     }
-
 
     public void setLocationPermissionGranted(boolean locationPermissionGranted) {
         locationPermissionGrantedMutableLiveData.setValue(locationPermissionGranted);
     }
 
-    public void setLocation(Location location) {
+    public void setMapLocation(Location location) {
         this.location = location;
     }
 }

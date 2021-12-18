@@ -18,4 +18,23 @@ public class PlaceAutocompleteApiResponse {
 	public String getStatus(){
 		return status;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		PlaceAutocompleteApiResponse that = (PlaceAutocompleteApiResponse) o;
+
+		if (predictions != null ? !predictions.equals(that.predictions) : that.predictions != null)
+			return false;
+		return status != null ? status.equals(that.status) : that.status == null;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = predictions != null ? predictions.hashCode() : 0;
+		result = 31 * result + (status != null ? status.hashCode() : 0);
+		return result;
+	}
 }
