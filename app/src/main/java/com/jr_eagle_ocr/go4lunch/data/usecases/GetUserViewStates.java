@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
+package com.jr_eagle_ocr.go4lunch.data.usecases;
 
 import android.util.Log;
 
@@ -6,7 +6,7 @@ import androidx.core.util.Pair;
 
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
+import com.jr_eagle_ocr.go4lunch.data.usecases.parent.UseCase;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
 
 import java.util.ArrayList;
@@ -33,7 +33,8 @@ public final class GetUserViewStates extends UseCase {
      * @param userChosenRestaurantMap a map<user id, chosen restaurant id> to get the restaurant id for each user having chosen a restaurant
      * @return a list of UserViewState
      */
-    public List<UserViewState> getUserViewStates(String displayedRestaurantId, Map<String, User> allLoggedUsers,
+    public List<UserViewState> getUserViewStates(String displayedRestaurantId,
+                                                 Map<String, User> allLoggedUsers,
                                                  Map<String, Pair<String, String>> userChosenRestaurantMap) {
         List<UserViewState> userViewStates = new ArrayList<>(); //To be produced to valorize livedata
         if (allLoggedUsers != null) {
@@ -73,9 +74,13 @@ public final class GetUserViewStates extends UseCase {
                 if ((displayedRestaurantId != null && hasChosen && !isCurrentUser)
                         || (displayedRestaurantId == null && !isCurrentUser)) {
 
-                    UserViewState userViewState = new UserViewState(
-                            userName, appendingString, userUrlPicture,
-                            null, chosenRestaurantId, chosenRestaurantName, textAlpha, imageAlpha);
+                    UserViewState userViewState = new UserViewState(userName,
+                                                                    appendingString,
+                                                                    userUrlPicture,
+                                                                    chosenRestaurantId,
+                                                                    chosenRestaurantName,
+                                                                    textAlpha,
+                                                                    imageAlpha);
 
                     userViewStates.add(userViewState);
                     Log.d(TAG, "getUserViewStates: userViewState added in list: " + userViewState.toString());

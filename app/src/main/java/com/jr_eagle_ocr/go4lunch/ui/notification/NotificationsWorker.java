@@ -15,8 +15,9 @@ import androidx.work.WorkerParameters;
 
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetNotificationKit;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetNotificationPair;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -28,7 +29,7 @@ public final class NotificationsWorker extends Worker {
     private final int NOTIFICATION_ID = 007;
     private final String NOTIFICATION_TAG = "GO4LUNCH";
     private final Context context;
-    private final GetNotificationKit getNotificationKit;
+    private final GetNotificationPair getNotificationPair;
 
     public NotificationsWorker(
             @NonNull Context context,
@@ -36,22 +37,28 @@ public final class NotificationsWorker extends Worker {
     ) {
         super(context, workerParams);
         this.context = context;
-        getNotificationKit = Go4LunchApplication.getDependencyContainer().getNotificationKit();
+        getNotificationPair = Go4LunchApplication.getDependencyContainer().getNotificationKit();
     }
 
     @NonNull
     @Override
     public Result doWork() {
         // Get the style with lines and pending intent for the notification
-        Pair<NotificationCompat.InboxStyle, PendingIntent> stylePendingIntentPair = null;
+        Pair<List<String>, PendingIntent> stylePendingIntentPair = null;
         try {
-            stylePendingIntentPair = getNotificationKit.getNotificationKit(context);
+            stylePendingIntentPair = getNotificationPair.getNotificationPair(context);
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }
         if (stylePendingIntentPair != null
                 && stylePendingIntentPair.first != null
                 && stylePendingIntentPair.second != null) {
+            // Create a Style for the Notification
+            NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+            inboxStyle.setBigContentTitle(context.getString(R.string.app_name) + " !");
+            for (String line : stylePendingIntentPair.first) {
+                inboxStyle.addLine(line);
+            }
             // Create a Channel (Android 8)
             String channelId = getApplicationContext().getString(R.string.default_notification_channel_id);
             // Build a Notification object
@@ -61,7 +68,7 @@ public final class NotificationsWorker extends Worker {
                             .setAutoCancel(true)
                             .setTimeoutAfter(600000)
                             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                            .setStyle(stylePendingIntentPair.first)
+                            .setStyle(inboxStyle)
                             .setContentIntent(stylePendingIntentPair.second);
             // Add the Notification to the Notification Manager and show it.
             NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);

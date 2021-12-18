@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
+package com.jr_eagle_ocr.go4lunch.data.usecases;
 
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -12,8 +12,8 @@ import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
 import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
+import com.jr_eagle_ocr.go4lunch.data.usecases.parent.UseCase;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.RestaurantViewSate;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
 import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 
 import java.util.ArrayList;
@@ -25,16 +25,22 @@ import java.util.Map;
  * @author jrigault
  */
 public final class GetRestaurantViewStates extends UseCase {
+    private final BitmapUtil bitmapUtil;
     private final LocationRepository locationRepository;
     private final RestaurantRepository restaurantRepository;
+    private final Calendar calendar;
     private final LiveData<Map<String, Restaurant>> allRestaurantsLiveData;
 
     public GetRestaurantViewStates(
+            BitmapUtil bitmapUtil,
             LocationRepository locationRepository,
-            RestaurantRepository restaurantRepository
+            RestaurantRepository restaurantRepository,
+            Calendar calendar
     ) {
+        this.bitmapUtil = bitmapUtil;
         this.locationRepository = locationRepository;
         this.restaurantRepository = restaurantRepository;
+        this.calendar = calendar;
         allRestaurantsLiveData = restaurantRepository.getAllRestaurants();
     }
 
@@ -55,7 +61,7 @@ public final class GetRestaurantViewStates extends UseCase {
                 if (restaurant != null) {
 
                     // Restaurant photo
-                    Bitmap photo = BitmapUtil.decodeBase64(restaurant.getPhotoString());
+                    Bitmap photo = bitmapUtil.decodeBase64(restaurant.getPhotoString());
                     // Restaurant name
                     String name = restaurant.getName();
                     // Restaurant distance from current maps location
@@ -100,16 +106,43 @@ public final class GetRestaurantViewStates extends UseCase {
      */
     @NonNull
     private String getDistanceText(Restaurant restaurant) {
-        String distance;
+        String distanceText;
         double startLat = restaurant.getGeoPoint().getLatitude();
         double startLng = restaurant.getGeoPoint().getLongitude();
-        double endLat = locationRepository.getLocation().getLatitude();
-        double endLng = locationRepository.getLocation().getLongitude();
-        float[] results = new float[1];
-        Location.distanceBetween(startLat, startLng, endLat, endLng, results);
-        double result = Math.rint(results[0]);
-        distance = String.valueOf(result).split("\\.")[0] + "m";
-        return distance;
+        Location location = locationRepository.getMapLocation();
+        double endLat = location.getLatitude();
+        double endLng = location.getLongitude();
+        double distance = this.getDistance(startLat, startLng, endLat, endLng, "K") * 1000;
+        distanceText = String.valueOf(Math.rint(distance)).replace(".0", "") + "m";
+        return distanceText;
+    }
+
+    /**
+     * Calculate distance between two geo points
+     *
+     * @param lat1 first point latitude
+     * @param lon1 first point longitude
+     * @param lat2 second point latitude
+     * @param lon2 second point longitude
+     * @param unit M: mile (any string but K and N default), K: kilometer, N: nautical mile
+     * @return the distance between the two point in the specified unit
+     */
+    private double getDistance(double lat1, double lon1, double lat2, double lon2, String unit) {
+        if ((lat1 == lat2) && (lon1 == lon2)) {
+            return 0;
+        } else {
+            double theta = lon1 - lon2;
+            double dist = Math.sin(Math.toRadians(lat1)) * Math.sin(Math.toRadians(lat2)) + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.cos(Math.toRadians(theta));
+            dist = Math.acos(dist);
+            dist = Math.toDegrees(dist);
+            dist = dist * 60 * 1.1515;
+            if (unit.equals("K")) {
+                dist = dist * 1.609344;
+            } else if (unit.equals("N")) {
+                dist = dist * 0.8684;
+            }
+            return (dist);
+        }
     }
 
     /**
@@ -125,7 +158,6 @@ public final class GetRestaurantViewStates extends UseCase {
         String closingTime = "";
         boolean isWarningStyle = true;
 
-        Calendar calendar = Calendar.getInstance();
         long nowTimeMillis = calendar.getTimeInMillis();
         int todayDayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
         int todayDayInt = calendar.get(Calendar.DAY_OF_WEEK) - 1;
@@ -149,7 +181,7 @@ public final class GetRestaurantViewStates extends UseCase {
             long compareMinutes = (closeTimeMillis - nowTimeMillis) / 60000;
             if (compareMinutes <= 0) {
                 openingPrefix = R.string.closed;
-            } else if (compareMinutes < 60) {
+            } else if (compareMinutes <= 60) {
                 openingPrefix = R.string.closing_soon;
             } else {
                 openingPrefix = R.string.open_until;

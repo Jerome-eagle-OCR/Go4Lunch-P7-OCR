@@ -18,7 +18,7 @@ import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearChosenRestaurant;
 
 import java.util.ArrayList;
 import java.util.List;

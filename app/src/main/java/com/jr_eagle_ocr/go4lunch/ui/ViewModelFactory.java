@@ -7,9 +7,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetCurrentUserChosenRestaurantId;
+import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
 import com.jr_eagle_ocr.go4lunch.ui.authentication.AuthenticationViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.listview.ListViewViewModel;
@@ -17,6 +17,7 @@ import com.jr_eagle_ocr.go4lunch.ui.logout.LogOutViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.mapview.MapViewViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.settings.SettingsViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.workmates.WorkmatesViewModel;
+import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -31,6 +32,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
             synchronized (ViewModelFactory.class) {
                 if (factory == null) {
                     factory = new ViewModelFactory(
+                            Go4LunchApplication.getDependencyContainer().getBitmapUtil(),
                             Go4LunchApplication.getDependencyContainer().getUserRepository(),
                             Go4LunchApplication.getDependencyContainer().getLocationRepository(),
                             Go4LunchApplication.getDependencyContainer().getRestaurantRepository(),
@@ -43,6 +45,8 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         return factory;
     }
 
+    @NonNull
+    private final BitmapUtil bitmapUtil;
     @NonNull
     private final UserRepository userRepository;
     @NonNull
@@ -58,6 +62,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
 
 
     private ViewModelFactory(
+            @NonNull BitmapUtil bitmapUtil,
             @NonNull UserRepository userRepository,
             @NonNull LocationRepository locationRepository,
             @NonNull RestaurantRepository restaurantRepository,
@@ -65,6 +70,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
             @NonNull SetClearChosenRestaurant setClearChosenRestaurant,
             @NonNull SetClearLikedRestaurant setClearLikedRestaurant
     ) {
+        this.bitmapUtil = bitmapUtil;
         this.userRepository = userRepository;
         this.locationRepository = locationRepository;
         this.restaurantRepository = restaurantRepository;
@@ -88,6 +94,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         }
         if (modelClass.isAssignableFrom(ListViewViewModel.class)) {
             return (T) new ListViewViewModel(
+                    bitmapUtil,
                     locationRepository, userRepository, restaurantRepository);
         }
         if (modelClass.isAssignableFrom(MapViewViewModel.class)) {

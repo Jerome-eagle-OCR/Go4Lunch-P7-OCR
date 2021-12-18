@@ -6,18 +6,20 @@ import com.jr_eagle_ocr.go4lunch.data.place_autocomplete.PlaceAutocompleteReposi
 import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetCurrentUserChosenRestaurantId;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetNotificationKit;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.IsLikedRestaurant;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.PlaceAutocompleteSearch;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearChosenRestaurant;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.SetClearLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetCurrentUserChosenRestaurantId;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetIsLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetNotificationPair;
+import com.jr_eagle_ocr.go4lunch.data.usecases.PlaceAutocompleteSearch;
+import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearChosenRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 
 /**
  * @author jrigault
  */
 public final class Go4LunchDependencyContainer {
     private final Application context;
+    private final BitmapUtil bitmapUtil;
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
     private final RestaurantRepository restaurantRepository;
@@ -26,20 +28,20 @@ public final class Go4LunchDependencyContainer {
     private final SetClearChosenRestaurant setClearChosenRestaurant;
     private final GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId;
     private final SetClearLikedRestaurant setClearLikedRestaurant;
-    private final IsLikedRestaurant isLikedRestaurant;
-    private final GetNotificationKit getNotificationKit;
+    private final GetIsLikedRestaurant getIsLikedRestaurant;
+    private final GetNotificationPair getNotificationPair;
 
     public Go4LunchDependencyContainer(
             Application context
     ) {
         this.context = context;
+        this.bitmapUtil = new BitmapUtil();
         userRepository = new UserRepository();
         locationRepository = new LocationRepository();
-        restaurantRepository = new RestaurantRepository();
-        placeAutocompleteRepository = new PlaceAutocompleteRepository();
+        restaurantRepository = new RestaurantRepository(bitmapUtil);
+        placeAutocompleteRepository = new PlaceAutocompleteRepository(locationRepository);
 
-        placeAutocompleteSearch = new PlaceAutocompleteSearch(
-                locationRepository, placeAutocompleteRepository);
+        placeAutocompleteSearch = new PlaceAutocompleteSearch(placeAutocompleteRepository);
 
         getCurrentUserChosenRestaurantId =
                 new GetCurrentUserChosenRestaurantId(
@@ -54,18 +56,22 @@ public final class Go4LunchDependencyContainer {
                 new SetClearLikedRestaurant(
                         userRepository, restaurantRepository);
 
-        isLikedRestaurant =
-                new IsLikedRestaurant(
+        getIsLikedRestaurant =
+                new GetIsLikedRestaurant(
                         userRepository, restaurantRepository);
 
 
-        getNotificationKit =
-                new GetNotificationKit(
+        getNotificationPair =
+                new GetNotificationPair(
                         userRepository, restaurantRepository);
     }
 
     public Application getContext() {
         return context;
+    }
+
+    public BitmapUtil getBitmapUtil() {
+        return bitmapUtil;
     }
 
     public UserRepository getUserRepository() {
@@ -100,11 +106,11 @@ public final class Go4LunchDependencyContainer {
         return setClearLikedRestaurant;
     }
 
-    public IsLikedRestaurant getIsLikedRestaurant() {
-        return isLikedRestaurant;
+    public GetIsLikedRestaurant getIsLikedRestaurant() {
+        return getIsLikedRestaurant;
     }
 
-    public GetNotificationKit getNotificationKit() {
-        return getNotificationKit;
+    public GetNotificationPair getNotificationKit() {
+        return getNotificationPair;
     }
 }

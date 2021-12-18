@@ -14,12 +14,18 @@ android {
         versionName "1.0"
         multiDexEnabled true
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
+        // For Google Firebase/Maps/Places
         buildConfigField 'String', 'GOOGLE_PLACES_KEY', OCR_P7_Google_Places_web_key
         it.resValue 'string', 'google_places_key', OCR_P7_Google_Places_sdk_key
-    }
 
+        // For testing
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        // The following argument makes the Android Test Orchestrator run its
+        // "pm clear" command after each test invocation. This command ensures
+        // that the app's state is completely cleared between tests.
+        testInstrumentationRunnerArguments clearPackageData: 'true'
+        buildConfigField "java.util.concurrent.atomic.AtomicBoolean", "IS_TESTING", "new java.util.concurrent.atomic.AtomicBoolean(false)"
+    }
     buildTypes {
         release {
             minifyEnabled false
@@ -32,6 +38,14 @@ android {
     }
     buildFeatures {
         viewBinding true
+    }
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
+        animationsDisabled = true
+        unitTests {
+            returnDefaultValues = true
+            includeAndroidResources = true
+        }
     }
 }
 
@@ -60,7 +74,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics'
 
     // FIREBASE UI
-    //noinspection GradleDependency
     implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
 
     // Facebook login support
@@ -90,9 +103,78 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation 'io.reactivex.rxjava2:rxjava:2.2.21'
 
-    // For tests
-    testImplementation 'junit:junit:4.13.2'
+    //--------------------------------------------------------------------
+    // For testing
+    //--------------------------------------------------------------------
+    // Mockito
+    testImplementation 'org.mockito:mockito-core:3.11.2'
+    testImplementation 'org.mockito:mockito-inline:3.11.2'
+    androidTestImplementation "org.mockito:mockito-android:3.11.2"
+    // Orchestrator to have app cleaned between tests
+    androidTestUtil 'androidx.test:orchestrator:1.4.1'
+    // Executor
+    testImplementation 'androidx.arch.core:core-testing:2.1.0'
+    androidTestImplementation 'androidx.arch.core:core-testing:2.1.0'
+    // Junit4
+//    testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    // Espresso
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    //--------------------------------------------------------------------
+}
 
+
+// JaCoCo stuff
+android.applicationVariants.all { variant ->
+    def variantName = variant.name.capitalize()
+    def filesToAnalyze = [
+            '**/*ViewModel.class',
+            '**/*Repository.class'
+    ]
+
+    task("jacoco${variantName}Report", type: JacocoReport, dependsOn: "test${variantName}UnitTest") {
+        group 'Reporting'
+        description "Generate ${variantName} Jacoco coverage reports."
+
+        def htmlOutDir = layout.buildDirectory.dir("reports/jacoco/$name/html").get().asFile
+
+        doLast {
+            openReport htmlOutDir
+        }
+
+        reports {
+            xml.enabled = true
+            html {
+                destination htmlOutDir
+            }
+        }
+
+        getSourceDirectories().setFrom(files(android.sourceSets.main.java.srcDirs))
+        getExecutionData().setFrom(files("${buildDir}/jacoco/test${variantName}UnitTest.exec"))
+        getClassDirectories().setFrom(fileTree(dir: variant.javaCompiler.destinationDir, includes: filesToAnalyze))
+    }
+}
+
+// Open JaCoCo report after generation
+def openReport(htmlOutDir) {
+    final reportPath = "$htmlOutDir\\index.html"
+
+    println "HTML Report: $reportPath"
+
+    def os = org.gradle.internal.os.OperatingSystem.current()
+    if (os.isWindows()) {
+        exec { commandLine 'cmd', '/c', "start $reportPath" }
+    } else if (os.isMacOsX()) {
+        exec { commandLine 'open', "$reportPath" }
+    } else if (os.isLinux()) {
+        try {
+            exec { commandLine 'xdg-open', "$reportPath" }
+        } catch (Exception ignored) {
+            if (localProperties.containsKey("linux-html-cmd")) {
+                exec { commandLine properties.get("linux-html-cmd"), "$reportPath" }
+            } else {
+                println "'linux-html-cmd' property could not be found in 'local.properties'"
+            }
+        }
+    }
 }

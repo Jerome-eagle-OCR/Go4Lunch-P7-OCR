@@ -1,6 +1,5 @@
-package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
+package com.jr_eagle_ocr.go4lunch.data.usecases;
 
-import android.location.Location;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -8,8 +7,7 @@ import androidx.annotation.NonNull;
 import com.google.android.libraries.places.api.model.Place;
 import com.jr_eagle_ocr.go4lunch.data.place_autocomplete.PlaceAutocompleteRepository;
 import com.jr_eagle_ocr.go4lunch.data.place_autocomplete.models.PredictionsItem;
-import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
+import com.jr_eagle_ocr.go4lunch.data.usecases.parent.UseCase;
 import com.jr_eagle_ocr.go4lunch.ui.AutocompleteRestaurantViewState;
 
 import java.util.ArrayList;
@@ -27,7 +25,7 @@ import io.reactivex.subjects.Subject;
 /**
  * @author jrigault
  */
-public class PlaceAutocompleteSearch extends UseCase {
+public final class PlaceAutocompleteSearch extends UseCase {
     public static final String OK = "OK";
     public static final String NO_SEARCH_MADE = "NO_SEARCH_MADE";
     public static final String ZERO_RESULTS = "ZERO_RESULTS";
@@ -37,8 +35,7 @@ public class PlaceAutocompleteSearch extends UseCase {
     private final Observable<List<AutocompleteRestaurantViewState>> autocompleteRestaurantsObservable;
 
     public PlaceAutocompleteSearch(
-            LocationRepository locationRepository,
-            PlaceAutocompleteRepository placeAutocompleteRepository
+            @NonNull PlaceAutocompleteRepository placeAutocompleteRepository
     ) {
         // Create autocomplete observable triggered by search input
         autocompleteRestaurantsObservable = searchInputSubject
@@ -48,8 +45,7 @@ public class PlaceAutocompleteSearch extends UseCase {
                     List<AutocompleteRestaurantViewState> autocompleteRestaurants = new ArrayList<>();
                     final AutocompleteRestaurantViewState[] header = new AutocompleteRestaurantViewState[1];
                     if (!input.isEmpty()) {
-                        Location location = locationRepository.getLocation();
-                        return placeAutocompleteRepository.getPlaceAutocompleteSearchResponse(input, location)
+                        return placeAutocompleteRepository.getPlaceAutocompleteSearchResponse(input)
                                 .subscribeOn(Schedulers.io())
                                 .map(response -> {
                                     List<PredictionsItem> predictions = response.getPredictions();
@@ -96,7 +92,7 @@ public class PlaceAutocompleteSearch extends UseCase {
      * @param input chars from which to search
      */
     public void setSearchInput(@NonNull String input) {
-        if (!(this.input.isEmpty() && input.isEmpty())) {
+        if (!this.input.equals(input)) {
             this.input = input;
             searchInputSubject.onNext(input);
         }

@@ -50,7 +50,7 @@ public class MapViewViewModel extends ViewModel {
     }
 
     public void setLocation(Location lastKnownLocation) {
-        locationRepository.setLocation(lastKnownLocation);
+        locationRepository.setMapLocation(lastKnownLocation);
     }
 
     public void setLocationPermissionGranted(boolean locationPermissionGranted) {

@@ -11,7 +11,7 @@ import com.jr_eagle_ocr.go4lunch.data.models.ChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetUserViewStates;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetUserViewStates;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
 
 import java.util.ArrayList;

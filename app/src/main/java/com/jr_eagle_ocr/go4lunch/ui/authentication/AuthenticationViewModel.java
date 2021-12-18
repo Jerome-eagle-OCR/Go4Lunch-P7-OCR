@@ -42,7 +42,7 @@ public class AuthenticationViewModel extends ViewModel {
         }
 
         // Listen user creation with observer that will be removed in onCleared()
-        isUserCreatedEventLiveData = userRepository.isUserCreatedEvent();
+        isUserCreatedEventLiveData = userRepository.getUserCreatedEvent();
         isUserCreatedObserver = isUserCreatedEvent -> {
             if (!isUserCreatedEvent.getHasBeenHandled()) {
                 isUserCreatedEvent.getContentIfNotHandled();

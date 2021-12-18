@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
+package com.jr_eagle_ocr.go4lunch.data.usecases;
 
 import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.BYUSERS_FIELD;
 import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.LIKEDBY_COLLECTION_NAME;
@@ -15,7 +15,7 @@ import com.google.firebase.firestore.FieldValue;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
+import com.jr_eagle_ocr.go4lunch.data.usecases.parent.UseCase;
 
 import java.util.HashMap;
 import java.util.Map;

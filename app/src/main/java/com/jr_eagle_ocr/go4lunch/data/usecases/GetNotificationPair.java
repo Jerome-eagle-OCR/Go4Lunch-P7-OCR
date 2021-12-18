@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
+package com.jr_eagle_ocr.go4lunch.data.usecases;
 
 import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.BYUSERS_FIELD;
 import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.CHOSENBY_COLLECTION_NAME;
@@ -11,7 +11,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import androidx.core.app.NotificationCompat;
 import androidx.core.util.Pair;
 
 import com.google.android.gms.tasks.Tasks;
@@ -21,8 +20,8 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
+import com.jr_eagle_ocr.go4lunch.data.usecases.parent.UseCase;
 import com.jr_eagle_ocr.go4lunch.ui.MainActivity;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,11 +30,11 @@ import java.util.concurrent.ExecutionException;
 /**
  * @author jrigault
  */
-public class GetNotificationKit extends UseCase {
+public final class GetNotificationPair extends UseCase {
     private final UserRepository userRepository;
     private final RestaurantRepository restaurantRepository;
 
-    public GetNotificationKit(
+    public GetNotificationPair(
             UserRepository userRepository,
             RestaurantRepository restaurantRepository
     ) {
@@ -44,28 +43,23 @@ public class GetNotificationKit extends UseCase {
     }
 
     /**
-     * Get the notification lines if a user is authenticated, empty list if not
+     * Get the notification kit if a user is authenticated, null kit if not
      *
-     * @param context
-     * @return a list of lines (String)
+     * @param context the application context
+     * @return a Pair, first InboxStyle, second PendingIntent
      */
-    public Pair<NotificationCompat.InboxStyle, PendingIntent> getNotificationKit(Context context) throws ExecutionException, InterruptedException {
-        NotificationCompat.InboxStyle inboxStyle = null;
+    public Pair<List<String>, PendingIntent> getNotificationPair(Context context) throws ExecutionException, InterruptedException {
+        List<String> notificationLines = null;
         PendingIntent pendingIntent = null;
-        List<String> notificationLines = getNotificationLines(context);
-        if (!notificationLines.isEmpty()) {
+        List<String> tempNotificationLines = getNotificationLines(context);
+        if (!tempNotificationLines.isEmpty()) {
+            notificationLines = tempNotificationLines;
             Log.d(TAG, "Notification text: " + notificationLines);
             // Create an Intent to go to chosen restaurant detail when user click on the Notification
             Intent intent = MainActivity.navigate(context, true);
             pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
-            // Create a Style for the Notification
-            inboxStyle = new NotificationCompat.InboxStyle();
-            inboxStyle.setBigContentTitle(context.getString(R.string.app_name) + " !");
-            for (String line : notificationLines) {
-                inboxStyle.addLine(line);
-            }
         }
-        return new Pair<>(inboxStyle, pendingIntent);
+        return new Pair<>(notificationLines, pendingIntent);
     }
 
     /**
@@ -121,20 +115,28 @@ public class GetNotificationKit extends UseCase {
      */
     private String getJoiningUsers(Context context, String uid, DocumentSnapshot restaurantDocument) throws ExecutionException, InterruptedException {
         StringBuilder joiningUsers = new StringBuilder();
+        String and = context.getString(R.string.and);
         QuerySnapshot querySnapshot = Tasks.await(restaurantDocument.getReference()
                 .collection(CHOSENBY_COLLECTION_NAME)
                 .get());
         List<DocumentSnapshot> userDocuments = querySnapshot.getDocuments();
-        if (userDocuments.size() > 1) {
+        for (DocumentSnapshot documentSnapshot : userDocuments) {
+            if (documentSnapshot.getId().equals(uid)) {
+                userDocuments.remove(documentSnapshot);
+                break;
+            }
+        }
+        if (!userDocuments.isEmpty()) {
+            boolean isFirstAddedUser = true;
             for (int i = 0; i < userDocuments.size(); i++) {
                 DocumentSnapshot userDocument = userDocuments.get(i);
                 String userDocumentId = userDocument.getId();
                 if (!userDocumentId.equals(uid)) {
-                    if (i != 0) {
-                        String and = context.getString(R.string.and);
+                    if (!isFirstAddedUser) {
                         joiningUsers.append((i < (userDocuments.size() - 1)) ? ", " : and);
                     }
                     joiningUsers.append(userDocument.getString(USERNAME_FIELD));
+                    isFirstAddedUser = false;
                 }
             }
         }

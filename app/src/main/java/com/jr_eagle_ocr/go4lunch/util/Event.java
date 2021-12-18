@@ -42,4 +42,22 @@ public class Event<T> {
     public final T peekContent() {
         return this.content;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Event<?> event = (Event<?>) o;
+
+        if (hasBeenHandled != event.hasBeenHandled) return false;
+        return content != null ? content.equals(event.content) : event.content == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = content != null ? content.hashCode() : 0;
+        result = 31 * result + (hasBeenHandled ? 1 : 0);
+        return result;
+    }
 }

@@ -14,12 +14,14 @@ import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.GetRestaurantViewStates;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetRestaurantViewStates;
 import com.jr_eagle_ocr.go4lunch.ui.AutocompleteRestaurantViewState;
 import com.jr_eagle_ocr.go4lunch.ui.MainViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.RestaurantViewSate;
+import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,13 +36,18 @@ public class ListViewViewModel extends ViewModel {
     private final GetRestaurantViewStates getRestaurantViewStates;
 
     public ListViewViewModel(
+            BitmapUtil bitmapUtil,
             LocationRepository locationRepository,
             UserRepository userRepository,
             RestaurantRepository restaurantRepository
     ) {
         currentUserLiveData = userRepository.getCurrentUser();
         restaurantChosenByUserIdsMapLiveData = restaurantRepository.getChosenRestaurantByUserIdsMap();
-        getRestaurantViewStates = new GetRestaurantViewStates(locationRepository, restaurantRepository);
+        getRestaurantViewStates = new GetRestaurantViewStates(
+                bitmapUtil,
+                locationRepository,
+                restaurantRepository,
+                Calendar.getInstance());
 
         allRestaurantViewStatesMediatorLiveData.addSource(currentUserLiveData, currentUser ->
                 buildAndSetAllRestaurantViewStates());

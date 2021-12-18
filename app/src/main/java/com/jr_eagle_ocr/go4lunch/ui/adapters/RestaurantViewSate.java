@@ -2,12 +2,14 @@ package com.jr_eagle_ocr.go4lunch.ui.adapters;
 
 import android.graphics.Bitmap;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
  * @author jrigault
  */
 public class RestaurantViewSate {
+    @NonNull
     private final String id;
     @Nullable
     private final Bitmap photo;
@@ -22,7 +24,7 @@ public class RestaurantViewSate {
     private final float rating;
 
     public RestaurantViewSate(
-            String id,
+            @NonNull String id,
             @Nullable Bitmap photo,
             String name,
             String distance,
@@ -47,6 +49,7 @@ public class RestaurantViewSate {
         this.rating = rating;
     }
 
+    @NonNull
     public String getId() {
         return id;
     }
@@ -90,6 +93,43 @@ public class RestaurantViewSate {
 
     public float getRating() {
         return rating;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        RestaurantViewSate that = (RestaurantViewSate) o;
+
+        if (isJoinersVisible != that.isJoinersVisible) return false;
+        if (openingPrefix != that.openingPrefix) return false;
+        if (isWarningStyle != that.isWarningStyle) return false;
+        if (Float.compare(that.rating, rating) != 0) return false;
+        if (!id.equals(that.id)) return false;
+        if (photo != null ? !photo.equals(that.photo) : that.photo != null) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (distance != null ? !distance.equals(that.distance) : that.distance != null)
+            return false;
+        if (address != null ? !address.equals(that.address) : that.address != null) return false;
+        if (joiners != null ? !joiners.equals(that.joiners) : that.joiners != null) return false;
+        return closingTime != null ? closingTime.equals(that.closingTime) : that.closingTime == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id.hashCode();
+        result = 31 * result + (photo != null ? photo.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (distance != null ? distance.hashCode() : 0);
+        result = 31 * result + (address != null ? address.hashCode() : 0);
+        result = 31 * result + (joiners != null ? joiners.hashCode() : 0);
+        result = 31 * result + (isJoinersVisible ? 1 : 0);
+        result = 31 * result + openingPrefix;
+        result = 31 * result + (closingTime != null ? closingTime.hashCode() : 0);
+        result = 31 * result + (isWarningStyle ? 1 : 0);
+        result = 31 * result + (rating != +0.0f ? Float.floatToIntBits(rating) : 0);
+        return result;
     }
 
     @Override

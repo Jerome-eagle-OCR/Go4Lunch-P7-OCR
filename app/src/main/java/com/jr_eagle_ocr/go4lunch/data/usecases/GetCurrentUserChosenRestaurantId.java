@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.data.repositories.usecases;
+package com.jr_eagle_ocr.go4lunch.data.usecases;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -7,7 +7,7 @@ import com.jr_eagle_ocr.go4lunch.data.models.ChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.repositories.usecases.parent.UseCase;
+import com.jr_eagle_ocr.go4lunch.data.usecases.parent.UseCase;
 
 import java.util.List;
 import java.util.Map;
@@ -29,9 +29,9 @@ public final class GetCurrentUserChosenRestaurantId extends UseCase {
         chosenRestaurantByUserIdsMapLiveData = restaurantRepository.getChosenRestaurantByUserIdsMap();
 
         currentUserChosenRestaurantIdMediatorLiveData.addSource(currentUserLiveData, currentUser ->
-                setCurrentUserChosenRestaurantId());
+                getCurrentUserChosenRestaurantId());
         currentUserChosenRestaurantIdMediatorLiveData.addSource(chosenRestaurantByUserIdsMapLiveData, chosenRestaurantByUserIdsMap ->
-                setCurrentUserChosenRestaurantId());
+                getCurrentUserChosenRestaurantId());
     }
 
     /**
@@ -40,11 +40,6 @@ public final class GetCurrentUserChosenRestaurantId extends UseCase {
      * @return the place id of the chosen restaurant
      */
     public LiveData<String> getCurrentUserChosenRestaurantId() {
-        return currentUserChosenRestaurantIdMediatorLiveData;
-    }
-
-
-    private void setCurrentUserChosenRestaurantId() {
         String currentUserChosenRestaurantId = currentUserChosenRestaurantIdMediatorLiveData.getValue();
         String newChosenRestaurantId = "";
         User currentUser = currentUserLiveData.getValue();
@@ -65,5 +60,7 @@ public final class GetCurrentUserChosenRestaurantId extends UseCase {
         if (!Objects.equals(currentUserChosenRestaurantId, newChosenRestaurantId)) {
             currentUserChosenRestaurantIdMediatorLiveData.setValue(newChosenRestaurantId);
         }
+
+        return currentUserChosenRestaurantIdMediatorLiveData;
     }
 }

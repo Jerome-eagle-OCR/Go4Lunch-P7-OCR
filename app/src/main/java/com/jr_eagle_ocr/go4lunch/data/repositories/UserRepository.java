@@ -7,12 +7,15 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.jr_eagle_ocr.go4lunch.BuildConfig;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.parent.Repository;
 import com.jr_eagle_ocr.go4lunch.util.Event;
@@ -26,13 +29,17 @@ import java.util.Objects;
  * @author jrigault
  */
 public final class UserRepository extends Repository {
+    private final AuthUI authUI = AuthUI.getInstance();
+    private final FirebaseFirestore db = FirebaseFirestore.getInstance();
     private final MutableLiveData<FirebaseUser> currentFirebaseUserMutableLiveData;
-    private final MutableLiveData<Event<Boolean>> isUserCreatedEventMutableLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Event<Boolean>> userCreatedEventMutableLiveData = new MutableLiveData<>();
     private final MutableLiveData<Map<String, User>> allLoggedUsersMutableLiveData = new MutableLiveData<>();
     private final MutableLiveData<User> currentUserMutableLiveData = new MutableLiveData<>();
     private ListenerRegistration listenerRegistration;
 
-    public UserRepository() {
+    public UserRepository(
+    ) {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
         auth.addAuthStateListener(UserRepository.this::onAuthStateChanged);
         FirebaseUser currentFirebaseUser = auth.getCurrentUser();
         currentFirebaseUserMutableLiveData = new MutableLiveData<>(currentFirebaseUser);
@@ -86,16 +93,14 @@ public final class UserRepository extends Repository {
         return authUI.delete(context);
     }
 
-
     // -----------------
     // --- FIRESTORE ---
     // -----------------
 
-    private static final String USERS_COLLECTION_NAME = "users";
-    private static final String USERID_FIELD = "uid";
-    private static final String USERNAME_FIELD = "userName";
-    private static final String USERURLPICTURE_FIELD = "userUrlPicture";
-
+    public static final String USERS_COLLECTION_NAME = BuildConfig.IS_TESTING.get() ? "users_test" : "users";
+    public static final String USERID_FIELD = "uid";
+    public static final String USERNAME_FIELD = "userName";
+    public static final String USERURLPICTURE_FIELD = "userUrlPicture";
 
     /**
      * Set user in Firestore from FirebaseAuth eventually modified/completed
@@ -135,7 +140,7 @@ public final class UserRepository extends Repository {
                             userToCreate.setUserName(nameFromEmail);
                         }
                         this.setUser(userToCreate).addOnSuccessListener(unused ->
-                                isUserCreatedEventMutableLiveData.setValue(new Event<>(Boolean.TRUE)));
+                                userCreatedEventMutableLiveData.setValue(new Event<>(Boolean.TRUE)));
                     });
         }
     }
@@ -166,8 +171,8 @@ public final class UserRepository extends Repository {
      *
      * @return a livedata holding a boolean event
      */
-    public LiveData<Event<Boolean>> isUserCreatedEvent() {
-        return isUserCreatedEventMutableLiveData;
+    public LiveData<Event<Boolean>> getUserCreatedEvent() {
+        return userCreatedEventMutableLiveData;
     }
 
     /**
@@ -248,9 +253,9 @@ public final class UserRepository extends Repository {
             Log.d(TAG, "setAllLoggedUsers: users collection listener set");
 
         } else if (listenerRegistration != null) {
+            listenerRegistration.remove();
             setCurrentUser(null, null);
             allLoggedUsersMutableLiveData.setValue(null);
-            listenerRegistration.remove();
             Log.d(TAG, "setAllLoggedUsers: users collection listener removed");
         }
     }
