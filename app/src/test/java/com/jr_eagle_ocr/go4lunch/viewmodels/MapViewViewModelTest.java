@@ -1,4 +1,4 @@
-package com.jr_eagle_ocr.go4lunch.ui.mapview;
+package com.jr_eagle_ocr.go4lunch.viewmodels;
 
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_AUTOCOMPLETE_RESTAURANT_VIEWSTATE_ARRAY;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_AUTOCOMPLETE_RESTAURANT_VIEWSTATE_ARRAY2;
@@ -32,6 +32,7 @@ import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.usecases.GetRestaurantViewStates;
 import com.jr_eagle_ocr.go4lunch.ui.AutocompleteRestaurantViewState;
 import com.jr_eagle_ocr.go4lunch.ui.MainViewModel;
+import com.jr_eagle_ocr.go4lunch.ui.mapview.MapViewViewModel;
 
 import org.junit.After;
 import org.junit.Before;
