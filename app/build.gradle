@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'com.google.gms.google-services'  // Google Services plugin
+    id 'jacoco'
 }
 
 android {
@@ -128,8 +129,13 @@ dependencies {
 android.applicationVariants.all { variant ->
     def variantName = variant.name.capitalize()
     def filesToAnalyze = [
-            '**/*ViewModel.class',
-            '**/*Repository.class'
+            '**/LocationRepository.class',
+            '**/PlaceAutocompleteRepository.class',
+            '**/GetCurrentUserChosenRestaurantId.class',
+            '**/GetRestaurantViewStates.class',
+            '**/GetUserViewStates.class',
+            '**/PlaceAutocompleteSearch.class',
+            '**/*ViewModel.class'
     ]
 
     task("jacoco${variantName}Report", type: JacocoReport, dependsOn: "test${variantName}UnitTest") {

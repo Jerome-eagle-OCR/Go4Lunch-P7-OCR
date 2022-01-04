@@ -28,7 +28,6 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.Re
     private final List<RestaurantViewSate> items;
     private final RestaurantAdapter.DisplayRestaurantListener listener;
 
-
     class RestaurantViewHolder extends RecyclerView.ViewHolder {
         public final Context context;
         public final ImageView photoImageView;

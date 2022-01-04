@@ -7,11 +7,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
-import com.jr_eagle_ocr.go4lunch.data.usecases.GetCurrentUserChosenRestaurantId;
 import com.jr_eagle_ocr.go4lunch.data.usecases.GetRestaurantViewStates;
 import com.jr_eagle_ocr.go4lunch.data.usecases.GetUserViewStates;
 import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearChosenRestaurant;
-import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
 import com.jr_eagle_ocr.go4lunch.ui.authentication.AuthenticationViewModel;
 import com.jr_eagle_ocr.go4lunch.ui.listview.ListViewViewModel;
@@ -40,9 +38,8 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                             Go4LunchApplication.getDependencyContainer().getUserRepository(),
                             Go4LunchApplication.getDependencyContainer().getLocationRepository(),
                             Go4LunchApplication.getDependencyContainer().getRestaurantRepository(),
-                            Go4LunchApplication.getDependencyContainer().getCurrentUserChosenRestaurantId(),
-                            Go4LunchApplication.getDependencyContainer().setClearChosenRestaurant(),
-                            Go4LunchApplication.getDependencyContainer().setClearLikedRestaurant());
+                            Go4LunchApplication.getDependencyContainer().setClearChosenRestaurant()
+                    );
                 }
             }
         }
@@ -58,28 +55,20 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
     @NonNull
     private final RestaurantRepository restaurantRepository;
     @NonNull
-    private final GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId;
-    @NonNull
     private final SetClearChosenRestaurant setClearChosenRestaurant;
-    @NonNull
-    private final SetClearLikedRestaurant setClearLikedRestaurant;
 
     private ViewModelFactory(
             @NonNull BitmapUtil bitmapUtil,
             @NonNull UserRepository userRepository,
             @NonNull LocationRepository locationRepository,
             @NonNull RestaurantRepository restaurantRepository,
-            @NonNull GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId,
-            @NonNull SetClearChosenRestaurant setClearChosenRestaurant,
-            @NonNull SetClearLikedRestaurant setClearLikedRestaurant
+            @NonNull SetClearChosenRestaurant setClearChosenRestaurant
     ) {
         this.bitmapUtil = bitmapUtil;
         this.userRepository = userRepository;
         this.locationRepository = locationRepository;
         this.restaurantRepository = restaurantRepository;
-        this.getCurrentUserChosenRestaurantId = getCurrentUserChosenRestaurantId;
         this.setClearChosenRestaurant = setClearChosenRestaurant;
-        this.setClearLikedRestaurant = setClearLikedRestaurant;
     }
 
     @SuppressWarnings("unchecked")

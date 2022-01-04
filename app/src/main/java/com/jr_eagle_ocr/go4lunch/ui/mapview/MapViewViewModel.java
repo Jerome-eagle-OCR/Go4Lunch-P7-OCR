@@ -110,22 +110,22 @@ public class MapViewViewModel extends ViewModel {
         List<String> filteredRestaurantIds = filteredRestaurantIdsLivedata.getValue();
         if (foundRestaurantIds != null && chosenRestaurantIds != null
                 && allRestaurants != null && !allRestaurants.isEmpty()) {
-            for (String id : foundRestaurantIds) {
-                boolean isToBeSet = filteredRestaurantIds == null || filteredRestaurantIds.contains(id);
+            for (String foundRestaurantId : foundRestaurantIds) {
+                boolean isToBeSet = filteredRestaurantIds == null || filteredRestaurantIds.contains(foundRestaurantId);
                 if (isToBeSet) {
-                    Restaurant restaurant = allRestaurants.get(id);
+                    Restaurant restaurant = allRestaurants.get(foundRestaurantId);
                     if (restaurant != null) {
-                        Map<String, Object> details = new HashMap<>();
+                        Map<String, Object> detailsHashMap = new HashMap<>();
                         String name = restaurant.getName();
                         double lat = restaurant.getGeoPoint().getLatitude();
                         double lng = restaurant.getGeoPoint().getLongitude();
                         LatLng latLng = new LatLng(lat, lng);
-                        boolean isChosen = chosenRestaurantIds.contains(id);
+                        boolean isChosen = chosenRestaurantIds.contains(foundRestaurantId);
                         int drawableResource = isChosen ? R.drawable.green_marker : R.drawable.orange_marker;
-                        details.put(NAME, name);
-                        details.put(LATLNG, latLng);
-                        details.put(DRAWABLE_RESOURCE, drawableResource);
-                        markerDetails.put(id, details);
+                        detailsHashMap.put(NAME, name);
+                        detailsHashMap.put(LATLNG, latLng);
+                        detailsHashMap.put(DRAWABLE_RESOURCE, drawableResource);
+                        markerDetails.put(foundRestaurantId, detailsHashMap);
                     }
                 }
             }

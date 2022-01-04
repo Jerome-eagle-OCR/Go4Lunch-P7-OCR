@@ -19,6 +19,7 @@ import android.location.Location;
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import androidx.lifecycle.MutableLiveData;
 
+import com.jr_eagle_ocr.go4lunch.BuildConfig;
 import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
 import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
@@ -44,6 +45,9 @@ import java.util.Map;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class GetRestaurantViewStatesTest {
+    static {
+        BuildConfig.IS_TESTING.set(true);
+    }
 
     @Mock
     private BitmapUtil mockBitmapUtil;

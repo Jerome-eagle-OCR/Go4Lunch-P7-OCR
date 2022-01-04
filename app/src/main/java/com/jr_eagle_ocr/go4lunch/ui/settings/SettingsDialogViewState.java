@@ -29,4 +29,25 @@ public class SettingsDialogViewState {
     public String getUserURLpicture() {
         return userURLpicture;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SettingsDialogViewState that = (SettingsDialogViewState) o;
+
+        if (isSwitchNotificationChecked != that.isSwitchNotificationChecked) return false;
+        if (userName != null ? !userName.equals(that.userName) : that.userName != null)
+            return false;
+        return userURLpicture != null ? userURLpicture.equals(that.userURLpicture) : that.userURLpicture == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (isSwitchNotificationChecked ? 1 : 0);
+        result = 31 * result + (userName != null ? userName.hashCode() : 0);
+        result = 31 * result + (userURLpicture != null ? userURLpicture.hashCode() : 0);
+        return result;
+    }
 }

@@ -21,7 +21,7 @@ public class FoundRestaurant {
     private String mPhoneNumber;
     @Nullable
     private Bitmap mPhoto;
-    private String mWebSiteUrl;
+    private String mWebsiteUrl;
 
     public FoundRestaurant(
             String id
@@ -63,8 +63,8 @@ public class FoundRestaurant {
         return mPhoto;
     }
 
-    public String getWebSiteUrl() {
-        return mWebSiteUrl;
+    public String getWebsiteUrl() {
+        return mWebsiteUrl;
     }
 
 
@@ -96,7 +96,7 @@ public class FoundRestaurant {
         mPhoto = photo;
     }
 
-    public void setWebSiteUrl(String webSiteUrl) {
-        mWebSiteUrl = webSiteUrl;
+    public void setWebsiteUrl(String websiteUrl) {
+        mWebsiteUrl = websiteUrl;
     }
 }

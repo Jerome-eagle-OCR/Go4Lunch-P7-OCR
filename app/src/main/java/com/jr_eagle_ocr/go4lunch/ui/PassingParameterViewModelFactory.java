@@ -9,6 +9,7 @@ import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.data.usecases.GetCurrentUserChosenRestaurantId;
 import com.jr_eagle_ocr.go4lunch.data.usecases.GetIsLikedRestaurant;
+import com.jr_eagle_ocr.go4lunch.data.usecases.GetUserViewStates;
 import com.jr_eagle_ocr.go4lunch.data.usecases.PlaceAutocompleteSearch;
 import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearLikedRestaurant;
@@ -27,6 +28,8 @@ public class PassingParameterViewModelFactory extends ViewModelProvider.NewInsta
     @NonNull
     private final Object parameter;
     @NonNull
+    private final BitmapUtil bitmapUtil;
+    @NonNull
     private final LocationRepository locationRepository;
     @NonNull
     private final UserRepository userRepository;
@@ -42,8 +45,6 @@ public class PassingParameterViewModelFactory extends ViewModelProvider.NewInsta
     private final SetClearChosenRestaurant setClearChosenRestaurant;
     @NonNull
     private final SetClearLikedRestaurant setClearLikedRestaurant;
-    @NonNull
-    private final BitmapUtil bitmapUtil;
 
     public PassingParameterViewModelFactory(
             @NonNull Object parameter
@@ -75,7 +76,8 @@ public class PassingParameterViewModelFactory extends ViewModelProvider.NewInsta
                     (String) parameter, bitmapUtil,
                     userRepository, restaurantRepository,
                     getCurrentUserChosenRestaurantId, getIsLikedRestaurant,
-                    setClearChosenRestaurant, setClearLikedRestaurant);
+                    setClearChosenRestaurant, setClearLikedRestaurant,
+                    new GetUserViewStates());
         }
         throw new IllegalArgumentException("Unknown ViewModel class");
     }

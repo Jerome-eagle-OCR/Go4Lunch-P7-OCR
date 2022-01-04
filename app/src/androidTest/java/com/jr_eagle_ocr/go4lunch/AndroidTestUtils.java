@@ -8,7 +8,6 @@ import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.U
 import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.USERNAME_FIELD;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
@@ -31,27 +30,23 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.jr_eagle_ocr.go4lunch.data.models.ChosenRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.FoundRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.User;
-import com.jr_eagle_ocr.go4lunch.data.place_autocomplete.models.PlaceAutocompleteApiResponse;
 import com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.di.Go4LunchApplication;
+import com.jr_eagle_ocr.go4lunch.ui.restaurant_detail.RestaurantDetailViewSate;
 
 import org.junit.Assert;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
 public abstract class AndroidTestUtils {
@@ -144,7 +139,7 @@ public abstract class AndroidTestUtils {
         TEST_FOUND_RESTAURANT.setOpeningHours(openingHours);
         TEST_FOUND_RESTAURANT.setPhoneNumber("+33 1 85 15 23 84");
         TEST_FOUND_RESTAURANT.setPhoto(TEST_FOUND_RESTAURANT_BITMAP);
-        TEST_FOUND_RESTAURANT.setWebSiteUrl("https://bigfernand.com/restaurants/restaurant-big-fernand-versailles/");
+        TEST_FOUND_RESTAURANT.setWebsiteUrl("https://bigfernand.com/restaurants/restaurant-big-fernand-versailles/");
 
         TEST_FOUND_RESTAURANT2.setName(TEST_FOUND_RESTAURANT.getName());
         TEST_FOUND_RESTAURANT2.setAddress(TEST_FOUND_RESTAURANT.getAddress());
@@ -153,7 +148,7 @@ public abstract class AndroidTestUtils {
         TEST_FOUND_RESTAURANT2.setOpeningHours(TEST_FOUND_RESTAURANT.getOpeningHours());
         TEST_FOUND_RESTAURANT2.setPhoneNumber(TEST_FOUND_RESTAURANT.getPhoneNumber());
         TEST_FOUND_RESTAURANT2.setPhoto(TEST_FOUND_RESTAURANT.getPhoto());
-        TEST_FOUND_RESTAURANT2.setWebSiteUrl(TEST_FOUND_RESTAURANT.getWebSiteUrl());
+        TEST_FOUND_RESTAURANT2.setWebsiteUrl(TEST_FOUND_RESTAURANT.getWebsiteUrl());
     }
 
     public static final Restaurant TEST_RESTAURANT = new Restaurant();
@@ -167,7 +162,7 @@ public abstract class AndroidTestUtils {
         TEST_RESTAURANT.setGeoPoint(new GeoPoint(latLng.latitude, latLng.longitude));
         TEST_RESTAURANT.setAddress(TEST_FOUND_RESTAURANT.getAddress());
         TEST_RESTAURANT.setPhoneNumber(TEST_FOUND_RESTAURANT.getPhoneNumber());
-        TEST_RESTAURANT.setWebSiteUrl(TEST_FOUND_RESTAURANT.getWebSiteUrl());
+        TEST_RESTAURANT.setWebsiteUrl(TEST_FOUND_RESTAURANT.getWebsiteUrl());
         HashMap<String, String> closeTimes = new LinkedHashMap<>();
         for (DayOfWeek day : DayOfWeek.values()) {
             closeTimes.put(day.name(), "22:30");
@@ -183,7 +178,7 @@ public abstract class AndroidTestUtils {
         TEST_RESTAURANT2.setGeoPoint(TEST_RESTAURANT.getGeoPoint());
         TEST_RESTAURANT2.setAddress(TEST_RESTAURANT.getAddress());
         TEST_RESTAURANT2.setPhoneNumber(TEST_RESTAURANT.getPhoneNumber());
-        TEST_RESTAURANT2.setWebSiteUrl(TEST_RESTAURANT.getWebSiteUrl());
+        TEST_RESTAURANT2.setWebsiteUrl(TEST_RESTAURANT.getWebsiteUrl());
         TEST_RESTAURANT2.setCloseTimes(TEST_RESTAURANT.getCloseTimes());
         TEST_RESTAURANT2.setCloseTimes(TEST_RESTAURANT.getCloseTimes());
         TEST_RESTAURANT2.setRating(TEST_RESTAURANT.getRating());
@@ -219,6 +214,20 @@ public abstract class AndroidTestUtils {
 
     static {
         TEST_RESTAURANT_DATA.put(PLACEID_FIELD, TEST_RESTAURANT.getId());
+    }
+
+    public static final RestaurantDetailViewSate TEST_RESTAURANT_DETAIL_VIEW_SATE;
+
+    static {
+        TEST_RESTAURANT_DETAIL_VIEW_SATE = new RestaurantDetailViewSate(TEST_RESTAURANT.getId(),
+                null,
+                TEST_RESTAURANT.getName(),
+                TEST_RESTAURANT.getAddress(),
+                TEST_RESTAURANT.getPhoneNumber(),
+                TEST_RESTAURANT.getWebsiteUrl(),
+                0,
+                0,
+                null);
     }
 
     public static void signInUser(String userEmail, String userPwd) throws ExecutionException, InterruptedException {

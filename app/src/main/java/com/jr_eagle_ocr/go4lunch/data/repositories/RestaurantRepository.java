@@ -112,7 +112,7 @@ public final class RestaurantRepository extends Repository {
         // Phone number
         String phoneNumber = foundRestaurant.getPhoneNumber();
         // Web site URL
-        String webSiteUrl = foundRestaurant.getWebSiteUrl();
+        String websiteUrl = foundRestaurant.getWebsiteUrl();
         // Close times
         HashMap<String, String> closeTimes = getCloseTimes(foundRestaurant);
         // Rating
@@ -129,7 +129,7 @@ public final class RestaurantRepository extends Repository {
                                                geoPoint,
                                                address,
                                                phoneNumber,
-                                               webSiteUrl,
+                                               websiteUrl,
                                                closeTimes,
                                                rating,
                                                timestamp);

@@ -1,10 +1,9 @@
 package com.jr_eagle_ocr.go4lunch.viewmodels;
 
-import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_AUTOCOMPLETE_RESTAURANT_VIEWSTATE_ARRAY;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_AUTOCOMPLETE_RESTAURANT_VIEWSTATE_ARRAY2;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_CHOSEN_RESTAURANT;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_CHOSEN_RESTAURANT2;
-import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_CHOSEN_RESTAURANT_ID;
+import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_PLACE_ID;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_RESTAURANT1_VIEWSTATE;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_RESTAURANT2_VIEWSTATE;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_RESTAURANT3_VIEWSTATE;
@@ -174,7 +173,7 @@ public class ListViewViewModelTest {
         Map<String, Integer> actualRestaurantChosenByUsersCountMapArgument = restaurantChosenByUsersCountMapArgumentCaptor.getValue();
         Map<String, Integer> expectedRestaurantChosenByUsersCountMapArgument = new HashMap<>();
         expectedRestaurantChosenByUsersCountMapArgument.put(TEST_CHOSEN_RESTAURANT2.getPlaceId(), 1);
-        expectedRestaurantChosenByUsersCountMapArgument.put(TEST_CHOSEN_RESTAURANT_ID, 2); // Current user choice should not be taken into account
+        expectedRestaurantChosenByUsersCountMapArgument.put(TEST_PLACE_ID, 2); // Current user choice should not be taken into account
         assertEquals(expectedRestaurantChosenByUsersCountMapArgument, actualRestaurantChosenByUsersCountMapArgument);
     }
 
@@ -202,7 +201,7 @@ public class ListViewViewModelTest {
         Map<String, Integer> actualRestaurantChosenByUsersCountMapArgument = restaurantChosenByUsersCountMapArgumentCaptor.getValue();
         Map<String, Integer> expectedRestaurantChosenByUsersCountMapArgument = new HashMap<>();
         expectedRestaurantChosenByUsersCountMapArgument.put(TEST_CHOSEN_RESTAURANT2.getPlaceId(), 1);
-        expectedRestaurantChosenByUsersCountMapArgument.put(TEST_CHOSEN_RESTAURANT_ID, 2); // Current user choice should not be taken into account
+        expectedRestaurantChosenByUsersCountMapArgument.put(TEST_PLACE_ID, 2); // Current user choice should not be taken into account
         assertEquals(expectedRestaurantChosenByUsersCountMapArgument, actualRestaurantChosenByUsersCountMapArgument);
 
         List<RestaurantViewSate> actualRestaurantViewStates = LiveDataTestUtil.getValue(underTestListViewViewModel.getRestaurantViewStates());
@@ -213,8 +212,8 @@ public class ListViewViewModelTest {
     @Test
     public void getAllRestaurantViewStates_whenAutocompleteSearchPerformedAndSelectionMade_shouldCallMethodsAndReturnValueAsExpected() throws InterruptedException {
         List<RestaurantViewSate> fakeRestaurantViewStates = Arrays.asList(TEST_RESTAURANT1_VIEWSTATE,
-                TEST_RESTAURANT2_VIEWSTATE,
-                TEST_RESTAURANT3_VIEWSTATE);
+                                                                          TEST_RESTAURANT2_VIEWSTATE,
+                                                                          TEST_RESTAURANT3_VIEWSTATE);
         when(mockGetRestaurantViewStates.getRestaurantViewStates(anyMap()))
                 .thenReturn(fakeRestaurantViewStates); // Totally fake list
         autocompleteRestaurantArrayMutableLiveData.setValue(TEST_AUTOCOMPLETE_RESTAURANT_VIEWSTATE_ARRAY2);
@@ -235,7 +234,7 @@ public class ListViewViewModelTest {
         Map<String, Integer> actualRestaurantChosenByUsersCountMapArgument = restaurantChosenByUsersCountMapArgumentCaptor.getValue();
         Map<String, Integer> expectedRestaurantChosenByUsersCountMapArgument = new HashMap<>();
         expectedRestaurantChosenByUsersCountMapArgument.put(TEST_CHOSEN_RESTAURANT2.getPlaceId(), 1);
-        expectedRestaurantChosenByUsersCountMapArgument.put(TEST_CHOSEN_RESTAURANT_ID, 2); // Current user choice should not be taken into account
+        expectedRestaurantChosenByUsersCountMapArgument.put(TEST_PLACE_ID, 2); // Current user choice should not be taken into account
         assertEquals(expectedRestaurantChosenByUsersCountMapArgument, actualRestaurantChosenByUsersCountMapArgument);
 
         List<RestaurantViewSate> actualRestaurantViewStates = LiveDataTestUtil.getValue(underTestListViewViewModel.getRestaurantViewStates());
