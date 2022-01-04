@@ -65,7 +65,7 @@ public final class GetNotificationPair extends UseCase {
     /**
      * Build the notification lines
      *
-     * @param context
+     * @param context the Android context
      * @return a list of strings
      */
     private List<String> getNotificationLines(Context context) throws ExecutionException, InterruptedException {
@@ -108,7 +108,7 @@ public final class GetNotificationPair extends UseCase {
     /**
      * Build the joining users string
      *
-     * @param context
+     * @param context the Android context
      * @param uid                the authenticated user id
      * @param restaurantDocument the authenticated user chosen restaurant Firestore document
      * @return a string

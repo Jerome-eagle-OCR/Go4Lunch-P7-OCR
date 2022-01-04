@@ -313,7 +313,7 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback {
                                     foundRestaurant.setOpeningHours(detailPlace.getOpeningHours());
                                     foundRestaurant.setPhoneNumber(detailPlace.getPhoneNumber());
                                     Uri uri = detailPlace.getWebsiteUri();
-                                    if (uri != null) foundRestaurant.setWebSiteUrl(uri.toString());
+                                    if (uri != null) foundRestaurant.setWebsiteUrl(uri.toString());
 
                                     // Get the photo metadata.
                                     final List<PhotoMetadata> metadata = detailPlace.getPhotoMetadatas();

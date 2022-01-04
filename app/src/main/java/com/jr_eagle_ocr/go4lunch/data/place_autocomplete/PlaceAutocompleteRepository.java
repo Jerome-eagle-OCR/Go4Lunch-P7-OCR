@@ -49,7 +49,6 @@ public final class PlaceAutocompleteRepository {
      * Get place autocomplete API response observable
      *
      * @param input       chars from which to search
-     * @param mapLocation geographic location to search around
      * @return place autocomplete API response in Rxjava observable
      */
     public Observable<PlaceAutocompleteApiResponse> getPlaceAutocompleteSearchResponse(String input) {

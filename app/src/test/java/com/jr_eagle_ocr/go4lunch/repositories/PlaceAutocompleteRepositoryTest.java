@@ -58,9 +58,6 @@ public class PlaceAutocompleteRepositoryTest {
 
     @After
     public void tearDown() throws Exception {
-        placeAutocompleteRepository = null;
-        BuildConfig.IS_TESTING.set(false);
-        //assert PlaceAutocompleteRepository.BASE_URL.equals(RepositoriesConstantsTest.HTTPS_MAPS_GOOGLEAPIS_COM_MAPS_API_PLACE);
     }
 
     @Test

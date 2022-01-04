@@ -21,6 +21,7 @@ import com.jr_eagle_ocr.go4lunch.databinding.ActivityRestaurantDetailBinding;
 import com.jr_eagle_ocr.go4lunch.ui.PassingParameterViewModelFactory;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserAdapter;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
+import com.jr_eagle_ocr.go4lunch.util.IntentUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -127,8 +128,9 @@ public class RestaurantDetailActivity extends AppCompatActivity implements Navig
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        Intent intent = viewModel.getIntent(item.getOrder());
-        if (intent != null) {
+        String intentString = viewModel.getIntentString(item.getOrder());
+        if (intentString != null) {
+            Intent intent = IntentUtil.getIntent(intentString, restaurant);
             startActivity(intent);
         }
         return false;

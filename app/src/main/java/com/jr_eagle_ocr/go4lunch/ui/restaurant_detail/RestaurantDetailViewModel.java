@@ -1,12 +1,12 @@
 package com.jr_eagle_ocr.go4lunch.ui.restaurant_detail;
 
 
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.util.Log;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.core.util.Pair;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -26,6 +26,7 @@ import com.jr_eagle_ocr.go4lunch.data.usecases.SetClearLikedRestaurant;
 import com.jr_eagle_ocr.go4lunch.ui.adapters.UserViewState;
 import com.jr_eagle_ocr.go4lunch.util.BitmapUtil;
 import com.jr_eagle_ocr.go4lunch.util.Event;
+import com.jr_eagle_ocr.go4lunch.util.IntentUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +40,7 @@ public class RestaurantDetailViewModel extends ViewModel {
     private final String TAG = getClass().getSimpleName();
     private final String LIKE = "LIKE";
     private final String CHOOSE = "CHOOSE";
+    private final BitmapUtil bitmapUtil;
     private final LiveData<User> currentUserLiveData;
     private final LiveData<Map<String, User>> allLoggedUsersLiveData;
     private final LiveData<Map<String, Restaurant>> allRestaurantsLiveData;
@@ -49,7 +51,6 @@ public class RestaurantDetailViewModel extends ViewModel {
     private final GetUserViewStates getUserViewStates;
     private final SetClearChosenRestaurant setClearChosenRestaurant;
     private final SetClearLikedRestaurant setClearLikedRestaurant;
-    private final BitmapUtil bitmapUtil;
     private final MediatorLiveData<RestaurantDetailViewSate> restaurantDetailViewStateMediatorLiveData = new MediatorLiveData<>();
     private final MediatorLiveData<List<UserViewState>> joiningUserViewStatesMediatorLiveData = new MediatorLiveData<>();
     private final MediatorLiveData<Event<Integer>> snackbarMessageEventMediatorLiveData = new MediatorLiveData<>();
@@ -62,16 +63,18 @@ public class RestaurantDetailViewModel extends ViewModel {
     private boolean blockNextChosenSnackbar = false;
 
     public RestaurantDetailViewModel(
-            String displayedRestaurantId,
-            BitmapUtil bitmapUtil,
-            UserRepository userRepository,
-            RestaurantRepository restaurantRepository,
-            GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId,
-            GetIsLikedRestaurant getIsLikedRestaurant,
-            SetClearChosenRestaurant setClearChosenRestaurant,
-            SetClearLikedRestaurant setClearLikedRestaurant
+            @NonNull String displayedRestaurantId,
+            @NonNull BitmapUtil bitmapUtil,
+            @NonNull UserRepository userRepository,
+            @NonNull RestaurantRepository restaurantRepository,
+            @NonNull GetCurrentUserChosenRestaurantId getCurrentUserChosenRestaurantId,
+            @NonNull GetIsLikedRestaurant getIsLikedRestaurant,
+            @NonNull SetClearChosenRestaurant setClearChosenRestaurant,
+            @NonNull SetClearLikedRestaurant setClearLikedRestaurant,
+            @NonNull GetUserViewStates getUserViewStates
     ) {
         this.displayedRestaurantId = displayedRestaurantId;
+        this.bitmapUtil = bitmapUtil;
         currentUserLiveData = userRepository.getCurrentUser();
         allLoggedUsersLiveData = userRepository.getAllLoggedUsers();
         allRestaurantsLiveData = restaurantRepository.getAllRestaurants();
@@ -79,10 +82,9 @@ public class RestaurantDetailViewModel extends ViewModel {
         currentUserChosenRestaurantIdLiveData = getCurrentUserChosenRestaurantId.getCurrentUserChosenRestaurantId();
         this.getIsLikedRestaurant = getIsLikedRestaurant;
         isLikedRestaurantLiveData = getIsLikedRestaurant.isLikedRestaurant();
-        this.getUserViewStates = new GetUserViewStates();
+        this.getUserViewStates = getUserViewStates;
         this.setClearChosenRestaurant = setClearChosenRestaurant;
         this.setClearLikedRestaurant = setClearLikedRestaurant;
-        this.bitmapUtil = bitmapUtil;
 
         init();
     }
@@ -119,7 +121,8 @@ public class RestaurantDetailViewModel extends ViewModel {
             }
         });
         snackbarMessageEventMediatorLiveData.addSource(currentUserChosenRestaurantIdLiveData, chosenRestaurantId -> {
-            if (displayedRestaurantId != null && chosenRestaurantId != null && isChooseClickedOnce && !blockNextChosenSnackbar) {
+            if (displayedRestaurantId != null && chosenRestaurantId != null
+                    && isChooseClickedOnce && !blockNextChosenSnackbar) {
                 buildAndSetSnackbarMessageEvent(CHOOSE, isChosen());
             }
             blockNextChosenSnackbar = false;
@@ -147,19 +150,22 @@ public class RestaurantDetailViewModel extends ViewModel {
             Bitmap photo = bitmapUtil.decodeBase64(restaurant.getPhotoString());
             String name = restaurant.getName();
             String address = restaurant.getAddress();
+            String phoneNumber = restaurant.getPhoneNumber();
+            String websiteUrl = restaurant.getWebsiteUrl();
             boolean isChosen = isChosen();
-            int chosenResource = isChosen ? R.drawable.ic_check_circle : R.drawable.ic_circle;
+            int chooseResource = isChosen ? R.drawable.ic_check_circle : R.drawable.ic_circle;
             boolean isLiked = isLiked();
             int likeVisibility = isLiked ? View.VISIBLE : View.INVISIBLE;
             RestaurantDetailViewSate restaurantDetailViewState =
-                    new RestaurantDetailViewSate(
-                            displayedRestaurantId,
-                            photo,
-                            name,
-                            address,
-                            chosenResource,
-                            likeVisibility,
-                            joiningUserViewStatesMediatorLiveData.getValue());
+                    new RestaurantDetailViewSate(displayedRestaurantId,
+                                                 photo,
+                                                 name,
+                                                 address,
+                                                 phoneNumber,
+                                                 websiteUrl,
+                                                 chooseResource,
+                                                 likeVisibility,
+                                                 joiningUserViewStatesMediatorLiveData.getValue());
             restaurantDetailViewStateMediatorLiveData.setValue(restaurantDetailViewState);
         }
     }
@@ -168,7 +174,7 @@ public class RestaurantDetailViewModel extends ViewModel {
      * Build and set the list of user view state to feed UserAdapter,
      * based on users lunching at the displayed restaurant
      */
-    public void buildAndSetJoiningUserViewStates() {
+    private void buildAndSetJoiningUserViewStates() {
         List<UserViewState> userViewStates = new ArrayList<>(); //To be produced to valorize livedata
         User currentUser = currentUserLiveData.getValue();
         if (currentUser != null) {
@@ -191,7 +197,9 @@ public class RestaurantDetailViewModel extends ViewModel {
                 }
                 Map<String, User> allLoggedUsers = allLoggedUsersLiveData.getValue();
                 userViewStates = getUserViewStates.getUserViewStates(displayedRestaurantId,
-                        currentUser, allLoggedUsers, userChosenRestaurantMap);
+                                                                     currentUser,
+                                                                     allLoggedUsers,
+                                                                     userChosenRestaurantMap);
             }
         }
         joiningUserViewStatesMediatorLiveData.setValue(userViewStates);
@@ -221,13 +229,11 @@ public class RestaurantDetailViewModel extends ViewModel {
      * @param itemOrder navigation selected item order
      * @return an intent to start an activity or null if action in VM only is needed
      */
-    public Intent getIntent(int itemOrder) {
-        Intent intent = null;
+    public String getIntentString(int itemOrder) {
+        String intentString = null;
         switch (itemOrder) {
             case 100:
-                String phoneNumber = restaurant.getPhoneNumber();
-                Uri tel = Uri.fromParts("tel", phoneNumber, null);
-                intent = new Intent(Intent.ACTION_DIAL, tel);
+                intentString = IntentUtil.ACTION_DIAL_INTENT;
                 break;
             case 200:
                 isLikeClickedOnce = true;
@@ -239,12 +245,10 @@ public class RestaurantDetailViewModel extends ViewModel {
                 }
                 break;
             case 300:
-                String websiteUrl = restaurant.getWebSiteUrl();
-                Uri url = Uri.parse(websiteUrl);
-                intent = new Intent(Intent.ACTION_VIEW, url);
+                intentString = IntentUtil.ACTION_VIEW_INTENT;
                 break;
         }
-        return intent;
+        return intentString;
     }
 
     /**
@@ -299,8 +303,24 @@ public class RestaurantDetailViewModel extends ViewModel {
     }
 
     @Override
-    protected void onCleared() {
+    public void onCleared() {
         super.onCleared();
         getIsLikedRestaurant.removeListenerRegistration();
+    }
+
+    @VisibleForTesting
+    public void setLikeAndChooseClickedOnceToTrue() {
+        isLikeClickedOnce = true;
+        isChooseClickedOnce = true;
+    }
+
+    @VisibleForTesting
+    public final boolean isChooseClickedOnce() {
+        return isChooseClickedOnce;
+    }
+
+    @VisibleForTesting
+    public final boolean isBlockNextChosenSnackbar() {
+        return blockNextChosenSnackbar;
     }
 }

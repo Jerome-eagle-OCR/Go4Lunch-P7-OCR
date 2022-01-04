@@ -2,15 +2,17 @@ package com.jr_eagle_ocr.go4lunch.viewmodels;
 
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_AUTOCOMPLETE_RESTAURANT_VIEWSTATE_ARRAY;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_AUTOCOMPLETE_RESTAURANT_VIEWSTATE_ARRAY2;
-import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_CHOSEN_RESTAURANT2;
-import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_CHOSEN_RESTAURANT_ID;
+import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_PLACE_ID;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_RESTAURANT;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_RESTAURANT1_VIEWSTATE;
+import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_RESTAURANT2;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_RESTAURANT3_VIEWSTATE;
-import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.LISTVIEW;
 import static com.jr_eagle_ocr.go4lunch.ui.MainViewModel.MAPVIEW;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
+import static com.jr_eagle_ocr.go4lunch.ui.mapview.MapViewViewModel.DRAWABLE_RESOURCE;
+import static com.jr_eagle_ocr.go4lunch.ui.mapview.MapViewViewModel.LATLNG;
+import static com.jr_eagle_ocr.go4lunch.ui.mapview.MapViewViewModel.NAME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -23,8 +25,10 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.jr_eagle_ocr.go4lunch.BuildConfig;
 import com.jr_eagle_ocr.go4lunch.LiveDataTestUtil;
+import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.data.models.FoundRestaurant;
 import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
 import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
@@ -44,8 +48,9 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -64,8 +69,6 @@ public class MapViewViewModelTest {
     private RestaurantRepository mockRestaurantRepository;
     @Mock
     private GetRestaurantViewStates mockGetRestaurantViewStates;
-    @Captor
-    private ArgumentCaptor<Map<String, Integer>> restaurantChosenByUsersCountMapArgumentCaptor;
     @Mock
     private MainViewModel mockMainViewModel;
     @Captor
@@ -89,11 +92,12 @@ public class MapViewViewModelTest {
         chosenRestaurantIdsMutableLiveData.setValue(null);
         when(mockRestaurantRepository.getChosenRestaurantIds()).thenReturn(chosenRestaurantIdsMutableLiveData);
 
-        underTestMapViewViewModel = new MapViewViewModel(mockLocationRepository, mockRestaurantRepository);
         autocompleteRestaurantArrayMutableLiveData = new MutableLiveData<>();
         when(mockMainViewModel.getAutocompleteRestaurantArray()).thenReturn(autocompleteRestaurantArrayMutableLiveData);
         selectedItemMutableLiveData = new MutableLiveData<>();
         when(mockMainViewModel.getSelectedItem()).thenReturn(selectedItemMutableLiveData);
+
+        underTestMapViewViewModel = new MapViewViewModel(mockLocationRepository, mockRestaurantRepository);
     }
 
     @After
@@ -154,7 +158,9 @@ public class MapViewViewModelTest {
 
     @Test
     public void setFoundRestaurantIds_shouldCallMethodAsExpected() {
-        underTestMapViewViewModel.setMainViewModel(mockMainViewModel); // Needed to have filteredRestaurantIdsLivedata initialized
+        // Needed to have filteredRestaurantIdsLivedata initialized when setMarkerDetails() is called
+        // otherwise the test fails with NPE
+        underTestMapViewViewModel.setMainViewModel(mockMainViewModel);
         List<String> mockList = (List<String>) mock(List.class);
 
         underTestMapViewViewModel.setFoundRestaurantIds(mockList);
@@ -186,7 +192,79 @@ public class MapViewViewModelTest {
     }
 
     @Test
-    public void getMarkerDetails() {
+    public void getMarkerDetails_whenNoAutocompleteSearchYetPerformed_shouldReturnValueAsExpected() throws InterruptedException {
+        setCommonHypothesesForMarkerDetailsTests();
+        // Needed to initialize filteredRestaurantIdsLD and selectedItemLD
+        underTestMapViewViewModel.setMainViewModel(mockMainViewModel);
 
+
+        Map<String, Map<String, Object>> actualMarkerDetails = LiveDataTestUtil.getValue(underTestMapViewViewModel.getMarkerDetails());
+
+        // Construct expected 2 elements hashmap
+        Map<String, Map<String, Object>> expectedMarkerDetails = new HashMap<>();
+        Map<String, Object> detailsHashMap = new HashMap<>();
+        Map<String, Object> detailsHashMap2 = new HashMap<>();
+        detailsHashMap.put(NAME, TEST_RESTAURANT.getName());
+        detailsHashMap2.put(NAME, TEST_RESTAURANT2.getName());
+        LatLng latLng = new LatLng(TEST_RESTAURANT.getGeoPoint().getLatitude(), TEST_RESTAURANT.getGeoPoint().getLongitude());
+        detailsHashMap.put(LATLNG, latLng);
+        detailsHashMap2.put(LATLNG, latLng);
+        detailsHashMap.put(DRAWABLE_RESOURCE, R.drawable.green_marker);
+        detailsHashMap2.put(DRAWABLE_RESOURCE, R.drawable.orange_marker);
+        expectedMarkerDetails.put(TEST_RESTAURANT.getId(), detailsHashMap);
+        expectedMarkerDetails.put(TEST_RESTAURANT2.getId(), detailsHashMap2);
+
+        assertEquals(expectedMarkerDetails, actualMarkerDetails);
+    }
+
+    @Test
+    public void getMarkerDetails_whenAutocompleteSearchPerformed_shouldReturnValueAsExpected() throws InterruptedException {
+        setCommonHypothesesForMarkerDetailsTests();
+        autocompleteRestaurantArrayMutableLiveData.setValue(TEST_AUTOCOMPLETE_RESTAURANT_VIEWSTATE_ARRAY);
+        // Needed to initialize filteredRestaurantIdsLD and selectedItemLD
+        underTestMapViewViewModel.setMainViewModel(mockMainViewModel);
+
+        LiveDataTestUtil.getValue(underTestMapViewViewModel.getMarkerDetails());
+
+        // Construct expected 1 element hashmap
+        Map<String, Map<String, Object>> expectedMarkerDetails = new HashMap<>();
+        Map<String, Object> detailsHashMap = new HashMap<>();
+        detailsHashMap.put(NAME, TEST_RESTAURANT.getName());
+        LatLng latLng = new LatLng(TEST_RESTAURANT.getGeoPoint().getLatitude(), TEST_RESTAURANT.getGeoPoint().getLongitude());
+        detailsHashMap.put(LATLNG, latLng);
+        detailsHashMap.put(DRAWABLE_RESOURCE, R.drawable.green_marker);
+        expectedMarkerDetails.put(TEST_RESTAURANT.getId(), detailsHashMap);
+
+        // Lately valorization to get last value as setMarkerDetails is called multiple times
+        Map<String, Map<String, Object>> actualMarkerDetails = LiveDataTestUtil.getValue(underTestMapViewViewModel.getMarkerDetails());
+
+        assertEquals(expectedMarkerDetails, actualMarkerDetails);
+    }
+
+    @Test
+    public void getMarkerDetails_whenAutocompleteSearchPerformedAnditemSelected_shouldReturnValueAsExpected() throws InterruptedException {
+        selectedItemMutableLiveData.setValue(TEST_AUTOCOMPLETE_RESTAURANT_VIEWSTATE_ARRAY[0]);
+
+        // As it should not have any influence this previous test should succeed
+        getMarkerDetails_whenAutocompleteSearchPerformed_shouldReturnValueAsExpected();
+    }
+
+    private void setCommonHypothesesForMarkerDetailsTests() {
+        // For allRestaurantsLD
+        String TEST_RESTAURANT_ID = TEST_RESTAURANT.getId();
+        String TEST_RESTAURANT2_ID = TEST_RESTAURANT2.getId();
+        Map<String, Restaurant> fakeAllRestaurants = new HashMap<>();
+        fakeAllRestaurants.put(TEST_RESTAURANT_ID, TEST_RESTAURANT);
+        fakeAllRestaurants.put(TEST_RESTAURANT2_ID, TEST_RESTAURANT2);
+        allRestaurantsMutableLiveData.setValue(fakeAllRestaurants);
+        // For chosenRestaurantIdsLD
+        List<String> fakeChosenRestaurantIds = new ArrayList<>();
+        fakeChosenRestaurantIds.add(TEST_PLACE_ID);
+        chosenRestaurantIdsMutableLiveData.setValue(fakeChosenRestaurantIds);
+        // For foundRestaurantsIds
+        List<String> foundRestaurantIds = new ArrayList<>();
+        foundRestaurantIds.add(TEST_RESTAURANT_ID);
+        foundRestaurantIds.add(TEST_RESTAURANT2_ID);
+        when(mockRestaurantRepository.getFoundRestaurantIds()).thenReturn(foundRestaurantIds);
     }
 }

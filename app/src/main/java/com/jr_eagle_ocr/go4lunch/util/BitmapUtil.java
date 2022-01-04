@@ -13,7 +13,7 @@ import java.io.ByteArrayOutputStream;
  * Bitmap to String, and vice-versa, conversion utils to allow restaurant photo storage
  * in a Restaurant Document in Firestore db
  */
-public class BitmapUtil {
+public final class BitmapUtil {
     public BitmapUtil() {
     }
 

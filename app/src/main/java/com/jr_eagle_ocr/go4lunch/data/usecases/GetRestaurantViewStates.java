@@ -5,9 +5,11 @@ import android.location.Location;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.LiveData;
 
 import com.google.android.libraries.places.api.model.DayOfWeek;
+import com.jr_eagle_ocr.go4lunch.BuildConfig;
 import com.jr_eagle_ocr.go4lunch.R;
 import com.jr_eagle_ocr.go4lunch.data.models.Restaurant;
 import com.jr_eagle_ocr.go4lunch.data.repositories.LocationRepository;
@@ -28,7 +30,7 @@ public final class GetRestaurantViewStates extends UseCase {
     private final BitmapUtil bitmapUtil;
     private final LocationRepository locationRepository;
     private final RestaurantRepository restaurantRepository;
-    private final Calendar calendar;
+    private Calendar calendar;
     private final LiveData<Map<String, Restaurant>> allRestaurantsLiveData;
 
     public GetRestaurantViewStates(
@@ -158,6 +160,7 @@ public final class GetRestaurantViewStates extends UseCase {
         String closingTime = "";
         boolean isWarningStyle = true;
 
+        calendar = this.getCalendar();
         long nowTimeMillis = calendar.getTimeInMillis();
         int todayDayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
         int todayDayInt = calendar.get(Calendar.DAY_OF_WEEK) - 1;
@@ -197,6 +200,15 @@ public final class GetRestaurantViewStates extends UseCase {
         openingArray[2] = isWarningStyle;
 
         return openingArray;
+    }
+
+    /**
+     * Get Calendar depending on test running or not
+     *
+     * @return constructor calendar if test is running or new instance
+     */
+    private Calendar getCalendar() {
+        return BuildConfig.IS_TESTING.get() ? calendar : Calendar.getInstance();
     }
 
     /**

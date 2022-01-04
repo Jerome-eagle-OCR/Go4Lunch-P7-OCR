@@ -5,10 +5,14 @@ import static com.jr_eagle_ocr.go4lunch.data.repositories.RestaurantRepository.L
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -39,9 +43,9 @@ public class SettingsViewModel extends ViewModel {
     private final MutableLiveData<Integer> deleteUserResultMutableLiveData = new MutableLiveData<>();
 
     public SettingsViewModel(
-            UserRepository userRepository,
-            RestaurantRepository restaurantRepository,
-            SetClearChosenRestaurant setClearChosenRestaurant
+            @NonNull UserRepository userRepository,
+            @NonNull RestaurantRepository restaurantRepository,
+            @NonNull SetClearChosenRestaurant setClearChosenRestaurant
     ) {
         this.userRepository = userRepository;
         this.restaurantRepository = restaurantRepository;
@@ -135,5 +139,25 @@ public class SettingsViewModel extends ViewModel {
 
     public void setUserUrlPicture(String userUrlPicture) {
         this.userUrlPicture = userUrlPicture;
+    }
+
+    @VisibleForTesting
+    public final boolean isNoonReminderEnabled() {
+        return isNoonReminderEnabled;
+    }
+
+    @VisibleForTesting
+    public final String getUserName() {
+        return userName;
+    }
+
+    @VisibleForTesting
+    public final String getUserUrlPicture() {
+        return userUrlPicture;
+    }
+
+    @RestrictTo(RestrictTo.Scope.TESTS)
+    public MutableLiveData<Integer> getValidateResultMutableLiveData() {
+        return validateResultMutableLiveData;
     }
 }

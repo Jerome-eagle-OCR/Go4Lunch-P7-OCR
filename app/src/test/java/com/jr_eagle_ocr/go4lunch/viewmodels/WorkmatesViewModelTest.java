@@ -1,7 +1,7 @@
 package com.jr_eagle_ocr.go4lunch.viewmodels;
 
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_CHOSEN_RESTAURANT;
-import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_CHOSEN_RESTAURANT_ID;
+import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_PLACE_ID;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_USER1;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_USER1_ID;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_USER2;
@@ -110,7 +110,7 @@ public class WorkmatesViewModelTest {
         LiveDataTestUtil.getValue(underTestWorkmatesViewModel.getUserViewStates());
 
         Map<String, Pair<String, String>> expectedUserChosenRestaurantMapArgument = new HashMap<>();
-        expectedUserChosenRestaurantMapArgument.put(TEST_USER2_ID, new Pair<>(TEST_CHOSEN_RESTAURANT_ID, TEST_CHOSEN_RESTAURANT.getPlaceName()));
+        expectedUserChosenRestaurantMapArgument.put(TEST_USER2_ID, new Pair<>(TEST_PLACE_ID, TEST_CHOSEN_RESTAURANT.getPlaceName()));
 
         assertAllActualArgumentsAreAsExpected(expectedUserChosenRestaurantMapArgument);
     }
@@ -139,7 +139,7 @@ public class WorkmatesViewModelTest {
         LiveDataTestUtil.getValue(underTestWorkmatesViewModel.getUserViewStates());
 
         Map<String, Pair<String, String>> expectedUserChosenRestaurantMapArgument = new HashMap<>();
-        expectedUserChosenRestaurantMapArgument.put(TEST_USER2_ID, new Pair<>(TEST_CHOSEN_RESTAURANT_ID, TEST_CHOSEN_RESTAURANT.getPlaceName()));
+        expectedUserChosenRestaurantMapArgument.put(TEST_USER2_ID, new Pair<>(TEST_PLACE_ID, TEST_CHOSEN_RESTAURANT.getPlaceName()));
 
         assertAllActualArgumentsAreAsExpected(expectedUserChosenRestaurantMapArgument);
     }

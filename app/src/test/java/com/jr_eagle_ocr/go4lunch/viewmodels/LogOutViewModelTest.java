@@ -1,5 +1,6 @@
 package com.jr_eagle_ocr.go4lunch.viewmodels;
 
+import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_USER1;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -15,6 +16,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
 import com.jr_eagle_ocr.go4lunch.BuildConfig;
 import com.jr_eagle_ocr.go4lunch.LiveDataTestUtil;
+import com.jr_eagle_ocr.go4lunch.TestUtils;
+import com.jr_eagle_ocr.go4lunch.data.models.User;
 import com.jr_eagle_ocr.go4lunch.data.repositories.UserRepository;
 import com.jr_eagle_ocr.go4lunch.ui.logout.LogOutViewModel;
 
@@ -45,6 +48,7 @@ public class LogOutViewModelTest {
     @Before
     public void setUp() throws Exception {
         when(mockUserRepository.getCurrentFirebaseUser()).thenReturn(new MutableLiveData<>(mock(FirebaseUser.class)));
+        when(mockUserRepository.getCurrentUser()).thenReturn(new MutableLiveData<>(TEST_USER1));
         when(mockUserRepository.signOut(any())).thenReturn(mockTask);
         underTestLogOutViewModel = new LogOutViewModel(mockUserRepository);
     }
@@ -68,12 +72,11 @@ public class LogOutViewModelTest {
         when(mockTask.addOnSuccessListener((OnSuccessListener<Void>) any(OnSuccessListener.class))).thenReturn(mockTask);
         when(mockTask.addOnFailureListener(any(OnFailureListener.class))).thenReturn(mockTask);
 
-//        List<Integer> expectedSignOutResults = new ArrayList<>();
-//        expectedSignOutResults.add(R.string.disconnection_successful);
-//        expectedSignOutResults.add(R.string.disconnection_unsuccessful);
-
         underTestLogOutViewModel.signOut(null);
 
+        TEST_USER1.setLogged(false); // As user sign out isLogged must be false
+        verify(mockUserRepository).setUser(TEST_USER1);
         verify(mockUserRepository).signOut(any());
+        TEST_USER1.setLogged(true); // Set it back to true for other test class to perform normally
     }
 }

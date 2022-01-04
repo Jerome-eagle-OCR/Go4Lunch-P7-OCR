@@ -19,7 +19,7 @@ public class Restaurant {
     @Nullable
     private String phoneNumber;
     @Nullable
-    private String webSiteUrl;
+    private String websiteUrl;
     private HashMap<String, String> closeTimes;
     private float rating;
     private String timestamp;
@@ -34,7 +34,7 @@ public class Restaurant {
             GeoPoint geoPoint,
             String address,
             @Nullable String phoneNumber,
-            @Nullable String webSiteUrl,
+            @Nullable String websiteUrl,
             HashMap<String, String> closeTimes,
             float rating,
             String timestamp
@@ -45,7 +45,7 @@ public class Restaurant {
         this.geoPoint = geoPoint;
         this.address = address;
         this.phoneNumber = phoneNumber;
-        this.webSiteUrl = webSiteUrl;
+        this.websiteUrl = websiteUrl;
         this.closeTimes = closeTimes;
         this.rating = rating;
         this.timestamp = timestamp;
@@ -78,8 +78,8 @@ public class Restaurant {
     }
 
     @Nullable
-    public String getWebSiteUrl() {
-        return webSiteUrl;
+    public String getWebsiteUrl() {
+        return websiteUrl;
     }
 
     public HashMap<String, String> getCloseTimes() {
@@ -119,8 +119,8 @@ public class Restaurant {
         this.phoneNumber = phoneNumber;
     }
 
-    public void setWebSiteUrl(@Nullable String webSiteUrl) {
-        this.webSiteUrl = webSiteUrl;
+    public void setWebsiteUrl(@Nullable String websiteUrl) {
+        this.websiteUrl = websiteUrl;
     }
 
     public void setCloseTimes(HashMap<String, String> closeTimes) {
@@ -152,7 +152,7 @@ public class Restaurant {
         if (address != null ? !address.equals(that.address) : that.address != null) return false;
         if (phoneNumber != null ? !phoneNumber.equals(that.phoneNumber) : that.phoneNumber != null)
             return false;
-        if (webSiteUrl != null ? !webSiteUrl.equals(that.webSiteUrl) : that.webSiteUrl != null)
+        if (websiteUrl != null ? !websiteUrl.equals(that.websiteUrl) : that.websiteUrl != null)
             return false;
         if (closeTimes != null ? !closeTimes.equals(that.closeTimes) : that.closeTimes != null)
             return false;
@@ -167,7 +167,7 @@ public class Restaurant {
         result = 31 * result + (geoPoint != null ? geoPoint.hashCode() : 0);
         result = 31 * result + (address != null ? address.hashCode() : 0);
         result = 31 * result + (phoneNumber != null ? phoneNumber.hashCode() : 0);
-        result = 31 * result + (webSiteUrl != null ? webSiteUrl.hashCode() : 0);
+        result = 31 * result + (websiteUrl != null ? websiteUrl.hashCode() : 0);
         result = 31 * result + (closeTimes != null ? closeTimes.hashCode() : 0);
         result = 31 * result + (rating != +0.0f ? Float.floatToIntBits(rating) : 0);
         result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);

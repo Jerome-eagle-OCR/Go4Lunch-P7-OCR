@@ -2,7 +2,7 @@ package com.jr_eagle_ocr.go4lunch.viewmodels;
 
 import static com.jr_eagle_ocr.go4lunch.TestUtils.BEFORE_NOON_CALENDAR;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_AUTOCOMPLETE_RESTAURANT_VIEWSTATE_ARRAY;
-import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_CHOSEN_RESTAURANT_ID;
+import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_PLACE_ID;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_INITIAL_DELAY;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_RESTAURANT;
 import static com.jr_eagle_ocr.go4lunch.TestUtils.TEST_USER1;
@@ -45,7 +45,6 @@ import com.jr_eagle_ocr.go4lunch.ui.MainViewState;
 import com.jr_eagle_ocr.go4lunch.util.Event;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -182,11 +181,11 @@ public class MainViewModelTest {
 
     @Test
     public void getMainViewState_whenAChosenRestaurant_withSuccess() throws InterruptedException {
-        currentUserChosenRestaurantIdMutableLiveData.setValue(TEST_CHOSEN_RESTAURANT_ID);
+        currentUserChosenRestaurantIdMutableLiveData.setValue(TEST_PLACE_ID);
         MainViewState expectedMainViewState = new MainViewState(TEST_USER1.getUserName(),
                 TEST_USER1.getUserUrlPicture(),
                 TEST_USER1_EMAIL,
-                TEST_CHOSEN_RESTAURANT_ID,
+                TEST_PLACE_ID,
                 SET_WORKER);
 
         MainViewState actualMainViewState = LiveDataTestUtil.getValue(underTestMainViewModel.getMainViewState());
@@ -196,12 +195,12 @@ public class MainViewModelTest {
 
     @Test
     public void getMainViewState_whenAChosenRestaurant_butNoonReminderDisabled_withSuccess() throws InterruptedException {
-        currentUserChosenRestaurantIdMutableLiveData.setValue(TEST_CHOSEN_RESTAURANT_ID);
+        currentUserChosenRestaurantIdMutableLiveData.setValue(TEST_PLACE_ID);
         TEST_USER1.setNoonReminderEnabled(false);
         MainViewState expectedMainViewState = new MainViewState(TEST_USER1.getUserName(),
                 TEST_USER1.getUserUrlPicture(),
                 TEST_USER1_EMAIL,
-                TEST_CHOSEN_RESTAURANT_ID,
+                TEST_PLACE_ID,
                 UNSET_WORKER);
 
         MainViewState actualMainViewState = LiveDataTestUtil.getValue(underTestMainViewModel.getMainViewState());
@@ -263,7 +262,7 @@ public class MainViewModelTest {
         underTestMainViewModel.getMainViewState().observeForever(observer);
 
         // Change current user and wait for livedata change
-        currentUserChosenRestaurantIdMutableLiveData.setValue(TEST_CHOSEN_RESTAURANT_ID);
+        currentUserChosenRestaurantIdMutableLiveData.setValue(TEST_PLACE_ID);
         long startTime = System.currentTimeMillis();
         do {
             long lapTime = System.currentTimeMillis();
@@ -354,7 +353,7 @@ public class MainViewModelTest {
     @Test
     public void navigateTo_whenJumpToRestaurantDetailTrue_andCurrentUserChosenRestaurantNotEmpty_shouldBeNavigateToYourLunchEvent() throws InterruptedException {
         locationPermissionGrantedMutableLiveData.setValue(true);
-        currentUserChosenRestaurantIdMutableLiveData.setValue(TEST_CHOSEN_RESTAURANT_ID);
+        currentUserChosenRestaurantIdMutableLiveData.setValue(TEST_PLACE_ID);
         underTestMainViewModel = new MainViewModel(true,
                 mockLocationRepository,
                 mockUserRepository,
@@ -400,7 +399,7 @@ public class MainViewModelTest {
         assertNull(triggeredNavigateToEvent.peekContent()); // Event is not null but content is
 
         // Navigate to your lunch selected (when choice made)
-        currentUserChosenRestaurantIdMutableLiveData.setValue(TEST_CHOSEN_RESTAURANT_ID);
+        currentUserChosenRestaurantIdMutableLiveData.setValue(TEST_PLACE_ID);
         assertNavigationItemTriggerCorrespondingNavigateToEvent(R.id.nav_your_lunch);
     }
 

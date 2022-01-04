@@ -71,12 +71,6 @@ public class PlaceAutocompleteSearchTest {
 
         List<List<AutocompleteRestaurantViewState>> actuals = new ArrayList<>();
 
-//        TestObserver<List<AutocompleteRestaurantViewState>> testObserver =
-//                underTestPlaceAutocompleteSearch.getAutocompleteRestaurantsObservable()
-//                        .test();
-//
-//        testObserver.assertValue(expected);
-
         Disposable disposable = getDisposable(actuals);
 
         waitForUpdating(actuals, 0);
